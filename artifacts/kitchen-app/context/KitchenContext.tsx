@@ -30,6 +30,7 @@ export interface KitchenFunction {
   id: string;
   name: string;
   room: string;
+  floor: string;
   functionType: FunctionType;
   startTime: string;
   endTime: string;
@@ -59,6 +60,7 @@ export interface PrepItem {
 
 export interface StaffMember {
   id: string;
+  staffNumber: string;
   name: string;
   role: "Head Chef" | "Sous Chef" | "Pastry Chef" | "Function Captain" | "Casual";
   shiftStart: string;
@@ -77,12 +79,12 @@ export interface BroadcastMessage {
 }
 
 const SAMPLE_STAFF: StaffMember[] = [
-  { id: "s1", name: "Marco Ricci",  role: "Head Chef",        shiftStart: "05:00", shiftEnd: "14:00", functionIds: ["f1","f2","f3"], teamLeadFor: "Hot Kitchen",   section: "Hot Kitchen" },
-  { id: "s2", name: "Sarah Chen",   role: "Sous Chef",        shiftStart: "07:00", shiftEnd: "16:00", functionIds: ["f1","f3"],      teamLeadFor: "Cold Larder",   section: "Cold Larder" },
-  { id: "s3", name: "Jake Morrison",role: "Casual",           shiftStart: "09:00", shiftEnd: "17:00", functionIds: ["f1","f2","f3"],                               section: "Function Team" },
-  { id: "s4", name: "Amara Osei",   role: "Pastry Chef",      shiftStart: "06:00", shiftEnd: "15:00", functionIds: ["f1","f2","f3"], teamLeadFor: "Pastry",        section: "Pastry" },
-  { id: "s5", name: "Liam Walsh",   role: "Casual",           shiftStart: "10:00", shiftEnd: "18:00", functionIds: ["f1","f2","f3"],                               section: "Function Team" },
-  { id: "s6", name: "David Park",   role: "Function Captain", shiftStart: "08:00", shiftEnd: "22:00", functionIds: ["f1","f2","f3"], teamLeadFor: "Function Team", section: "Function Team" },
+  { id: "s1", staffNumber: "#0001", name: "Marco Ricci",   role: "Head Chef",        shiftStart: "05:00", shiftEnd: "14:00", functionIds: ["f1","f2","f3"], teamLeadFor: "Hot Kitchen",   section: "Hot Kitchen" },
+  { id: "s2", staffNumber: "#0002", name: "Sarah Chen",    role: "Sous Chef",        shiftStart: "07:00", shiftEnd: "16:00", functionIds: ["f1","f3"],      teamLeadFor: "Cold Larder",   section: "Cold Larder" },
+  { id: "s3", staffNumber: "#0047", name: "Jake Morrison", role: "Casual",           shiftStart: "09:00", shiftEnd: "17:00", functionIds: ["f1","f2","f3"],                                section: "Function Team" },
+  { id: "s4", staffNumber: "#0003", name: "Amara Osei",    role: "Pastry Chef",      shiftStart: "06:00", shiftEnd: "15:00", functionIds: ["f1","f2","f3"], teamLeadFor: "Pastry",        section: "Pastry" },
+  { id: "s5", staffNumber: "#0063", name: "Liam Walsh",    role: "Casual",           shiftStart: "10:00", shiftEnd: "18:00", functionIds: ["f1","f2","f3"],                                section: "Function Team" },
+  { id: "s6", staffNumber: "#0012", name: "David Park",    role: "Function Captain", shiftStart: "08:00", shiftEnd: "22:00", functionIds: ["f1","f2","f3"], teamLeadFor: "Function Team", section: "Function Team" },
 ];
 
 const SAMPLE_FUNCTIONS: KitchenFunction[] = [
@@ -90,6 +92,7 @@ const SAMPLE_FUNCTIONS: KitchenFunction[] = [
     id: "f1",
     name: "Harrison Wedding Luncheon",
     room: "Ballroom A",
+    floor: "Level 1",
     functionType: "A-la-carte",
     startTime: "12:00",
     endTime: "15:00",
@@ -120,6 +123,7 @@ const SAMPLE_FUNCTIONS: KitchenFunction[] = [
     id: "f2",
     name: "Corporate Boardroom Lunch",
     room: "Suite 3",
+    floor: "Level 2",
     functionType: "A-la-carte",
     startTime: "13:00",
     endTime: "14:30",
@@ -148,6 +152,7 @@ const SAMPLE_FUNCTIONS: KitchenFunction[] = [
     id: "f3",
     name: "Gala Dinner",
     room: "Grand Ballroom",
+    floor: "Ground Floor",
     functionType: "A-la-carte",
     startTime: "19:00",
     endTime: "23:00",
@@ -392,10 +397,13 @@ const SAMPLE_PREP: PrepItem[] = [
   },
 ];
 
+export const MANAGER_ROLES = ["Head Chef", "Sous Chef", "Pastry Chef", "Function Captain"] as const;
+
 interface KitchenContextType {
   functions: KitchenFunction[];
   prepItems: PrepItem[];
   staff: StaffMember[];
+  sickStaffIds: string[];
   currentStaffId: string | null;
   notificationsEnabled: boolean;
   broadcastMessage: BroadcastMessage | null;
@@ -406,12 +414,15 @@ interface KitchenContextType {
   dismissBroadcast: (id: string) => void;
   togglePrepItem: (id: string) => void;
   toggleTimelineItem: (functionId: string, timelineId: string) => void;
+  updateFunction: (id: string, updates: Partial<Omit<KitchenFunction, "id" | "timeline">>) => void;
+  markStaffSick: (staffId: string, sick: boolean) => void;
   todayDate: string;
 }
 
 const KitchenContext = createContext<KitchenContextType | null>(null);
 
-const STORAGE_KEY_FUNCTIONS = "@kitchen_functions_v2";
+const STORAGE_KEY_FUNCTIONS = "@kitchen_functions_v3";
+const STORAGE_KEY_SICK = "@kitchen_sick_v1";
 const STORAGE_KEY_PREP = "@kitchen_prep_v3";
 const STORAGE_KEY_CURRENT_STAFF = "@kitchen_current_staff";
 const STORAGE_KEY_NOTIFS = "@kitchen_notifs_enabled";
@@ -422,6 +433,7 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
   const [functions, setFunctions] = useState<KitchenFunction[]>(SAMPLE_FUNCTIONS);
   const [prepItems, setPrepItems] = useState<PrepItem[]>(SAMPLE_PREP);
   const [staff] = useState<StaffMember[]>(SAMPLE_STAFF);
+  const [sickStaffIds, setSickStaffIds] = useState<string[]>([]);
   const [currentStaffId, setCurrentStaffIdState] = useState<string | null>(null);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [broadcastMessage, setBroadcastState] = useState<BroadcastMessage | null>(null);
@@ -433,7 +445,7 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     (async () => {
       try {
-        const [storedFunctions, storedPrep, storedStaff, storedNotifs, storedBroadcast, storedDismissed] =
+        const [storedFunctions, storedPrep, storedStaff, storedNotifs, storedBroadcast, storedDismissed, storedSick] =
           await Promise.all([
             AsyncStorage.getItem(STORAGE_KEY_FUNCTIONS),
             AsyncStorage.getItem(STORAGE_KEY_PREP),
@@ -441,6 +453,7 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
             AsyncStorage.getItem(STORAGE_KEY_NOTIFS),
             AsyncStorage.getItem(STORAGE_KEY_BROADCAST),
             AsyncStorage.getItem(STORAGE_KEY_DISMISSED),
+            AsyncStorage.getItem(STORAGE_KEY_SICK),
           ]);
         if (storedFunctions) setFunctions(JSON.parse(storedFunctions));
         if (storedPrep) setPrepItems(JSON.parse(storedPrep));
@@ -448,6 +461,7 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
         if (storedNotifs) setNotificationsEnabled(storedNotifs === "true");
         if (storedBroadcast) setBroadcastState(JSON.parse(storedBroadcast));
         if (storedDismissed) setDismissedBroadcastId(storedDismissed);
+        if (storedSick) setSickStaffIds(JSON.parse(storedSick));
       } catch {
         // use defaults
       }
@@ -500,14 +514,30 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
+  const updateFunction = useCallback((id: string, updates: Partial<Omit<KitchenFunction, "id" | "timeline">>) => {
+    setFunctions((prev) => {
+      const updated = prev.map((fn) => fn.id === id ? { ...fn, ...updates } : fn);
+      AsyncStorage.setItem(STORAGE_KEY_FUNCTIONS, JSON.stringify(updated));
+      return updated;
+    });
+  }, []);
+
+  const markStaffSick = useCallback((staffId: string, sick: boolean) => {
+    setSickStaffIds((prev) => {
+      const updated = sick ? [...prev.filter((x) => x !== staffId), staffId] : prev.filter((x) => x !== staffId);
+      AsyncStorage.setItem(STORAGE_KEY_SICK, JSON.stringify(updated));
+      return updated;
+    });
+  }, []);
+
   return (
     <KitchenContext.Provider
       value={{
-        functions, prepItems, staff,
+        functions, prepItems, staff, sickStaffIds,
         currentStaffId, notificationsEnabled,
         broadcastMessage, dismissedBroadcastId,
         setCurrentStaff, setBroadcast, clearBroadcast, dismissBroadcast,
-        togglePrepItem, toggleTimelineItem, todayDate,
+        togglePrepItem, toggleTimelineItem, updateFunction, markStaffSick, todayDate,
       }}
     >
       {children}
