@@ -1,0 +1,8 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "Mbrlr1oWUS-mWgdoZZx_N"
+uri = "file://artifacts/kitchen-app/assets/images/icon.png"
+type = "image"
+title = "generated_image"
