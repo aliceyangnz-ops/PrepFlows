@@ -3,6 +3,7 @@ import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import React, { useRef, useState } from "react";
 import {
+  Alert,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -13,10 +14,9 @@ import {
   TextInput,
   TouchableWithoutFeedback,
   View,
-  Alert,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { BroadcastMessage, useKitchen } from "@/context/KitchenContext";
+import { BroadcastMessage, FunctionType, useKitchen } from "@/context/KitchenContext";
 import { useColors } from "@/hooks/useColors";
 
 function timeToMinutes(t: string) {
@@ -31,6 +31,20 @@ function getRoleColor(role: string, colors: ReturnType<typeof useColors>) {
     case "Pastry Chef": return "#A78BFA";
     case "Casual": return colors.warning;
     default: return colors.mutedForeground;
+  }
+}
+
+function getFunctionTypeColor(type: FunctionType): string {
+  switch (type) {
+    case "A-la-carte": return "#F59E0B";
+    case "Buffet": return "#3B82F6";
+    case "Cocktail": return "#8B5CF6";
+    case "Canapés": return "#22C55E";
+    case "Canapés + A-la-carte": return "#F97316";
+    case "School Ball": return "#EC4899";
+    case "Set Menu": return "#14B8A6";
+    case "High Tea": return "#F43F5E";
+    default: return "#6B7A94";
   }
 }
 
@@ -106,25 +120,12 @@ export default function TodayScreen() {
   const s = StyleSheet.create({
     root: { flex: 1, backgroundColor: colors.background },
     scroll: { flex: 1 },
-    header: {
-      paddingTop: topPad + 16,
-      paddingHorizontal: 20,
-      paddingBottom: 12,
-      flexDirection: "row",
-      alignItems: "flex-end",
-    },
+    header: { paddingTop: topPad + 16, paddingHorizontal: 20, paddingBottom: 12, flexDirection: "row", alignItems: "flex-end" },
     headerLeft: { flex: 1 },
     dateLabel: { fontSize: 12, fontFamily: "Inter_500Medium", color: colors.mutedForeground, letterSpacing: 1, textTransform: "uppercase" },
     headerTitle: { fontSize: 26, fontFamily: "Inter_700Bold", color: colors.foreground, marginTop: 2 },
-    megaBtn: {
-      width: 38, height: 38, borderRadius: 19,
-      alignItems: "center", justifyContent: "center",
-      marginBottom: 4, borderWidth: 1,
-    },
-    broadcastBanner: {
-      marginHorizontal: 20, marginBottom: 14,
-      borderRadius: colors.radius, borderWidth: 1.5, overflow: "hidden",
-    },
+    megaBtn: { width: 38, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center", marginBottom: 4, borderWidth: 1 },
+    broadcastBanner: { marginHorizontal: 20, marginBottom: 14, borderRadius: colors.radius, borderWidth: 1.5, overflow: "hidden" },
     broadcastTop: { flexDirection: "row", alignItems: "flex-start", padding: 14, gap: 10 },
     broadcastIconWrap: { width: 32, height: 32, borderRadius: 16, alignItems: "center", justifyContent: "center", marginTop: 1 },
     broadcastBody: { flex: 1 },
@@ -134,38 +135,20 @@ export default function TodayScreen() {
     broadcastActions: { flexDirection: "row", borderTopWidth: 1 },
     broadcastBtn: { flex: 1, paddingVertical: 11, alignItems: "center" },
     broadcastBtnText: { fontSize: 13, fontFamily: "Inter_600SemiBold" },
-    glanceCard: {
-      marginHorizontal: 20, marginBottom: 14,
-      backgroundColor: colors.card, borderRadius: colors.radius,
-      borderWidth: 1, borderColor: colors.border, overflow: "hidden",
-    },
-    glanceHeader: {
-      flexDirection: "row", alignItems: "center", gap: 8,
-      paddingHorizontal: 14, paddingVertical: 10,
-      borderBottomWidth: 1, borderBottomColor: colors.border,
-      backgroundColor: colors.secondary,
-    },
-    glanceHeaderText: { fontSize: 12, fontFamily: "Inter_700Bold", color: colors.foreground, flex: 1, letterSpacing: 0.3 },
-    glanceRow: {
-      flexDirection: "row", alignItems: "center",
-      paddingHorizontal: 14, paddingVertical: 12,
-      borderBottomWidth: 1, borderBottomColor: colors.border,
-      gap: 10,
-    },
+    glanceCard: { marginHorizontal: 20, marginBottom: 14, backgroundColor: colors.card, borderRadius: colors.radius, borderWidth: 1, borderColor: colors.border, overflow: "hidden" },
+    glanceHeader: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 14, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.border, backgroundColor: colors.secondary },
+    glanceHeaderText: { fontSize: 12, fontFamily: "Inter_700Bold", color: colors.foreground, flex: 1 },
+    glanceRow: { flexDirection: "row", alignItems: "center", paddingHorizontal: 14, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.border, gap: 10 },
     glanceTime: { fontSize: 15, fontFamily: "Inter_700Bold", color: colors.primary, width: 46 },
     glanceInfo: { flex: 1 },
     glanceName: { fontSize: 14, fontFamily: "Inter_600SemiBold", color: colors.foreground },
-    glanceRoom: { fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground, marginTop: 1 },
-    glancePax: {
-      paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8,
-      alignItems: "center", justifyContent: "center",
-    },
+    glanceSub: { fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground, marginTop: 1 },
+    glanceTypePill: { paddingHorizontal: 7, paddingVertical: 3, borderRadius: 6 },
+    glanceTypeText: { fontSize: 10, fontFamily: "Inter_700Bold" },
+    glancePax: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, alignItems: "center" },
     glancePaxNum: { fontSize: 14, fontFamily: "Inter_700Bold" },
     glancePaxLabel: { fontSize: 9, fontFamily: "Inter_500Medium", textTransform: "uppercase", letterSpacing: 0.5 },
-    myCard: {
-      marginHorizontal: 20, marginBottom: 14,
-      borderRadius: colors.radius, borderWidth: 1, overflow: "hidden",
-    },
+    myCard: { marginHorizontal: 20, marginBottom: 14, borderRadius: colors.radius, borderWidth: 1, overflow: "hidden" },
     myCardHeader: { flexDirection: "row", alignItems: "center", paddingHorizontal: 14, paddingVertical: 12, gap: 10 },
     myAvatar: { width: 38, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center" },
     myAvatarText: { fontSize: 14, fontFamily: "Inter_700Bold" },
@@ -175,35 +158,24 @@ export default function TodayScreen() {
     notifPillText: { fontSize: 11, fontFamily: "Inter_600SemiBold" },
     myDivider: { height: 1 },
     myEvents: { padding: 12, gap: 8 },
-    myEventRow: {
-      flexDirection: "row", alignItems: "center", gap: 10,
-      paddingHorizontal: 10, paddingVertical: 8, borderRadius: 8, borderWidth: 1,
-    },
+    myEventRow: { flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 10, paddingVertical: 8, borderRadius: 8, borderWidth: 1 },
     myEventTime: { fontSize: 13, fontFamily: "Inter_700Bold" },
     myEventName: { flex: 1, fontSize: 13, fontFamily: "Inter_500Medium", color: colors.foreground },
-    myEventRoom: { fontSize: 11, fontFamily: "Inter_400Regular", color: colors.mutedForeground },
-    sectionLabel: {
-      fontSize: 11, fontFamily: "Inter_700Bold", color: colors.mutedForeground,
-      letterSpacing: 1.2, textTransform: "uppercase", marginHorizontal: 20, marginBottom: 10,
-    },
-    progressCard: {
-      marginHorizontal: 20, marginBottom: 16,
-      backgroundColor: colors.card, borderRadius: colors.radius,
-      padding: 16, borderWidth: 1, borderColor: colors.border,
-    },
+    myEventSub: { fontSize: 11, fontFamily: "Inter_400Regular", color: colors.mutedForeground },
+    sectionLabel: { fontSize: 11, fontFamily: "Inter_700Bold", color: colors.mutedForeground, letterSpacing: 1.2, textTransform: "uppercase", marginHorizontal: 20, marginBottom: 10 },
+    progressCard: { marginHorizontal: 20, marginBottom: 16, backgroundColor: colors.card, borderRadius: colors.radius, padding: 16, borderWidth: 1, borderColor: colors.border },
     progressRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 8 },
     progressLabel: { fontSize: 14, fontFamily: "Inter_600SemiBold", color: colors.foreground },
     progressCount: { fontSize: 13, fontFamily: "Inter_500Medium", color: colors.mutedForeground },
     progressBar: { height: 6, backgroundColor: colors.border, borderRadius: 3, overflow: "hidden" },
     progressFill: { height: 6, backgroundColor: colors.accent, borderRadius: 3 },
-    fnCard: {
-      marginHorizontal: 20, marginBottom: 12,
-      backgroundColor: colors.card, borderRadius: colors.radius,
-      padding: 16, borderWidth: 1, borderColor: colors.border,
-    },
-    fnRow: { flexDirection: "row", alignItems: "center", marginBottom: 8 },
+    fnCard: { marginHorizontal: 20, marginBottom: 12, backgroundColor: colors.card, borderRadius: colors.radius, padding: 16, borderWidth: 1, borderColor: colors.border },
+    fnRow: { flexDirection: "row", alignItems: "center", marginBottom: 6 },
     fnTime: { fontSize: 13, fontFamily: "Inter_600SemiBold", color: colors.primary, width: 52 },
     fnName: { flex: 1, fontSize: 15, fontFamily: "Inter_600SemiBold", color: colors.foreground },
+    fnTypeLine: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 8 },
+    fnTypePill: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
+    fnTypeText: { fontSize: 11, fontFamily: "Inter_700Bold" },
     fnMeta: { flexDirection: "row", gap: 8, alignItems: "center", flexWrap: "wrap" },
     chip: { flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: colors.secondary, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
     chipText: { fontSize: 11, fontFamily: "Inter_500Medium", color: colors.mutedForeground },
@@ -212,16 +184,9 @@ export default function TodayScreen() {
     avatarText: { fontSize: 11, fontFamily: "Inter_600SemiBold" },
     bottomPad: { height: Platform.OS === "web" ? 34 : insets.bottom + 80 },
     overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.6)", justifyContent: "flex-end" },
-    sheet: {
-      backgroundColor: colors.card, borderTopLeftRadius: 20, borderTopRightRadius: 20,
-      paddingBottom: Platform.OS === "ios" ? insets.bottom + 8 : 24,
-      borderTopWidth: 1, borderColor: colors.border,
-    },
+    sheet: { backgroundColor: colors.card, borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingBottom: Platform.OS === "ios" ? insets.bottom + 8 : 24, borderTopWidth: 1, borderColor: colors.border },
     handle: { width: 36, height: 4, borderRadius: 2, backgroundColor: colors.border, alignSelf: "center", marginTop: 12, marginBottom: 4 },
-    sheetHeader: {
-      flexDirection: "row", alignItems: "center", paddingHorizontal: 20, paddingVertical: 14,
-      borderBottomWidth: 1, borderBottomColor: colors.border, gap: 10,
-    },
+    sheetHeader: { flexDirection: "row", alignItems: "center", paddingHorizontal: 20, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: colors.border, gap: 10 },
     sheetTitle: { flex: 1, fontSize: 17, fontFamily: "Inter_700Bold", color: colors.foreground },
     sheetSub: { fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground, marginTop: 2 },
     closeBtn: { width: 30, height: 30, borderRadius: 15, backgroundColor: colors.secondary, alignItems: "center", justifyContent: "center" },
@@ -244,14 +209,7 @@ export default function TodayScreen() {
           </View>
           {isManager && (
             <Pressable
-              style={({ pressed }) => [
-                s.megaBtn,
-                {
-                  backgroundColor: showBroadcast ? AMBER + "25" : colors.card,
-                  borderColor: showBroadcast ? AMBER + "60" : colors.border,
-                  opacity: pressed ? 0.75 : 1,
-                },
-              ]}
+              style={({ pressed }) => [s.megaBtn, { backgroundColor: showBroadcast ? AMBER + "25" : colors.card, borderColor: showBroadcast ? AMBER + "60" : colors.border, opacity: pressed ? 0.75 : 1 }]}
               onPress={openCompose}
             >
               <Ionicons name="megaphone" size={18} color={showBroadcast ? AMBER : colors.mutedForeground} />
@@ -268,9 +226,7 @@ export default function TodayScreen() {
               <View style={s.broadcastBody}>
                 <Text style={[s.broadcastLabel, { color: AMBER }]}>Message to all staff</Text>
                 <Text style={s.broadcastText}>{broadcastMessage.text}</Text>
-                <Text style={s.broadcastMeta}>
-                  From: {broadcastMessage.senderName} · {broadcastMessage.senderRole} · {formatRelativeTime(broadcastMessage.sentAt)}
-                </Text>
+                <Text style={s.broadcastMeta}>From: {broadcastMessage.senderName} · {broadcastMessage.senderRole} · {formatRelativeTime(broadcastMessage.sentAt)}</Text>
               </View>
             </View>
             <View style={[s.broadcastActions, { borderTopColor: AMBER + "30" }]}>
@@ -301,23 +257,20 @@ export default function TodayScreen() {
             {functions.map((fn, idx) => {
               const fnPrep = prepItems.filter((p) => p.functionId === fn.id);
               const prepDone = fnPrep.filter((p) => p.completed).length;
-              const isLast = idx === functions.length - 1;
+              const tc = getFunctionTypeColor(fn.functionType);
               return (
                 <Pressable
                   key={fn.id}
-                  style={({ pressed }) => [s.glanceRow, { borderBottomWidth: isLast ? 0 : 1, opacity: pressed ? 0.75 : 1 }]}
+                  style={({ pressed }) => [s.glanceRow, { borderBottomWidth: idx === functions.length - 1 ? 0 : 1, opacity: pressed ? 0.75 : 1 }]}
                   onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push(`/function/${fn.id}`); }}
                 >
                   <Text style={s.glanceTime}>{fn.startTime}</Text>
                   <View style={s.glanceInfo}>
                     <Text style={s.glanceName} numberOfLines={1}>{fn.name}</Text>
-                    <Text style={s.glanceRoom}>
-                      Room: {fn.room}  ·  Food ready: {prepDone}/{fnPrep.length}
-                    </Text>
+                    <Text style={s.glanceSub}>Room: {fn.room}  ·  Food ready: {prepDone}/{fnPrep.length}</Text>
                   </View>
-                  <View style={[s.glancePax, { backgroundColor: colors.primary + "18" }]}>
-                    <Text style={[s.glancePaxNum, { color: colors.primary }]}>{fn.guestCount}</Text>
-                    <Text style={[s.glancePaxLabel, { color: colors.primary }]}>guests</Text>
+                  <View style={[s.glanceTypePill, { backgroundColor: tc + "22" }]}>
+                    <Text style={[s.glanceTypeText, { color: tc }]}>{fn.functionType}</Text>
                   </View>
                   <Feather name="chevron-right" size={15} color={colors.mutedForeground} />
                 </Pressable>
@@ -332,15 +285,11 @@ export default function TodayScreen() {
             <View style={[s.myCard, { backgroundColor: rc + "10", borderColor: rc + "40" }]}>
               <View style={s.myCardHeader}>
                 <View style={[s.myAvatar, { backgroundColor: rc + "30" }]}>
-                  <Text style={[s.myAvatarText, { color: rc }]}>
-                    {currentMember.name.split(" ").map((n) => n[0]).join("")}
-                  </Text>
+                  <Text style={[s.myAvatarText, { color: rc }]}>{currentMember.name.split(" ").map((n) => n[0]).join("")}</Text>
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={s.myName}>{currentMember.name}</Text>
-                  <Text style={[s.myRole, { color: rc }]}>
-                    {currentMember.role} · Shift {currentMember.shiftStart}–{currentMember.shiftEnd}
-                  </Text>
+                  <Text style={[s.myRole, { color: rc }]}>{currentMember.role} · Shift {currentMember.shiftStart}–{currentMember.shiftEnd}</Text>
                 </View>
                 <View style={[s.notifPill, { backgroundColor: notificationsEnabled ? colors.accent + "20" : colors.secondary }]}>
                   <Ionicons name={notificationsEnabled ? "notifications" : "notifications-off"} size={12} color={notificationsEnabled ? colors.accent : colors.mutedForeground} />
@@ -353,20 +302,22 @@ export default function TodayScreen() {
                 <>
                   <View style={[s.myDivider, { backgroundColor: rc + "30" }]} />
                   <View style={s.myEvents}>
-                    {myFunctions.map((fn) => (
-                      <Pressable
-                        key={fn.id}
-                        style={({ pressed }) => [s.myEventRow, { backgroundColor: rc + "12", borderColor: rc + "30" }, pressed && { opacity: 0.8 }]}
-                        onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push(`/function/${fn.id}`); }}
-                      >
-                        <Text style={[s.myEventTime, { color: rc }]}>{fn.startTime}</Text>
-                        <View style={{ flex: 1 }}>
-                          <Text style={s.myEventName} numberOfLines={1}>{fn.name}</Text>
-                          <Text style={s.myEventRoom}>Room: {fn.room} · {fn.guestCount} guests</Text>
-                        </View>
-                        <Feather name="chevron-right" size={14} color={colors.mutedForeground} />
-                      </Pressable>
-                    ))}
+                    {myFunctions.map((fn) => {
+                      const tc = getFunctionTypeColor(fn.functionType);
+                      return (
+                        <Pressable key={fn.id} style={({ pressed }) => [s.myEventRow, { backgroundColor: rc + "12", borderColor: rc + "30" }, pressed && { opacity: 0.8 }]} onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push(`/function/${fn.id}`); }}>
+                          <Text style={[s.myEventTime, { color: rc }]}>{fn.startTime}</Text>
+                          <View style={{ flex: 1 }}>
+                            <Text style={s.myEventName} numberOfLines={1}>{fn.name}</Text>
+                            <Text style={s.myEventSub}>Room: {fn.room} · {fn.guestCount} guests</Text>
+                          </View>
+                          <View style={[s.glanceTypePill, { backgroundColor: tc + "22" }]}>
+                            <Text style={[s.glanceTypeText, { color: tc }]}>{fn.functionType}</Text>
+                          </View>
+                          <Feather name="chevron-right" size={14} color={colors.mutedForeground} />
+                        </Pressable>
+                      );
+                    })}
                   </View>
                 </>
               )}
@@ -388,16 +339,25 @@ export default function TodayScreen() {
         <Text style={s.sectionLabel}>All Events</Text>
         {functions.map((fn) => {
           const fnStaff = staff.filter((st) => fn.teamIds.includes(st.id));
+          const tc = getFunctionTypeColor(fn.functionType);
           return (
-            <Pressable
-              key={fn.id}
-              style={({ pressed }) => [s.fnCard, pressed && { opacity: 0.8 }]}
-              onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push(`/function/${fn.id}`); }}
-            >
+            <Pressable key={fn.id} style={({ pressed }) => [s.fnCard, pressed && { opacity: 0.8 }]} onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push(`/function/${fn.id}`); }}>
               <View style={s.fnRow}>
                 <Text style={s.fnTime}>{fn.startTime}</Text>
                 <Text style={s.fnName} numberOfLines={1}>{fn.name}</Text>
                 <Feather name="chevron-right" size={16} color={colors.mutedForeground} />
+              </View>
+              <View style={s.fnTypeLine}>
+                <View style={[s.fnTypePill, { backgroundColor: tc + "22" }]}>
+                  <Text style={[s.fnTypeText, { color: tc }]}>{fn.functionType}</Text>
+                </View>
+                {fn.functionType === "A-la-carte" && fn.serviceTimes && (
+                  <>
+                    {fn.serviceTimes.entree && <Text style={{ fontSize: 11, fontFamily: "Inter_400Regular", color: colors.mutedForeground }}>Ent: {fn.serviceTimes.entree}</Text>}
+                    {fn.serviceTimes.main && <Text style={{ fontSize: 11, fontFamily: "Inter_400Regular", color: colors.mutedForeground }}>Main: {fn.serviceTimes.main}</Text>}
+                    {fn.serviceTimes.dessert && <Text style={{ fontSize: 11, fontFamily: "Inter_400Regular", color: colors.mutedForeground }}>Des: {fn.serviceTimes.dessert}</Text>}
+                  </>
+                )}
               </View>
               <View style={s.fnMeta}>
                 <View style={s.chip}>
@@ -411,17 +371,8 @@ export default function TodayScreen() {
               </View>
               <View style={s.teamRow}>
                 {fnStaff.map((member) => (
-                  <View
-                    key={member.id}
-                    style={[s.avatar, {
-                      backgroundColor: getRoleColor(member.role, colors) + "25",
-                      borderWidth: currentStaffId === member.id ? 1.5 : 0,
-                      borderColor: getRoleColor(member.role, colors),
-                    }]}
-                  >
-                    <Text style={[s.avatarText, { color: getRoleColor(member.role, colors) }]}>
-                      {member.name.split(" ").map((n) => n[0]).join("")}
-                    </Text>
+                  <View key={member.id} style={[s.avatar, { backgroundColor: getRoleColor(member.role, colors) + "25", borderWidth: currentStaffId === member.id ? 1.5 : 0, borderColor: getRoleColor(member.role, colors) }]}>
+                    <Text style={[s.avatarText, { color: getRoleColor(member.role, colors) }]}>{member.name.split(" ").map((n) => n[0]).join("")}</Text>
                   </View>
                 ))}
               </View>
@@ -449,30 +400,12 @@ export default function TodayScreen() {
                     </Pressable>
                   </View>
                   <Pressable style={s.inputWrap} onPress={() => inputRef.current?.focus()}>
-                    <TextInput
-                      ref={inputRef}
-                      style={s.textInput}
-                      placeholder="Type your message here…"
-                      placeholderTextColor={colors.mutedForeground}
-                      multiline
-                      maxLength={200}
-                      value={draftText}
-                      onChangeText={setDraftText}
-                      autoFocus
-                    />
+                    <TextInput ref={inputRef} style={s.textInput} placeholder="Type your message here…" placeholderTextColor={colors.mutedForeground} multiline maxLength={200} value={draftText} onChangeText={setDraftText} autoFocus />
                   </Pressable>
-                  <Text style={[s.charCount, { color: draftText.length > 160 ? colors.warning : colors.mutedForeground }]}>
-                    {draftText.length}/200
-                  </Text>
-                  <Pressable
-                    style={({ pressed }) => [s.sendBtn, { backgroundColor: draftText.trim().length > 0 ? AMBER : colors.secondary, opacity: pressed ? 0.85 : 1 }]}
-                    onPress={sendBroadcast}
-                    disabled={draftText.trim().length === 0}
-                  >
+                  <Text style={[s.charCount, { color: draftText.length > 160 ? colors.warning : colors.mutedForeground }]}>{draftText.length}/200</Text>
+                  <Pressable style={({ pressed }) => [s.sendBtn, { backgroundColor: draftText.trim().length > 0 ? AMBER : colors.secondary, opacity: pressed ? 0.85 : 1 }]} onPress={sendBroadcast} disabled={draftText.trim().length === 0}>
                     <Ionicons name="megaphone" size={16} color={draftText.trim().length > 0 ? "#fff" : colors.mutedForeground} />
-                    <Text style={[s.sendBtnText, { color: draftText.trim().length > 0 ? "#fff" : colors.mutedForeground }]}>
-                      Send to all staff
-                    </Text>
+                    <Text style={[s.sendBtnText, { color: draftText.trim().length > 0 ? "#fff" : colors.mutedForeground }]}>Send to all staff</Text>
                   </Pressable>
                   <View style={s.tipRow}>
                     <Ionicons name="information-circle-outline" size={14} color={colors.mutedForeground} />

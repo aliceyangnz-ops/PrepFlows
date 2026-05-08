@@ -2,24 +2,30 @@ import { Feather, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import React from "react";
-import {
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useKitchen } from "@/context/KitchenContext";
+import { FunctionType, useKitchen } from "@/context/KitchenContext";
 import { useColors } from "@/hooks/useColors";
+
+function getFunctionTypeColor(type: FunctionType): string {
+  switch (type) {
+    case "A-la-carte": return "#F59E0B";
+    case "Buffet": return "#3B82F6";
+    case "Cocktail": return "#8B5CF6";
+    case "Canapés": return "#22C55E";
+    case "Canapés + A-la-carte": return "#F97316";
+    case "School Ball": return "#EC4899";
+    case "Set Menu": return "#14B8A6";
+    case "High Tea": return "#F43F5E";
+    default: return "#6B7A94";
+  }
+}
 
 export default function FunctionsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { functions, staff, prepItems } = useKitchen();
-
   const topPad = Platform.OS === "web" ? 67 : insets.top;
 
   function getRoleColor(role: string) {
@@ -37,51 +43,37 @@ export default function FunctionsScreen() {
     header: { paddingTop: topPad + 16, paddingHorizontal: 20, paddingBottom: 16 },
     title: { fontSize: 26, fontFamily: "Inter_700Bold", color: colors.foreground },
     subtitle: { fontSize: 13, fontFamily: "Inter_400Regular", color: colors.mutedForeground, marginTop: 2 },
-    card: {
-      marginHorizontal: 20, marginBottom: 16,
-      backgroundColor: colors.card, borderRadius: colors.radius,
-      borderWidth: 1, borderColor: colors.border, overflow: "hidden",
-    },
-    cardTop: {
-      backgroundColor: colors.primary + "15",
-      borderBottomWidth: 1, borderBottomColor: colors.border,
-      padding: 14, flexDirection: "row", alignItems: "center", gap: 10,
-    },
+    card: { marginHorizontal: 20, marginBottom: 16, backgroundColor: colors.card, borderRadius: colors.radius, borderWidth: 1, borderColor: colors.border, overflow: "hidden" },
+    cardTop: { borderBottomWidth: 1, borderBottomColor: colors.border, padding: 14 },
+    cardTopRow: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 8 },
     timePill: { backgroundColor: colors.primary, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
     timePillText: { fontSize: 15, fontFamily: "Inter_700Bold", color: "#fff" },
     cardName: { flex: 1, fontSize: 16, fontFamily: "Inter_700Bold", color: colors.foreground },
-    keyInfoRow: {
-      flexDirection: "row", borderBottomWidth: 1, borderBottomColor: colors.border,
-    },
-    keyInfoBox: {
-      flex: 1, padding: 12, alignItems: "center", justifyContent: "center",
-      borderRightWidth: 1, borderRightColor: colors.border,
-    },
+    typeRow: { flexDirection: "row", alignItems: "center", gap: 8, flexWrap: "wrap" },
+    typePill: { paddingHorizontal: 9, paddingVertical: 4, borderRadius: 6, borderWidth: 1 },
+    typeText: { fontSize: 12, fontFamily: "Inter_700Bold" },
+    courseTime: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, backgroundColor: colors.secondary },
+    courseTimeLabel: { fontSize: 10, fontFamily: "Inter_700Bold", color: colors.mutedForeground, textTransform: "uppercase", letterSpacing: 0.5 },
+    courseTimeValue: { fontSize: 11, fontFamily: "Inter_600SemiBold", color: colors.foreground },
+    keyInfoRow: { flexDirection: "row", borderBottomWidth: 1, borderBottomColor: colors.border },
+    keyInfoBox: { flex: 1, padding: 12, alignItems: "center", justifyContent: "center", borderRightWidth: 1, borderRightColor: colors.border },
     keyInfoNum: { fontSize: 20, fontFamily: "Inter_700Bold" },
     keyInfoLabel: { fontSize: 10, fontFamily: "Inter_600SemiBold", color: colors.mutedForeground, textTransform: "uppercase", letterSpacing: 0.8, marginTop: 2 },
     body: { padding: 14, gap: 14 },
     sectionHead: { fontSize: 12, fontFamily: "Inter_700Bold", color: colors.mutedForeground, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 6 },
+    roomValue: { fontSize: 16, fontFamily: "Inter_600SemiBold", color: colors.foreground },
     menuRow: { flexDirection: "row", alignItems: "flex-start", gap: 8, paddingVertical: 3 },
     menuDot: { width: 6, height: 6, borderRadius: 3, marginTop: 5 },
     menuText: { fontSize: 13, fontFamily: "Inter_400Regular", color: colors.foreground, flex: 1, lineHeight: 20 },
     teamWrap: { flexDirection: "row", gap: 6, flexWrap: "wrap" },
-    teamBadge: {
-      flexDirection: "row", alignItems: "center", gap: 6,
-      paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, borderWidth: 1,
-    },
+    teamBadge: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, borderWidth: 1 },
     teamDot: { width: 8, height: 8, borderRadius: 4 },
     teamName: { fontSize: 13, fontFamily: "Inter_600SemiBold" },
     teamRole: { fontSize: 10, fontFamily: "Inter_400Regular" },
-    viewBtn: {
-      marginHorizontal: 14, marginBottom: 14,
-      backgroundColor: colors.primary,
-      borderRadius: colors.radius - 2,
-      paddingVertical: 12,
-      flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8,
-    },
-    viewBtnText: { fontSize: 14, fontFamily: "Inter_700Bold", color: "#fff" },
     progressBarWrap: { height: 5, backgroundColor: colors.border, borderRadius: 3, overflow: "hidden", marginTop: 4 },
     progressBarFill: { height: 5, borderRadius: 3 },
+    viewBtn: { marginHorizontal: 14, marginBottom: 14, backgroundColor: colors.primary, borderRadius: colors.radius - 2, paddingVertical: 12, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 },
+    viewBtnText: { fontSize: 14, fontFamily: "Inter_700Bold", color: "#fff" },
     bottomPad: { height: Platform.OS === "web" ? 34 : insets.bottom + 80 },
   });
 
@@ -90,7 +82,7 @@ export default function FunctionsScreen() {
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={s.header}>
           <Text style={s.title}>Events</Text>
-          <Text style={s.subtitle}>{functions.length} events on today — tap any event for full details</Text>
+          <Text style={s.subtitle}>{functions.length} events today — tap any event for full details</Text>
         </View>
 
         {functions.map((fn) => {
@@ -99,15 +91,51 @@ export default function FunctionsScreen() {
           const prepDone = fnPrep.filter((p) => p.completed).length;
           const stepsDone = fn.timeline.filter((t) => t.completed).length;
           const prepPct = fnPrep.length > 0 ? prepDone / fnPrep.length : 0;
+          const tc = getFunctionTypeColor(fn.functionType);
+          const isAlaCarte = fn.functionType === "A-la-carte" || fn.functionType === "Canapés + A-la-carte";
 
           return (
             <View key={fn.id} style={s.card}>
               <View style={s.cardTop}>
-                <View style={s.timePill}>
-                  <Text style={s.timePillText}>{fn.startTime}</Text>
+                <View style={s.cardTopRow}>
+                  <View style={s.timePill}><Text style={s.timePillText}>{fn.startTime}</Text></View>
+                  <Text style={s.cardName} numberOfLines={1}>{fn.name}</Text>
+                  <Feather name="chevron-right" size={16} color={colors.mutedForeground} />
                 </View>
-                <Text style={s.cardName} numberOfLines={1}>{fn.name}</Text>
-                <Feather name="chevron-right" size={16} color={colors.mutedForeground} />
+
+                <View style={s.typeRow}>
+                  <View style={[s.typePill, { backgroundColor: tc + "20", borderColor: tc + "50" }]}>
+                    <Text style={[s.typeText, { color: tc }]}>{fn.functionType}</Text>
+                  </View>
+                  {isAlaCarte && fn.serviceTimes && (
+                    <>
+                      {fn.serviceTimes.amuse && (
+                        <View style={s.courseTime}>
+                          <Text style={s.courseTimeLabel}>Amuse</Text>
+                          <Text style={s.courseTimeValue}>{fn.serviceTimes.amuse}</Text>
+                        </View>
+                      )}
+                      {fn.serviceTimes.entree && (
+                        <View style={s.courseTime}>
+                          <Text style={s.courseTimeLabel}>Ent.</Text>
+                          <Text style={s.courseTimeValue}>{fn.serviceTimes.entree}</Text>
+                        </View>
+                      )}
+                      {fn.serviceTimes.main && (
+                        <View style={s.courseTime}>
+                          <Text style={s.courseTimeLabel}>Main</Text>
+                          <Text style={s.courseTimeValue}>{fn.serviceTimes.main}</Text>
+                        </View>
+                      )}
+                      {fn.serviceTimes.dessert && (
+                        <View style={s.courseTime}>
+                          <Text style={s.courseTimeLabel}>Des.</Text>
+                          <Text style={s.courseTimeValue}>{fn.serviceTimes.dessert}</Text>
+                        </View>
+                      )}
+                    </>
+                  )}
+                </View>
               </View>
 
               <View style={s.keyInfoRow}>
@@ -120,9 +148,7 @@ export default function FunctionsScreen() {
                   <Text style={s.keyInfoLabel}>Service time</Text>
                 </View>
                 <View style={[s.keyInfoBox, { borderRightWidth: 0 }]}>
-                  <Text style={[s.keyInfoNum, { color: prepPct === 1 ? colors.accent : colors.warning }]}>
-                    {prepDone}/{fnPrep.length}
-                  </Text>
+                  <Text style={[s.keyInfoNum, { color: prepPct === 1 ? colors.accent : colors.warning }]}>{prepDone}/{fnPrep.length}</Text>
                   <Text style={s.keyInfoLabel}>Food ready</Text>
                   <View style={s.progressBarWrap}>
                     <View style={[s.progressBarFill, { width: `${prepPct * 100}%`, backgroundColor: prepPct === 1 ? colors.accent : colors.warning }]} />
@@ -136,7 +162,7 @@ export default function FunctionsScreen() {
                     <MaterialCommunityIcons name="door" size={13} color={colors.mutedForeground} />
                     <Text style={[s.sectionHead, { marginBottom: 0 }]}>Room</Text>
                   </View>
-                  <Text style={{ fontSize: 16, fontFamily: "Inter_600SemiBold", color: colors.foreground }}>{fn.room}</Text>
+                  <Text style={s.roomValue}>{fn.room}</Text>
                 </View>
 
                 <View>
@@ -186,13 +212,7 @@ export default function FunctionsScreen() {
                 </View>
               </View>
 
-              <Pressable
-                style={({ pressed }) => [s.viewBtn, pressed && { opacity: 0.8 }]}
-                onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  router.push(`/function/${fn.id}`);
-                }}
-              >
+              <Pressable style={({ pressed }) => [s.viewBtn, pressed && { opacity: 0.8 }]} onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push(`/function/${fn.id}`); }}>
                 <Text style={s.viewBtnText}>Open full details</Text>
                 <Feather name="arrow-right" size={15} color="#fff" />
               </Pressable>

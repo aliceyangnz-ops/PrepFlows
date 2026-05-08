@@ -8,15 +8,35 @@ export interface TimelineItem {
   completed: boolean;
 }
 
+export type FunctionType =
+  | "A-la-carte"
+  | "Buffet"
+  | "Cocktail"
+  | "Canapés"
+  | "Canapés + A-la-carte"
+  | "School Ball"
+  | "Set Menu"
+  | "High Tea";
+
+export interface ServiceTimes {
+  amuse?: string;
+  entree?: string;
+  main?: string;
+  dessert?: string;
+  supper?: string;
+}
+
 export interface KitchenFunction {
   id: string;
   name: string;
   room: string;
+  functionType: FunctionType;
   startTime: string;
   endTime: string;
   guestCount: number;
   status: "upcoming" | "active" | "completed";
   menu: string[];
+  serviceTimes?: ServiceTimes;
   teamIds: string[];
   timeline: TimelineItem[];
 }
@@ -61,69 +81,184 @@ const SAMPLE_FUNCTIONS: KitchenFunction[] = [
     id: "f1",
     name: "Harrison Wedding Luncheon",
     room: "Ballroom A",
+    functionType: "A-la-carte",
     startTime: "12:00",
     endTime: "15:00",
     guestCount: 280,
     status: "upcoming",
-    menu: ["Entrée: Prawn Cocktail", "Main: Roasted Eye Fillet", "Side: Truffle Potato Gratin", "Dessert: Panna Cotta"],
+    serviceTimes: {
+      entree: "12:00",
+      main: "12:35",
+      dessert: "13:30",
+    },
+    menu: [
+      "Entrée: Prawn Cocktail — tiger prawns, Marie Rose, iceberg, lemon",
+      "Main: Roasted MSA Eye Fillet — béarnaise, truffle gratin, broccolini",
+      "Dessert: Vanilla Panna Cotta — berry coulis, micro herbs",
+    ],
     teamIds: ["s1", "s2", "s3"],
     timeline: [
-      { id: "t1", time: "06:00", task: "Mise en place", completed: true },
-      { id: "t2", time: "08:00", task: "Main protein prep", completed: true },
-      { id: "t3", time: "10:00", task: "Sauces & garnishes", completed: false },
-      { id: "t4", time: "11:30", task: "Ballroom A setup", completed: false },
-      { id: "t5", time: "12:00", task: "Service begins", completed: false },
+      { id: "t1", time: "06:00", task: "Mise en place — all stations set, benches clear, HACCP sheets started", completed: true },
+      { id: "t2", time: "08:00", task: "Eye fillet: trim sinew, truss, portion 220g × 280. Season & hold chilled", completed: true },
+      { id: "t3", time: "10:00", task: "Béarnaise reduction on. Gratin into deck oven 180°C. Cocktail sauce bottled", completed: false },
+      { id: "t4", time: "11:30", task: "Ballroom A service check — crockery polished, mise en place on pass", completed: false },
+      { id: "t5", time: "12:00", task: "Entrée away — prawn cocktail plated & fired", completed: false },
+      { id: "t6", time: "12:35", task: "Fire mains — sear fillet in clarified butter, finish 180°C to 54°C core", completed: false },
+      { id: "t7", time: "13:30", task: "Dessert away — panna cotta garnished & plated", completed: false },
     ],
   },
   {
     id: "f2",
     name: "Corporate Boardroom Lunch",
     room: "Suite 3",
+    functionType: "A-la-carte",
     startTime: "13:00",
     endTime: "14:30",
     guestCount: 18,
     status: "upcoming",
-    menu: ["Starter: Antipasto Platter", "Main: Chicken Supreme", "Dessert: Chocolate Fondant"],
+    serviceTimes: {
+      entree: "13:00",
+      main: "13:25",
+      dessert: "14:05",
+    },
+    menu: [
+      "Starter: Antipasto — cured meats, giardiniera, grissini, EVOO",
+      "Main: Chicken Supreme — airline breast, jus lié, pomme purée, seasonal greens",
+      "Dessert: Chocolate Fondant — Valrhona 70%, crème anglaise, vanilla ice cream",
+    ],
     teamIds: ["s1"],
     timeline: [
-      { id: "t6", time: "09:00", task: "Prep all courses", completed: true },
-      { id: "t7", time: "12:30", task: "Suite 3 setup", completed: false },
-      { id: "t8", time: "13:00", task: "Service begins", completed: false },
+      { id: "t8", time: "09:00", task: "Mise en place — fondant batter made & chilled. Chicken trimmed & portioned 200g", completed: true },
+      { id: "t9", time: "12:30", task: "Suite 3 set — crockery & cutlery polished, water poured", completed: false },
+      { id: "t10", time: "13:00", task: "Fire entrée — antipasto platters dressed & away", completed: false },
+      { id: "t11", time: "13:25", task: "Fire mains — sear chicken skin-down 3min, flip, finish 180°C to 74°C core. Rest 5min", completed: false },
+      { id: "t12", time: "14:05", task: "Fire fondants 200°C/8min to order — jiggly centre only. Plate immediately", completed: false },
     ],
   },
   {
     id: "f3",
     name: "Gala Dinner",
     room: "Grand Ballroom",
+    functionType: "A-la-carte",
     startTime: "19:00",
     endTime: "23:00",
     guestCount: 450,
     status: "upcoming",
-    menu: ["Amuse-bouche: Wagyu Tartare", "Entrée: Seared Scallop", "Soup: Lobster Bisque", "Main: Beef Wellington", "Dessert: Croquembouche"],
+    serviceTimes: {
+      amuse: "19:00",
+      entree: "19:30",
+      main: "20:30",
+      dessert: "21:45",
+    },
+    menu: [
+      "Amuse-bouche: Wagyu Tartare — shallot, capers, Dijon, quail yolk, crostini",
+      "Entrée: Seared Scallop — U10, cauliflower purée, crispy pancetta, micro watercress",
+      "Soup: Lobster Bisque — roasted shell base, brandy flambe, 35% cream",
+      "Main: Beef Wellington — MSA fillet, duxelles, filo, Madeira jus",
+      "Dessert: Croquembouche — choux, crème pât, spun toffee (30 pax per tower)",
+    ],
     teamIds: ["s1", "s2", "s4", "s5"],
     timeline: [
-      { id: "t9", time: "07:00", task: "Begin Beef Wellington prep", completed: false },
-      { id: "t10", time: "10:00", task: "Pastry & desserts", completed: false },
-      { id: "t11", time: "14:00", task: "Sauces & reductions", completed: false },
-      { id: "t12", time: "17:00", task: "Grand Ballroom setup", completed: false },
-      { id: "t13", time: "19:00", task: "Gala service begins", completed: false },
+      { id: "t13", time: "07:00", task: "Wellington: sear fillet all sides smoking pan 30sec/side. Chill to 4°C. Duxelles on", completed: false },
+      { id: "t14", time: "09:00", task: "Duxelles reduce dry — no moisture. Assemble Wellingtons, wrap filo, chill", completed: false },
+      { id: "t15", time: "10:00", task: "Pastry: choux batter, bake 200°C/18min no peeking. Fill with crème pât < 5°C", completed: false },
+      { id: "t16", time: "13:00", task: "Bisque: roast shells, flambe brandy, add stock, reduce by 1/3. Strain. Taste & season", completed: false },
+      { id: "t17", time: "15:00", task: "Scallops dry on paper towel — critical for sear. Cauliflower purée blended smooth", completed: false },
+      { id: "t18", time: "17:00", task: "Grand Ballroom set — all crockery polished, pass mise en place complete", completed: false },
+      { id: "t19", time: "18:30", task: "Croquembouche assembly. 15 towers × 30 pax. Keep dry — NO humidity", completed: false },
+      { id: "t20", time: "19:00", task: "Amuse away — wagyu tartare plated × 450", completed: false },
+      { id: "t21", time: "19:30", task: "Fire entrée — scallops: sear smoking clarified butter 90sec/side, do NOT move", completed: false },
+      { id: "t22", time: "20:30", task: "Fire Wellingtons: 220°C/12min to 54°C core. Rest 5min tented. Madeira jus reheated", completed: false },
+      { id: "t23", time: "21:45", task: "Dessert away — croquembouche on tables, spun toffee on last", completed: false },
     ],
   },
 ];
 
 const SAMPLE_PREP: PrepItem[] = [
-  { id: "p1", functionId: "f1", category: "Proteins", dish: "Eye Fillet", quantity: "280 portions × 220g", note: "Trim, tie, rest at room temp 30min before", completed: true },
-  { id: "p2", functionId: "f1", category: "Proteins", dish: "Prawn Cocktail", quantity: "280 portions × 5 prawns", note: "Poach, chill overnight", completed: true },
-  { id: "p3", functionId: "f1", category: "Sauces", dish: "Béarnaise Sauce", quantity: "12 litres", note: "Hold at 60°C, make fresh", completed: false },
-  { id: "p4", functionId: "f1", category: "Sauces", dish: "Cocktail Sauce", quantity: "5 litres", note: "Refrigerate", completed: true },
-  { id: "p5", functionId: "f1", category: "Sides", dish: "Truffle Potato Gratin", quantity: "280 portions", note: "Bake at 180°C 45min, portion before service", completed: false },
-  { id: "p6", functionId: "f1", category: "Pastry", dish: "Panna Cotta", quantity: "290 portions (10 spare)", note: "Set overnight, garnish AM", completed: true },
-  { id: "p7", functionId: "f2", category: "Proteins", dish: "Chicken Supreme", quantity: "20 portions × 200g", note: "Pan-sear, finish in oven", completed: true },
-  { id: "p8", functionId: "f2", category: "Pastry", dish: "Chocolate Fondant", quantity: "20 portions", note: "Bake to order — 8 min at 200°C", completed: false },
-  { id: "p9", functionId: "f3", category: "Proteins", dish: "Beef Wellington", quantity: "450 portions × 180g", note: "Prep duxelles, wrap in filo, freeze briefly before service", completed: false },
-  { id: "p10", functionId: "f3", category: "Proteins", dish: "Seared Scallop", quantity: "900 pieces (2 per portion)", note: "Dry scallops on paper towel 2h before", completed: false },
-  { id: "p11", functionId: "f3", category: "Sauces", dish: "Lobster Bisque", quantity: "200 litres", note: "Reduce by 1/3 before service", completed: false },
-  { id: "p12", functionId: "f3", category: "Pastry", dish: "Croquembouche", quantity: "15 towers (30 guests per tower)", note: "Assemble day-of, keep dry", completed: false },
+  {
+    id: "p1", functionId: "f1", category: "Proteins",
+    dish: "MSA Eye Fillet",
+    quantity: "280 portions × 220g (62kg total)",
+    note: "Trim sinew & silverskin. Truss with butcher's twine. Season sea salt both sides. Chill until service. Sear in clarified butter all sides. Finish 180°C deck oven to 54°C core (med-rare). Rest 3min.",
+    completed: true,
+  },
+  {
+    id: "p2", functionId: "f1", category: "Proteins",
+    dish: "Tiger Prawn Cocktail",
+    quantity: "280 portions × 5 prawns (1,400 prawns, approx. 14kg)",
+    note: "Poach green tiger prawns @ 70°C/3min. Refresh ice bath immediately. Peel, devein, dry on paper towel. Refrigerate covered overnight. 5 prawns per serve.",
+    completed: true,
+  },
+  {
+    id: "p3", functionId: "f1", category: "Sauces",
+    dish: "Béarnaise Sauce",
+    quantity: "12L (approx. 40mL per serve + 20% buffer)",
+    note: "Classic white wine & tarragon reduction. Whisk egg yolks to ribbon stage over bain-marie. Stream in 8kg clarified butter. Hold in bain-marie at 60°C. Make fresh — do not batch > 2h pre-service. Discard if grainy.",
+    completed: false,
+  },
+  {
+    id: "p4", functionId: "f1", category: "Sauces",
+    dish: "Marie Rose Cocktail Sauce",
+    quantity: "5L",
+    note: "Combine: mayo, tomato sauce, Worcestershire, Tabasco, lemon juice. Season. Fill squeeze bottles. Temp check < 5°C before service. Label & date.",
+    completed: true,
+  },
+  {
+    id: "p5", functionId: "f1", category: "Sides",
+    dish: "Truffle Potato Gratin",
+    quantity: "280 portions (8 full gastros × 35 portions each)",
+    note: "Mandoline slice Nicola potatoes 1.5mm. Layer with truffle cream (300mL truflle oil per gastro) & gruyère. Bake 180°C/45min under foil, uncover last 10min. Rest 20min before portioning 4×7 cuts per gastro.",
+    completed: false,
+  },
+  {
+    id: "p6", functionId: "f1", category: "Pastry",
+    dish: "Vanilla Panna Cotta",
+    quantity: "290 portions (10 spare) — 1L mix per 5 serves",
+    note: "3.5 gold gelatine leaves per litre. Warm cream to 60°C, dissolve gelatine. Vanilla bean split & scraped. Set overnight at 4°C. Garnish AM: berry coulis 20mL per pot, micro herbs. Temp check < 5°C.",
+    completed: true,
+  },
+  {
+    id: "p7", functionId: "f2", category: "Proteins",
+    dish: "Chicken Supreme — Airline Breast",
+    quantity: "20 portions × 200g (skin on)",
+    note: "Score skin. Season both sides. Sear skin-down in clarified butter 3min until golden — do not move. Flip, baste. Finish 180°C/8min to 74°C core (probe check). Rest 5min tented foil. Jus lié 30mL per serve.",
+    completed: true,
+  },
+  {
+    id: "p8", functionId: "f2", category: "Pastry",
+    dish: "Chocolate Fondant",
+    quantity: "20 portions (+4 spares for test bakes)",
+    note: "Valrhona 70% ganache centre — freeze solid at -18°C minimum 4h. Batter: dark choc, butter, eggs, sugar, flour. Ramekins buttered & dusted. Fire to order 200°C/8min — centre must jiggle. Test bake at service start. Do NOT pre-bake.",
+    completed: false,
+  },
+  {
+    id: "p9", functionId: "f3", category: "Proteins",
+    dish: "Beef Wellington — MSA Fillet",
+    quantity: "450 portions × 180g (81kg fillet total)",
+    note: "Sear all sides in smoking-hot pan, 30sec per side — deep Maillard crust. Chill to 4°C before wrapping. Duxelles: 200g per kg beef — button mushroom, shallot, thyme, reduce bone dry. Brush with Dijon. Wrap filo 3 sheets, seam-down. Chill. Fire: 220°C/12min to 54°C core. Rest 5min tented.",
+    completed: false,
+  },
+  {
+    id: "p10", functionId: "f3", category: "Proteins",
+    dish: "Seared Scallop — U10",
+    quantity: "900 pieces × 2 per serve (approx. 45kg)",
+    note: "U10 scallops, roe off. Dry on paper towel minimum 2h — CRITICAL for sear. Hot smoking clarified butter. Sear 90sec each side — do NOT move. Golden crust. Serve immediately. Cauliflower purée: 60g per plate, warm.",
+    completed: false,
+  },
+  {
+    id: "p11", functionId: "f3", category: "Sauces",
+    dish: "Lobster Bisque",
+    quantity: "200L (450mL per serve)",
+    note: "Roast lobster shells 220°C/20min. Sweat mirepoix, add shells, brandy flambe. Add fish stock & tomato paste. Simmer 40min, strain fine chinois. Reduce by 1/3. Finish with 35% cream. Season. Temp check 75°C+ before service. Hold in bain-marie.",
+    completed: false,
+  },
+  {
+    id: "p12", functionId: "f3", category: "Pastry",
+    dish: "Croquembouche",
+    quantity: "15 towers × 30 pax (450 total)",
+    note: "Choux: bake 200°C/18min — NO peeking, do not open oven. Cool on rack. Fill with crème pâtissière (cool to < 5°C before filling). Toffee: 165°C amber. Dip puffs, build cone. Spun toffee wrap last. Assemble day-of. Keep dry — NO humidity or toffee weeps.",
+    completed: false,
+  },
 ];
 
 interface KitchenContextType {
@@ -145,7 +280,7 @@ interface KitchenContextType {
 
 const KitchenContext = createContext<KitchenContextType | null>(null);
 
-const STORAGE_KEY_FUNCTIONS = "@kitchen_functions";
+const STORAGE_KEY_FUNCTIONS = "@kitchen_functions_v2";
 const STORAGE_KEY_PREP = "@kitchen_prep";
 const STORAGE_KEY_CURRENT_STAFF = "@kitchen_current_staff";
 const STORAGE_KEY_NOTIFS = "@kitchen_notifs_enabled";
@@ -226,12 +361,7 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
     setFunctions((prev) => {
       const updated = prev.map((fn) =>
         fn.id === functionId
-          ? {
-              ...fn,
-              timeline: fn.timeline.map((t) =>
-                t.id === timelineId ? { ...t, completed: !t.completed } : t
-              ),
-            }
+          ? { ...fn, timeline: fn.timeline.map((t) => t.id === timelineId ? { ...t, completed: !t.completed } : t) }
           : fn
       );
       AsyncStorage.setItem(STORAGE_KEY_FUNCTIONS, JSON.stringify(updated));
@@ -242,20 +372,11 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
   return (
     <KitchenContext.Provider
       value={{
-        functions,
-        prepItems,
-        staff,
-        currentStaffId,
-        notificationsEnabled,
-        broadcastMessage,
-        dismissedBroadcastId,
-        setCurrentStaff,
-        setBroadcast,
-        clearBroadcast,
-        dismissBroadcast,
-        togglePrepItem,
-        toggleTimelineItem,
-        todayDate,
+        functions, prepItems, staff,
+        currentStaffId, notificationsEnabled,
+        broadcastMessage, dismissedBroadcastId,
+        setCurrentStaff, setBroadcast, clearBroadcast, dismissBroadcast,
+        togglePrepItem, toggleTimelineItem, todayDate,
       }}
     >
       {children}
