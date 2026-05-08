@@ -1,7 +1,10 @@
 import { Feather, Ionicons } from "@expo/vector-icons";
-import React, { useMemo } from "react";
+import * as Haptics from "expo-haptics";
+import React, { useState } from "react";
 import {
+  Alert,
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -10,6 +13,11 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useKitchen } from "@/context/KitchenContext";
 import { useColors } from "@/hooks/useColors";
+import {
+  cancelAllNotifications,
+  requestNotificationPermission,
+  scheduleStaffNotifications,
+} from "@/hooks/useNotifications";
 
 const HOURS = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
 const TOTAL_HOURS = HOURS.length;
@@ -23,7 +31,8 @@ function timeToFloat(t: string): number {
 export default function RosterScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { staff, functions } = useKitchen();
+  const { staff, functions, currentStaffId, notificationsEnabled, setCurrentStaff } = useKitchen();
+  const [loading, setLoading] = useState<string | null>(null);
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const minHour = HOURS[0];
@@ -38,15 +47,59 @@ export default function RosterScreen() {
     }
   }
 
-  function getRoleIcon(role: string) {
+  function getRoleIcon(role: string): React.ComponentProps<typeof Feather>["name"] {
     switch (role) {
       case "Head Chef": return "star";
       case "Sous Chef": return "award";
       case "Pastry Chef": return "gift";
-      case "Casual": return "user";
       default: return "user";
     }
   }
+
+  async function handleSelectMe(memberId: string) {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+    if (currentStaffId === memberId) {
+      await cancelAllNotifications();
+      setCurrentStaff(null, false);
+      return;
+    }
+
+    setLoading(memberId);
+    const member = staff.find((s) => s.id === memberId)!;
+    const assignedFunctions = functions.filter((f) => member.functionIds.includes(f.id));
+
+    if (Platform.OS === "web") {
+      setCurrentStaff(memberId, false);
+      setLoading(null);
+      return;
+    }
+
+    const granted = await requestNotificationPermission();
+
+    if (granted) {
+      await cancelAllNotifications();
+      const scheduled = await scheduleStaffNotifications(member, assignedFunctions);
+      setCurrentStaff(memberId, scheduled.length > 0);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      Alert.alert(
+        "Reminders set",
+        `You'll get ${scheduled.length} notification${scheduled.length !== 1 ? "s" : ""} for your shift and functions today.`,
+        [{ text: "Got it" }]
+      );
+    } else {
+      setCurrentStaff(memberId, false);
+      Alert.alert(
+        "Notifications off",
+        "You're set as active, but notifications are disabled. Enable them in Settings to get shift reminders.",
+        [{ text: "OK" }]
+      );
+    }
+
+    setLoading(null);
+  }
+
+  const casualCount = staff.filter((s) => s.role === "Casual").length;
 
   const s = StyleSheet.create({
     root: { flex: 1, backgroundColor: colors.background },
@@ -72,10 +125,8 @@ export default function RosterScreen() {
     rosterCard: {
       marginHorizontal: 20,
       marginBottom: 12,
-      backgroundColor: colors.card,
       borderRadius: colors.radius,
       borderWidth: 1,
-      borderColor: colors.border,
       overflow: "hidden",
     },
     staffRow: {
@@ -83,7 +134,6 @@ export default function RosterScreen() {
       alignItems: "center",
       padding: 14,
       borderBottomWidth: 1,
-      borderBottomColor: colors.border,
       gap: 10,
     },
     roleIcon: {
@@ -94,18 +144,49 @@ export default function RosterScreen() {
       justifyContent: "center",
     },
     staffName: { fontSize: 14, fontFamily: "Inter_600SemiBold", color: colors.foreground },
-    staffRole: { fontSize: 11, fontFamily: "Inter_400Regular", color: colors.mutedForeground },
-    shiftTime: { marginLeft: "auto" as const, fontSize: 12, fontFamily: "Inter_500Medium", color: colors.mutedForeground },
+    staffRole: { fontSize: 11, fontFamily: "Inter_400Regular" },
+    shiftTime: { fontSize: 12, fontFamily: "Inter_500Medium", color: colors.mutedForeground },
+    meBtn: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 5,
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+      borderRadius: 20,
+      borderWidth: 1,
+    },
+    meBtnText: { fontSize: 11, fontFamily: "Inter_600SemiBold" },
+    notifBadge: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      paddingHorizontal: 7,
+      paddingVertical: 3,
+      borderRadius: 10,
+      backgroundColor: colors.accent + "20",
+    },
+    notifBadgeText: { fontSize: 10, fontFamily: "Inter_600SemiBold", color: colors.accent },
     timelineContainer: { paddingHorizontal: 14, paddingVertical: 12 },
     timelineHeader: { flexDirection: "row", marginBottom: 6 },
-    hourLabel: { width: HOUR_WIDTH, fontSize: 9, fontFamily: "Inter_500Medium", color: colors.mutedForeground, textAlign: "center" },
-    timelineBg: { height: 12, backgroundColor: colors.secondary, borderRadius: 6, marginBottom: 8, position: "relative" },
+    hourLabel: { fontSize: 9, fontFamily: "Inter_500Medium", color: colors.mutedForeground, textAlign: "center" },
+    timelineBg: { height: 12, borderRadius: 6, marginBottom: 8, position: "relative" },
     shiftBar: {
       position: "absolute",
       height: 12,
       borderRadius: 6,
       opacity: 0.9,
     },
+    casualHighlight: {
+      marginHorizontal: 14,
+      marginBottom: 12,
+      padding: 10,
+      borderRadius: 8,
+      borderWidth: 1,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+    },
+    casualText: { fontSize: 12, fontFamily: "Inter_500Medium", flex: 1 },
     functionsSection: {
       paddingHorizontal: 14,
       paddingBottom: 12,
@@ -122,26 +203,8 @@ export default function RosterScreen() {
     },
     funcBadgeText: { flex: 1, fontSize: 12, fontFamily: "Inter_500Medium" },
     funcBadgeRoom: { fontSize: 11, fontFamily: "Inter_400Regular" },
-    casualHighlight: {
-      marginHorizontal: 14,
-      marginBottom: 12,
-      padding: 10,
-      backgroundColor: colors.warning + "18",
-      borderRadius: 8,
-      borderWidth: 1,
-      borderColor: colors.warning + "40",
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 8,
-    },
-    casualText: { fontSize: 12, fontFamily: "Inter_500Medium", color: colors.warning, flex: 1 },
     bottomPad: { height: Platform.OS === "web" ? 34 : insets.bottom + 80 },
   });
-
-  const casualCount = staff.filter((s) => s.role === "Casual").length;
-  const totalHoursWorked = staff.reduce((sum, s) => {
-    return sum + (timeToFloat(s.shiftEnd) - timeToFloat(s.shiftStart));
-  }, 0);
 
   return (
     <View style={s.root}>
@@ -168,24 +231,66 @@ export default function RosterScreen() {
 
         {staff.map((member) => {
           const rc = getRoleColor(member.role);
+          const isMe = currentStaffId === member.id;
+          const isLoading = loading === member.id;
           const shiftStart = timeToFloat(member.shiftStart);
           const shiftEnd = timeToFloat(member.shiftEnd);
-          const leftPct = ((shiftStart - minHour) / TOTAL_HOURS);
-          const widthPct = ((shiftEnd - shiftStart) / TOTAL_HOURS);
+          const leftPct = (shiftStart - minHour) / TOTAL_HOURS;
+          const widthPct = (shiftEnd - shiftStart) / TOTAL_HOURS;
           const memberFunctions = functions.filter((f) => member.functionIds.includes(f.id));
           const isCasual = member.role === "Casual";
 
           return (
-            <View key={member.id} style={s.rosterCard}>
-              <View style={s.staffRow}>
+            <View
+              key={member.id}
+              style={[
+                s.rosterCard,
+                {
+                  backgroundColor: isMe ? rc + "10" : colors.card,
+                  borderColor: isMe ? rc + "60" : colors.border,
+                },
+              ]}
+            >
+              <View style={[s.staffRow, { borderBottomColor: isMe ? rc + "30" : colors.border }]}>
                 <View style={[s.roleIcon, { backgroundColor: rc + "25" }]}>
-                  <Feather name={getRoleIcon(member.role) as any} size={14} color={rc} />
+                  <Feather name={getRoleIcon(member.role)} size={14} color={rc} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={s.staffName}>{member.name}</Text>
                   <Text style={[s.staffRole, { color: rc }]}>{member.role}</Text>
                 </View>
-                <Text style={s.shiftTime}>{member.shiftStart} – {member.shiftEnd}</Text>
+                <View style={{ alignItems: "flex-end", gap: 5 }}>
+                  <Text style={s.shiftTime}>{member.shiftStart} – {member.shiftEnd}</Text>
+                  <View style={{ flexDirection: "row", gap: 6, alignItems: "center" }}>
+                    {isMe && notificationsEnabled && (
+                      <View style={s.notifBadge}>
+                        <Ionicons name="notifications" size={10} color={colors.accent} />
+                        <Text style={s.notifBadgeText}>On</Text>
+                      </View>
+                    )}
+                    <Pressable
+                      style={({ pressed }) => [
+                        s.meBtn,
+                        {
+                          backgroundColor: isMe ? rc : "transparent",
+                          borderColor: isMe ? rc : colors.border,
+                          opacity: (pressed || isLoading) ? 0.7 : 1,
+                        },
+                      ]}
+                      onPress={() => handleSelectMe(member.id)}
+                      disabled={isLoading}
+                    >
+                      {isMe ? (
+                        <Feather name="check" size={11} color="#fff" />
+                      ) : (
+                        <Feather name="user" size={11} color={colors.mutedForeground} />
+                      )}
+                      <Text style={[s.meBtnText, { color: isMe ? "#fff" : colors.mutedForeground }]}>
+                        {isLoading ? "Setting up…" : isMe ? "That's me" : "This is me"}
+                      </Text>
+                    </Pressable>
+                  </View>
+                </View>
               </View>
 
               <View style={s.timelineContainer}>
@@ -194,7 +299,7 @@ export default function RosterScreen() {
                     <Text key={h} style={[s.hourLabel, { width: HOUR_WIDTH * 2 }]}>{h}:00</Text>
                   ))}
                 </View>
-                <View style={[s.timelineBg, { width: HOUR_WIDTH * TOTAL_HOURS }]}>
+                <View style={[s.timelineBg, { width: HOUR_WIDTH * TOTAL_HOURS, backgroundColor: isMe ? rc + "20" : colors.secondary }]}>
                   <View
                     style={[
                       s.shiftBar,
@@ -209,10 +314,10 @@ export default function RosterScreen() {
               </View>
 
               {isCasual && memberFunctions.length > 0 && (
-                <View style={s.casualHighlight}>
+                <View style={[s.casualHighlight, { backgroundColor: colors.warning + "18", borderColor: colors.warning + "40" }]}>
                   <Ionicons name="location" size={15} color={colors.warning} />
-                  <Text style={s.casualText}>
-                    Report to {memberFunctions.map(f => f.room).join(", ")} at {memberFunctions[0].startTime}
+                  <Text style={[s.casualText, { color: colors.warning }]}>
+                    Report to {memberFunctions.map((f) => f.room).join(", ")} at {memberFunctions[0].startTime}
                   </Text>
                 </View>
               )}
@@ -220,10 +325,7 @@ export default function RosterScreen() {
               {memberFunctions.length > 0 && (
                 <View style={s.functionsSection}>
                   {memberFunctions.map((fn) => (
-                    <View
-                      key={fn.id}
-                      style={[s.funcBadge, { backgroundColor: rc + "15", borderColor: rc + "35" }]}
-                    >
+                    <View key={fn.id} style={[s.funcBadge, { backgroundColor: rc + "15", borderColor: rc + "35" }]}>
                       <Feather name="clock" size={12} color={rc} />
                       <Text style={[s.funcBadgeText, { color: colors.foreground }]} numberOfLines={1}>{fn.name}</Text>
                       <Text style={[s.funcBadgeRoom, { color: colors.mutedForeground }]}>{fn.room} · {fn.startTime}</Text>

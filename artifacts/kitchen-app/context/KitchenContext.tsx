@@ -122,6 +122,9 @@ interface KitchenContextType {
   functions: KitchenFunction[];
   prepItems: PrepItem[];
   staff: StaffMember[];
+  currentStaffId: string | null;
+  notificationsEnabled: boolean;
+  setCurrentStaff: (id: string | null, notificationsOn: boolean) => void;
   togglePrepItem: (id: string) => void;
   toggleTimelineItem: (functionId: string, timelineId: string) => void;
   todayDate: string;
@@ -131,11 +134,15 @@ const KitchenContext = createContext<KitchenContextType | null>(null);
 
 const STORAGE_KEY_FUNCTIONS = "@kitchen_functions";
 const STORAGE_KEY_PREP = "@kitchen_prep";
+const STORAGE_KEY_CURRENT_STAFF = "@kitchen_current_staff";
+const STORAGE_KEY_NOTIFS = "@kitchen_notifs_enabled";
 
 export function KitchenProvider({ children }: { children: React.ReactNode }) {
   const [functions, setFunctions] = useState<KitchenFunction[]>(SAMPLE_FUNCTIONS);
   const [prepItems, setPrepItems] = useState<PrepItem[]>(SAMPLE_PREP);
   const [staff] = useState<StaffMember[]>(SAMPLE_STAFF);
+  const [currentStaffId, setCurrentStaffIdState] = useState<string | null>(null);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
 
   const today = new Date();
   const todayDate = today.toLocaleDateString("en-AU", { weekday: "long", day: "numeric", month: "long" });
@@ -143,17 +150,30 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     (async () => {
       try {
-        const storedFunctions = await AsyncStorage.getItem(STORAGE_KEY_FUNCTIONS);
-        const storedPrep = await AsyncStorage.getItem(STORAGE_KEY_PREP);
+        const [storedFunctions, storedPrep, storedStaff, storedNotifs] = await Promise.all([
+          AsyncStorage.getItem(STORAGE_KEY_FUNCTIONS),
+          AsyncStorage.getItem(STORAGE_KEY_PREP),
+          AsyncStorage.getItem(STORAGE_KEY_CURRENT_STAFF),
+          AsyncStorage.getItem(STORAGE_KEY_NOTIFS),
+        ]);
         if (storedFunctions) setFunctions(JSON.parse(storedFunctions));
         if (storedPrep) setPrepItems(JSON.parse(storedPrep));
+        if (storedStaff) setCurrentStaffIdState(storedStaff);
+        if (storedNotifs) setNotificationsEnabled(storedNotifs === "true");
       } catch {
         // use defaults
       }
     })();
   }, []);
 
-  const togglePrepItem = useCallback(async (id: string) => {
+  const setCurrentStaff = useCallback((id: string | null, notificationsOn: boolean) => {
+    setCurrentStaffIdState(id);
+    setNotificationsEnabled(notificationsOn);
+    AsyncStorage.setItem(STORAGE_KEY_CURRENT_STAFF, id ?? "");
+    AsyncStorage.setItem(STORAGE_KEY_NOTIFS, String(notificationsOn));
+  }, []);
+
+  const togglePrepItem = useCallback((id: string) => {
     setPrepItems((prev) => {
       const updated = prev.map((item) =>
         item.id === id ? { ...item, completed: !item.completed } : item
@@ -163,7 +183,7 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
-  const toggleTimelineItem = useCallback(async (functionId: string, timelineId: string) => {
+  const toggleTimelineItem = useCallback((functionId: string, timelineId: string) => {
     setFunctions((prev) => {
       const updated = prev.map((fn) =>
         fn.id === functionId
@@ -181,7 +201,19 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <KitchenContext.Provider value={{ functions, prepItems, staff, togglePrepItem, toggleTimelineItem, todayDate }}>
+    <KitchenContext.Provider
+      value={{
+        functions,
+        prepItems,
+        staff,
+        currentStaffId,
+        notificationsEnabled,
+        setCurrentStaff,
+        togglePrepItem,
+        toggleTimelineItem,
+        todayDate,
+      }}
+    >
       {children}
     </KitchenContext.Provider>
   );
