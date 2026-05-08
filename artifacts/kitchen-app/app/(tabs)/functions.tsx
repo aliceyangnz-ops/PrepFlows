@@ -18,86 +18,9 @@ export default function FunctionsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { functions, staff } = useKitchen();
+  const { functions, staff, prepItems } = useKitchen();
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
-
-  const s = StyleSheet.create({
-    root: { flex: 1, backgroundColor: colors.background },
-    header: {
-      paddingTop: topPad + 16,
-      paddingHorizontal: 20,
-      paddingBottom: 16,
-    },
-    title: { fontSize: 26, fontFamily: "Inter_700Bold", color: colors.foreground },
-    subtitle: { fontSize: 13, fontFamily: "Inter_400Regular", color: colors.mutedForeground, marginTop: 2 },
-    card: {
-      marginHorizontal: 20,
-      marginBottom: 14,
-      backgroundColor: colors.card,
-      borderRadius: colors.radius,
-      borderWidth: 1,
-      borderColor: colors.border,
-      overflow: "hidden",
-    },
-    cardHeader: {
-      backgroundColor: colors.primary + "18",
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-      padding: 14,
-      flexDirection: "row",
-      alignItems: "center",
-    },
-    timeBox: {
-      backgroundColor: colors.primary,
-      paddingHorizontal: 10,
-      paddingVertical: 4,
-      borderRadius: 6,
-      marginRight: 10,
-    },
-    timeText: { fontSize: 13, fontFamily: "Inter_700Bold", color: "#fff" },
-    cardTitle: { flex: 1, fontSize: 15, fontFamily: "Inter_600SemiBold", color: colors.foreground },
-    cardBody: { padding: 14, gap: 10 },
-    metaRow: { flexDirection: "row", gap: 10, flexWrap: "wrap" },
-    chip: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 5,
-      backgroundColor: colors.secondary,
-      paddingHorizontal: 10,
-      paddingVertical: 5,
-      borderRadius: 20,
-    },
-    chipText: { fontSize: 12, fontFamily: "Inter_500Medium", color: colors.foreground },
-    menuSection: { gap: 4 },
-    menuLabel: { fontSize: 11, fontFamily: "Inter_600SemiBold", color: colors.mutedForeground, letterSpacing: 1, textTransform: "uppercase" },
-    menuItem: { fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground },
-    teamSection: { flexDirection: "row", gap: 6, flexWrap: "wrap" },
-    teamBadge: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 5,
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-      borderRadius: 6,
-      borderWidth: 1,
-    },
-    teamName: { fontSize: 12, fontFamily: "Inter_500Medium" },
-    teamRole: { fontSize: 10, fontFamily: "Inter_400Regular" },
-    viewBtn: {
-      margin: 14,
-      marginTop: 0,
-      backgroundColor: colors.secondary,
-      borderRadius: colors.radius - 2,
-      paddingVertical: 10,
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "center",
-      gap: 6,
-    },
-    viewBtnText: { fontSize: 13, fontFamily: "Inter_600SemiBold", color: colors.primary },
-    bottomPad: { height: Platform.OS === "web" ? 34 : insets.bottom + 80 },
-  });
 
   function getRoleColor(role: string) {
     switch (role) {
@@ -109,65 +32,143 @@ export default function FunctionsScreen() {
     }
   }
 
+  const s = StyleSheet.create({
+    root: { flex: 1, backgroundColor: colors.background },
+    header: { paddingTop: topPad + 16, paddingHorizontal: 20, paddingBottom: 16 },
+    title: { fontSize: 26, fontFamily: "Inter_700Bold", color: colors.foreground },
+    subtitle: { fontSize: 13, fontFamily: "Inter_400Regular", color: colors.mutedForeground, marginTop: 2 },
+    card: {
+      marginHorizontal: 20, marginBottom: 16,
+      backgroundColor: colors.card, borderRadius: colors.radius,
+      borderWidth: 1, borderColor: colors.border, overflow: "hidden",
+    },
+    cardTop: {
+      backgroundColor: colors.primary + "15",
+      borderBottomWidth: 1, borderBottomColor: colors.border,
+      padding: 14, flexDirection: "row", alignItems: "center", gap: 10,
+    },
+    timePill: { backgroundColor: colors.primary, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
+    timePillText: { fontSize: 15, fontFamily: "Inter_700Bold", color: "#fff" },
+    cardName: { flex: 1, fontSize: 16, fontFamily: "Inter_700Bold", color: colors.foreground },
+    keyInfoRow: {
+      flexDirection: "row", borderBottomWidth: 1, borderBottomColor: colors.border,
+    },
+    keyInfoBox: {
+      flex: 1, padding: 12, alignItems: "center", justifyContent: "center",
+      borderRightWidth: 1, borderRightColor: colors.border,
+    },
+    keyInfoNum: { fontSize: 20, fontFamily: "Inter_700Bold" },
+    keyInfoLabel: { fontSize: 10, fontFamily: "Inter_600SemiBold", color: colors.mutedForeground, textTransform: "uppercase", letterSpacing: 0.8, marginTop: 2 },
+    body: { padding: 14, gap: 14 },
+    sectionHead: { fontSize: 12, fontFamily: "Inter_700Bold", color: colors.mutedForeground, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 6 },
+    menuRow: { flexDirection: "row", alignItems: "flex-start", gap: 8, paddingVertical: 3 },
+    menuDot: { width: 6, height: 6, borderRadius: 3, marginTop: 5 },
+    menuText: { fontSize: 13, fontFamily: "Inter_400Regular", color: colors.foreground, flex: 1, lineHeight: 20 },
+    teamWrap: { flexDirection: "row", gap: 6, flexWrap: "wrap" },
+    teamBadge: {
+      flexDirection: "row", alignItems: "center", gap: 6,
+      paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, borderWidth: 1,
+    },
+    teamDot: { width: 8, height: 8, borderRadius: 4 },
+    teamName: { fontSize: 13, fontFamily: "Inter_600SemiBold" },
+    teamRole: { fontSize: 10, fontFamily: "Inter_400Regular" },
+    viewBtn: {
+      marginHorizontal: 14, marginBottom: 14,
+      backgroundColor: colors.primary,
+      borderRadius: colors.radius - 2,
+      paddingVertical: 12,
+      flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8,
+    },
+    viewBtnText: { fontSize: 14, fontFamily: "Inter_700Bold", color: "#fff" },
+    progressBarWrap: { height: 5, backgroundColor: colors.border, borderRadius: 3, overflow: "hidden", marginTop: 4 },
+    progressBarFill: { height: 5, borderRadius: 3 },
+    bottomPad: { height: Platform.OS === "web" ? 34 : insets.bottom + 80 },
+  });
+
   return (
     <View style={s.root}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={s.header}>
-          <Text style={s.title}>Functions</Text>
-          <Text style={s.subtitle}>{functions.length} events today</Text>
+          <Text style={s.title}>Events</Text>
+          <Text style={s.subtitle}>{functions.length} events on today — tap any event for full details</Text>
         </View>
 
         {functions.map((fn) => {
           const fnStaff = staff.filter((st) => fn.teamIds.includes(st.id));
-          const completedTimeline = fn.timeline.filter((t) => t.completed).length;
+          const fnPrep = prepItems.filter((p) => p.functionId === fn.id);
+          const prepDone = fnPrep.filter((p) => p.completed).length;
+          const stepsDone = fn.timeline.filter((t) => t.completed).length;
+          const prepPct = fnPrep.length > 0 ? prepDone / fnPrep.length : 0;
+
           return (
             <View key={fn.id} style={s.card}>
-              <View style={s.cardHeader}>
-                <View style={s.timeBox}>
-                  <Text style={s.timeText}>{fn.startTime}</Text>
+              <View style={s.cardTop}>
+                <View style={s.timePill}>
+                  <Text style={s.timePillText}>{fn.startTime}</Text>
                 </View>
-                <Text style={s.cardTitle} numberOfLines={1}>{fn.name}</Text>
+                <Text style={s.cardName} numberOfLines={1}>{fn.name}</Text>
                 <Feather name="chevron-right" size={16} color={colors.mutedForeground} />
               </View>
 
-              <View style={s.cardBody}>
-                <View style={s.metaRow}>
-                  <View style={s.chip}>
-                    <MaterialCommunityIcons name="door" size={13} color={colors.mutedForeground} />
-                    <Text style={s.chipText}>{fn.room}</Text>
-                  </View>
-                  <View style={s.chip}>
-                    <Ionicons name="people" size={13} color={colors.mutedForeground} />
-                    <Text style={s.chipText}>{fn.guestCount} guests</Text>
-                  </View>
-                  <View style={s.chip}>
-                    <Feather name="clock" size={13} color={colors.mutedForeground} />
-                    <Text style={s.chipText}>{fn.startTime} – {fn.endTime}</Text>
-                  </View>
-                  <View style={[s.chip, { backgroundColor: colors.accent + "20" }]}>
-                    <Feather name="check-square" size={13} color={colors.accent} />
-                    <Text style={[s.chipText, { color: colors.accent }]}>{completedTimeline}/{fn.timeline.length} steps</Text>
+              <View style={s.keyInfoRow}>
+                <View style={s.keyInfoBox}>
+                  <Text style={[s.keyInfoNum, { color: colors.foreground }]}>{fn.guestCount}</Text>
+                  <Text style={s.keyInfoLabel}>Guests</Text>
+                </View>
+                <View style={s.keyInfoBox}>
+                  <Text style={[s.keyInfoNum, { color: colors.info }]}>{fn.startTime}–{fn.endTime}</Text>
+                  <Text style={s.keyInfoLabel}>Service time</Text>
+                </View>
+                <View style={[s.keyInfoBox, { borderRightWidth: 0 }]}>
+                  <Text style={[s.keyInfoNum, { color: prepPct === 1 ? colors.accent : colors.warning }]}>
+                    {prepDone}/{fnPrep.length}
+                  </Text>
+                  <Text style={s.keyInfoLabel}>Food ready</Text>
+                  <View style={s.progressBarWrap}>
+                    <View style={[s.progressBarFill, { width: `${prepPct * 100}%`, backgroundColor: prepPct === 1 ? colors.accent : colors.warning }]} />
                   </View>
                 </View>
+              </View>
 
-                <View style={s.menuSection}>
-                  <Text style={s.menuLabel}>Menu</Text>
+              <View style={s.body}>
+                <View>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 6 }}>
+                    <MaterialCommunityIcons name="door" size={13} color={colors.mutedForeground} />
+                    <Text style={[s.sectionHead, { marginBottom: 0 }]}>Room</Text>
+                  </View>
+                  <Text style={{ fontSize: 16, fontFamily: "Inter_600SemiBold", color: colors.foreground }}>{fn.room}</Text>
+                </View>
+
+                <View>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 6 }}>
+                    <Feather name="coffee" size={13} color={colors.mutedForeground} />
+                    <Text style={[s.sectionHead, { marginBottom: 0 }]}>What's being served</Text>
+                  </View>
                   {fn.menu.slice(0, 3).map((item, i) => (
-                    <Text key={i} style={s.menuItem}>· {item}</Text>
+                    <View key={i} style={s.menuRow}>
+                      <View style={[s.menuDot, { backgroundColor: colors.primary }]} />
+                      <Text style={s.menuText}>{item}</Text>
+                    </View>
                   ))}
                   {fn.menu.length > 3 && (
-                    <Text style={[s.menuItem, { color: colors.primary }]}>+{fn.menu.length - 3} more courses</Text>
+                    <Text style={{ fontSize: 12, fontFamily: "Inter_500Medium", color: colors.primary, marginTop: 2 }}>
+                      + {fn.menu.length - 3} more courses — see full details
+                    </Text>
                   )}
                 </View>
 
-                <View style={s.menuSection}>
-                  <Text style={s.menuLabel}>Team</Text>
-                  <View style={s.teamSection}>
+                <View>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 8 }}>
+                    <Ionicons name="people" size={13} color={colors.mutedForeground} />
+                    <Text style={[s.sectionHead, { marginBottom: 0 }]}>Who's working this event</Text>
+                  </View>
+                  <View style={s.teamWrap}>
                     {fnStaff.map((member) => {
                       const rc = getRoleColor(member.role);
                       return (
                         <View key={member.id} style={[s.teamBadge, { backgroundColor: rc + "18", borderColor: rc + "40" }]}>
-                          <View style={{ gap: 0 }}>
+                          <View style={[s.teamDot, { backgroundColor: rc }]} />
+                          <View>
                             <Text style={[s.teamName, { color: rc }]}>{member.name}</Text>
                             <Text style={[s.teamRole, { color: colors.mutedForeground }]}>{member.role}</Text>
                           </View>
@@ -176,17 +177,24 @@ export default function FunctionsScreen() {
                     })}
                   </View>
                 </View>
+
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                  <Feather name="check-circle" size={13} color={colors.mutedForeground} />
+                  <Text style={{ fontSize: 12, fontFamily: "Inter_500Medium", color: colors.mutedForeground }}>
+                    Work plan: {stepsDone} of {fn.timeline.length} tasks done
+                  </Text>
+                </View>
               </View>
 
               <Pressable
-                style={({ pressed }) => [s.viewBtn, pressed && { opacity: 0.7 }]}
+                style={({ pressed }) => [s.viewBtn, pressed && { opacity: 0.8 }]}
                 onPress={() => {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                   router.push(`/function/${fn.id}`);
                 }}
               >
-                <Text style={s.viewBtnText}>View Full Details</Text>
-                <Feather name="arrow-right" size={14} color={colors.primary} />
+                <Text style={s.viewBtnText}>Open full details</Text>
+                <Feather name="arrow-right" size={15} color="#fff" />
               </Pressable>
             </View>
           );
