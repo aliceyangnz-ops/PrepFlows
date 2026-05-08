@@ -418,6 +418,15 @@ export default function FunctionDetailScreen() {
           <Feather name="arrow-left" size={18} color={colors.foreground} />
         </Pressable>
         <View style={s.toolbarSpacer} />
+        {!editing && (
+          <Pressable
+            style={({ pressed }) => [s.editBtn, { backgroundColor: colors.card, borderColor: colors.border, opacity: pressed ? 0.7 : 1, marginRight: 6 }]}
+            onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push(`/prep-print/${fn.id}`); }}
+          >
+            <Feather name="printer" size={14} color={colors.mutedForeground} />
+            <Text style={[s.editBtnText, { color: colors.mutedForeground }]}>Print</Text>
+          </Pressable>
+        )}
         {canEdit && !editing && (
           <Pressable
             style={({ pressed }) => [s.editBtn, { backgroundColor: colors.card, borderColor: colors.primary + "60", opacity: pressed ? 0.7 : 1 }]}
