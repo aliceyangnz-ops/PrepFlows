@@ -41,12 +41,18 @@ export interface KitchenFunction {
   timeline: TimelineItem[];
 }
 
+export type PrepTeam = "Cold Larder" | "Pastry" | "Hot Kitchen" | "Catering" | "Butchery";
+export type PrepDay = "day-before" | "day-of";
+
 export interface PrepItem {
   id: string;
   functionId: string;
   category: string;
+  team: PrepTeam;
   dish: string;
   quantity: string;
+  deadline: string;
+  prepDay: PrepDay;
   note: string;
   completed: boolean;
 }
@@ -177,86 +183,122 @@ const SAMPLE_FUNCTIONS: KitchenFunction[] = [
 const SAMPLE_PREP: PrepItem[] = [
   {
     id: "p1", functionId: "f1", category: "Proteins",
+    team: "Butchery",
     dish: "MSA Eye Fillet",
     quantity: "280 portions × 220g (62kg total)",
-    note: "Trim sinew & silverskin. Truss with butcher's twine. Season sea salt both sides. Chill until service. Sear in clarified butter all sides. Finish 180°C deck oven to 54°C core (med-rare). Rest 3min.",
+    deadline: "08:00",
+    prepDay: "day-of",
+    note: "Trim sinew & silverskin. Truss with butcher's twine. Portion 220g. Season sea salt both sides. Chill portioned on trays — do NOT sear until service. Sear in clarified butter all sides. Finish 180°C deck oven to 54°C core (med-rare). Rest 3min.",
     completed: true,
   },
   {
     id: "p2", functionId: "f1", category: "Proteins",
+    team: "Cold Larder",
     dish: "Tiger Prawn Cocktail",
     quantity: "280 portions × 5 prawns (1,400 prawns, approx. 14kg)",
-    note: "Poach green tiger prawns @ 70°C/3min. Refresh ice bath immediately. Peel, devein, dry on paper towel. Refrigerate covered overnight. 5 prawns per serve.",
+    deadline: "16:00 (previous day)",
+    prepDay: "day-before",
+    note: "Poach green tiger prawns @ 70°C/3min. Refresh ice bath immediately. Peel, devein, dry on paper towel. Refrigerate covered overnight. Day-of: arrange 5 prawns per boat over iceberg. Catering team to dress with Marie Rose at service.",
     completed: true,
   },
   {
     id: "p3", functionId: "f1", category: "Sauces",
+    team: "Hot Kitchen",
     dish: "Béarnaise Sauce",
     quantity: "12L (approx. 40mL per serve + 20% buffer)",
-    note: "Classic white wine & tarragon reduction. Whisk egg yolks to ribbon stage over bain-marie. Stream in 8kg clarified butter. Hold in bain-marie at 60°C. Make fresh — do not batch > 2h pre-service. Discard if grainy.",
+    deadline: "11:45",
+    prepDay: "day-of",
+    note: "Classic white wine & tarragon reduction. Whisk egg yolks to ribbon stage over bain-marie. Stream in 8kg clarified butter. Hold in bain-marie at 60°C. Make fresh — do NOT batch > 2h pre-service. Discard if grainy or broken.",
     completed: false,
   },
   {
     id: "p4", functionId: "f1", category: "Sauces",
+    team: "Cold Larder",
     dish: "Marie Rose Cocktail Sauce",
     quantity: "5L",
-    note: "Combine: mayo, tomato sauce, Worcestershire, Tabasco, lemon juice. Season. Fill squeeze bottles. Temp check < 5°C before service. Label & date.",
+    deadline: "09:00",
+    prepDay: "day-of",
+    note: "Combine: mayo, tomato sauce, Worcestershire, Tabasco, lemon juice. Season. Fill squeeze bottles. Temp check < 5°C before service. Label & date. Catering team to dress prawn cocktails at service.",
     completed: true,
   },
   {
     id: "p5", functionId: "f1", category: "Sides",
+    team: "Hot Kitchen",
     dish: "Truffle Potato Gratin",
-    quantity: "280 portions (8 full gastros × 35 portions each)",
-    note: "Mandoline slice Nicola potatoes 1.5mm. Layer with truffle cream (300mL truflle oil per gastro) & gruyère. Bake 180°C/45min under foil, uncover last 10min. Rest 20min before portioning 4×7 cuts per gastro.",
+    quantity: "280 portions — 8 full gastros × 35 portions each",
+    deadline: "10:30",
+    prepDay: "day-of",
+    note: "Mandoline slice Nicola potatoes 1.5mm. Layer with truffle cream (300mL truffle oil per gastro) & gruyère. Bake 180°C/45min under foil, uncover last 10min. Rest 20min. Portion 4×7 cuts per gastro. Cover & hold in bain-marie 65°C.",
     completed: false,
   },
   {
     id: "p6", functionId: "f1", category: "Pastry",
+    team: "Pastry",
     dish: "Vanilla Panna Cotta",
-    quantity: "290 portions (10 spare) — 1L mix per 5 serves",
-    note: "3.5 gold gelatine leaves per litre. Warm cream to 60°C, dissolve gelatine. Vanilla bean split & scraped. Set overnight at 4°C. Garnish AM: berry coulis 20mL per pot, micro herbs. Temp check < 5°C.",
+    quantity: "290 pots (10 spare) — 1L cream mix per 5 serves",
+    deadline: "15:00 (previous day)",
+    prepDay: "day-before",
+    note: "3.5 gold gelatine leaves per litre. Warm cream to 60°C, dissolve gelatine. Vanilla bean split & scraped. Set overnight at 4°C. Day-of AM: garnish with berry coulis 20mL per pot, micro herbs. Temp check < 5°C.",
     completed: true,
   },
   {
     id: "p7", functionId: "f2", category: "Proteins",
+    team: "Hot Kitchen",
     dish: "Chicken Supreme — Airline Breast",
     quantity: "20 portions × 200g (skin on)",
-    note: "Score skin. Season both sides. Sear skin-down in clarified butter 3min until golden — do not move. Flip, baste. Finish 180°C/8min to 74°C core (probe check). Rest 5min tented foil. Jus lié 30mL per serve.",
+    deadline: "12:30",
+    prepDay: "day-of",
+    note: "Score skin. Season both sides. Sear skin-down in clarified butter 3min until golden — do NOT move. Flip, baste. Finish 180°C/8min to 74°C core (probe check). Rest 5min tented foil. Jus lié 30mL per serve, held at 80°C.",
     completed: true,
   },
   {
     id: "p8", functionId: "f2", category: "Pastry",
-    dish: "Chocolate Fondant",
-    quantity: "20 portions (+4 spares for test bakes)",
-    note: "Valrhona 70% ganache centre — freeze solid at -18°C minimum 4h. Batter: dark choc, butter, eggs, sugar, flour. Ramekins buttered & dusted. Fire to order 200°C/8min — centre must jiggle. Test bake at service start. Do NOT pre-bake.",
+    team: "Pastry",
+    dish: "Chocolate Fondant — Valrhona 70%",
+    quantity: "20 portions + 4 spares for test bakes",
+    deadline: "09:00",
+    prepDay: "day-of",
+    note: "Ganache centre — freeze solid -18°C minimum 4h. Batter: dark choc, butter, eggs, sugar, flour. Ramekins buttered & cocoa-dusted. Fire to order 200°C/8min — centre must jiggle. Pastry to test bake 1 at service start. Do NOT pre-bake.",
     completed: false,
   },
   {
     id: "p9", functionId: "f3", category: "Proteins",
+    team: "Hot Kitchen",
     dish: "Beef Wellington — MSA Fillet",
     quantity: "450 portions × 180g (81kg fillet total)",
-    note: "Sear all sides in smoking-hot pan, 30sec per side — deep Maillard crust. Chill to 4°C before wrapping. Duxelles: 200g per kg beef — button mushroom, shallot, thyme, reduce bone dry. Brush with Dijon. Wrap filo 3 sheets, seam-down. Chill. Fire: 220°C/12min to 54°C core. Rest 5min tented.",
+    deadline: "14:00",
+    prepDay: "day-of",
+    note: "Sear all sides smoking-hot pan, 30sec per side — deep Maillard crust. Chill to 4°C before wrapping. Duxelles: 200g per kg beef — button mushroom, shallot, thyme, reduce bone dry. Brush with Dijon. Wrap filo 3 sheets, seam-down. Chill wrapped. Fire: 220°C/12min to 54°C core. Rest 5min tented.",
     completed: false,
   },
   {
-    id: "p10", functionId: "f3", category: "Proteins",
+    id: "p10", functionId: "f3", category: "Seafood",
+    team: "Cold Larder",
     dish: "Seared Scallop — U10",
-    quantity: "900 pieces × 2 per serve (approx. 45kg)",
-    note: "U10 scallops, roe off. Dry on paper towel minimum 2h — CRITICAL for sear. Hot smoking clarified butter. Sear 90sec each side — do NOT move. Golden crust. Serve immediately. Cauliflower purée: 60g per plate, warm.",
+    quantity: "900 pieces × 2 per serve (approx. 45kg). Cauliflower purée: 60g per plate",
+    deadline: "17:00",
+    prepDay: "day-of",
+    note: "U10 scallops, roe off. Dry on paper towel minimum 2h — CRITICAL for sear. Cold larder to prep & hand to hot pass at service. Cauliflower purée: blended smooth, seasoned, held warm. Sear: smoking clarified butter 90sec each side — do NOT move.",
     completed: false,
   },
   {
     id: "p11", functionId: "f3", category: "Sauces",
+    team: "Hot Kitchen",
     dish: "Lobster Bisque",
-    quantity: "200L (450mL per serve)",
-    note: "Roast lobster shells 220°C/20min. Sweat mirepoix, add shells, brandy flambe. Add fish stock & tomato paste. Simmer 40min, strain fine chinois. Reduce by 1/3. Finish with 35% cream. Season. Temp check 75°C+ before service. Hold in bain-marie.",
+    quantity: "205L (450mL per serve + 10L buffer)",
+    deadline: "17:00",
+    prepDay: "day-of",
+    note: "Roast lobster shells 220°C/20min. Sweat mirepoix, add shells, brandy flambe. Fish stock & tomato paste. Simmer 40min, strain fine chinois. Reduce by 1/3. Finish with 35% cream at service. Temp check 75°C+ before service. Hold in bain-marie.",
     completed: false,
   },
   {
     id: "p12", functionId: "f3", category: "Pastry",
+    team: "Pastry",
     dish: "Croquembouche",
-    quantity: "15 towers × 30 pax (450 total)",
-    note: "Choux: bake 200°C/18min — NO peeking, do not open oven. Cool on rack. Fill with crème pâtissière (cool to < 5°C before filling). Toffee: 165°C amber. Dip puffs, build cone. Spun toffee wrap last. Assemble day-of. Keep dry — NO humidity or toffee weeps.",
+    quantity: "15 towers × 30 pax (450 total). Choux: approx. 2,700 puffs",
+    deadline: "18:30",
+    prepDay: "day-of",
+    note: "Choux puffs: bake 200°C/18min — NO peeking. Cool on rack. Fill with crème pâtissière cooled to < 5°C. Toffee: 165°C amber. Dip puffs, build cone. Spun toffee wrap last. Assemble day-of, min. 30min pre-service. Keep dry — NO humidity or toffee weeps.",
     completed: false,
   },
 ];
@@ -281,7 +323,7 @@ interface KitchenContextType {
 const KitchenContext = createContext<KitchenContextType | null>(null);
 
 const STORAGE_KEY_FUNCTIONS = "@kitchen_functions_v2";
-const STORAGE_KEY_PREP = "@kitchen_prep";
+const STORAGE_KEY_PREP = "@kitchen_prep_v2";
 const STORAGE_KEY_CURRENT_STAFF = "@kitchen_current_staff";
 const STORAGE_KEY_NOTIFS = "@kitchen_notifs_enabled";
 const STORAGE_KEY_BROADCAST = "@kitchen_broadcast";
