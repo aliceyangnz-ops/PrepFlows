@@ -41,7 +41,7 @@ export interface KitchenFunction {
   timeline: TimelineItem[];
 }
 
-export type PrepTeam = "Cold Larder" | "Pastry" | "Hot Kitchen" | "Catering" | "Butchery";
+export type PrepTeam = "Cold Larder" | "Pastry" | "Hot Kitchen" | "Function Team" | "Butchery";
 export type PrepDay = "day-before" | "day-of";
 
 export interface PrepItem {
@@ -60,10 +60,12 @@ export interface PrepItem {
 export interface StaffMember {
   id: string;
   name: string;
-  role: "Head Chef" | "Sous Chef" | "Pastry Chef" | "Casual";
+  role: "Head Chef" | "Sous Chef" | "Pastry Chef" | "Function Captain" | "Casual";
   shiftStart: string;
   shiftEnd: string;
   functionIds: string[];
+  teamLeadFor?: PrepTeam;
+  section?: PrepTeam;
 }
 
 export interface BroadcastMessage {
@@ -75,11 +77,12 @@ export interface BroadcastMessage {
 }
 
 const SAMPLE_STAFF: StaffMember[] = [
-  { id: "s1", name: "Marco Ricci", role: "Head Chef", shiftStart: "05:00", shiftEnd: "14:00", functionIds: ["f1", "f2", "f3"] },
-  { id: "s2", name: "Sarah Chen", role: "Sous Chef", shiftStart: "07:00", shiftEnd: "16:00", functionIds: ["f1", "f3"] },
-  { id: "s3", name: "Jake Morrison", role: "Casual", shiftStart: "09:00", shiftEnd: "17:00", functionIds: ["f1"] },
-  { id: "s4", name: "Amara Osei", role: "Pastry Chef", shiftStart: "06:00", shiftEnd: "15:00", functionIds: ["f3"] },
-  { id: "s5", name: "Liam Walsh", role: "Casual", shiftStart: "10:00", shiftEnd: "18:00", functionIds: ["f3"] },
+  { id: "s1", name: "Marco Ricci",  role: "Head Chef",        shiftStart: "05:00", shiftEnd: "14:00", functionIds: ["f1","f2","f3"], teamLeadFor: "Hot Kitchen",   section: "Hot Kitchen" },
+  { id: "s2", name: "Sarah Chen",   role: "Sous Chef",        shiftStart: "07:00", shiftEnd: "16:00", functionIds: ["f1","f3"],      teamLeadFor: "Cold Larder",   section: "Cold Larder" },
+  { id: "s3", name: "Jake Morrison",role: "Casual",           shiftStart: "09:00", shiftEnd: "17:00", functionIds: ["f1","f2","f3"],                               section: "Function Team" },
+  { id: "s4", name: "Amara Osei",   role: "Pastry Chef",      shiftStart: "06:00", shiftEnd: "15:00", functionIds: ["f1","f2","f3"], teamLeadFor: "Pastry",        section: "Pastry" },
+  { id: "s5", name: "Liam Walsh",   role: "Casual",           shiftStart: "10:00", shiftEnd: "18:00", functionIds: ["f1","f2","f3"],                               section: "Function Team" },
+  { id: "s6", name: "David Park",   role: "Function Captain", shiftStart: "08:00", shiftEnd: "22:00", functionIds: ["f1","f2","f3"], teamLeadFor: "Function Team", section: "Function Team" },
 ];
 
 const SAMPLE_FUNCTIONS: KitchenFunction[] = [
@@ -102,7 +105,7 @@ const SAMPLE_FUNCTIONS: KitchenFunction[] = [
       "Main: Roasted MSA Eye Fillet — béarnaise, truffle gratin, broccolini",
       "Dessert: Vanilla Panna Cotta — berry coulis, micro herbs",
     ],
-    teamIds: ["s1", "s2", "s3"],
+    teamIds: ["s1", "s2", "s3", "s6"],
     timeline: [
       { id: "t1", time: "06:00", task: "Mise en place — all stations set, benches clear, HACCP sheets started", completed: true },
       { id: "t2", time: "08:00", task: "Eye fillet: trim sinew, truss, portion 220g × 280. Season & hold chilled", completed: true },
@@ -132,7 +135,7 @@ const SAMPLE_FUNCTIONS: KitchenFunction[] = [
       "Main: Chicken Supreme — airline breast, jus lié, pomme purée, seasonal greens",
       "Dessert: Chocolate Fondant — Valrhona 70%, crème anglaise, vanilla ice cream",
     ],
-    teamIds: ["s1"],
+    teamIds: ["s1", "s3", "s6"],
     timeline: [
       { id: "t8", time: "09:00", task: "Mise en place — fondant batter made & chilled. Chicken trimmed & portioned 200g", completed: true },
       { id: "t9", time: "12:30", task: "Suite 3 set — crockery & cutlery polished, water poured", completed: false },
@@ -163,7 +166,7 @@ const SAMPLE_FUNCTIONS: KitchenFunction[] = [
       "Main: Beef Wellington — MSA fillet, duxelles, filo, Madeira jus",
       "Dessert: Croquembouche — choux, crème pât, spun toffee (30 pax per tower)",
     ],
-    teamIds: ["s1", "s2", "s4", "s5"],
+    teamIds: ["s1", "s2", "s4", "s5", "s6"],
     timeline: [
       { id: "t13", time: "07:00", task: "Wellington: sear fillet all sides smoking pan 30sec/side. Chill to 4°C. Duxelles on", completed: false },
       { id: "t14", time: "09:00", task: "Duxelles reduce dry — no moisture. Assemble Wellingtons, wrap filo, chill", completed: false },
@@ -301,6 +304,92 @@ const SAMPLE_PREP: PrepItem[] = [
     note: "Choux puffs: bake 200°C/18min — NO peeking. Cool on rack. Fill with crème pâtissière cooled to < 5°C. Toffee: 165°C amber. Dip puffs, build cone. Spun toffee wrap last. Assemble day-of, min. 30min pre-service. Keep dry — NO humidity or toffee weeps.",
     completed: false,
   },
+
+  // ── FUNCTION TEAM — f1 Harrison Wedding ─────────────────────────────────
+  {
+    id: "p_f1a", functionId: "f1", category: "Room Setup",
+    team: "Function Team",
+    dish: "Ballroom A — Room Setup & Linen",
+    quantity: "35 rounds × 8 covers = 280 total. 35 tablecloths, 280 napkins",
+    deadline: "09:30",
+    prepDay: "day-of",
+    note: "Set white damask tablecloths — pressed, no creases. Bishop's hat napkin fold per cover. Gold centrepiece candelabra × 35. Wedding menu cards at each place setting. All chairs level and equal spacing. Head Chef to sign off before 11:00.",
+    completed: true,
+  },
+  {
+    id: "p_f1b", functionId: "f1", category: "Room Setup",
+    team: "Function Team",
+    dish: "Crockery, Cutlery & Glassware — Polish & Set",
+    quantity: "280 covers × full set: entrée plate + main plate + dessert plate + 5-piece cutlery + 2 glasses",
+    deadline: "11:00",
+    prepDay: "day-of",
+    note: "Polish all crockery and glassware with lint-free cloth — no smears or lipstick marks. 5-piece cutlery per cover (fish knife/fork for prawn). Water goblet + white wine glass. Inspection standard: hold to light. Function Captain to sign off.",
+    completed: false,
+  },
+  {
+    id: "p_f1c", functionId: "f1", category: "Service",
+    team: "Function Team",
+    dish: "Pass Setup, Food Assembly & Runner Brief",
+    quantity: "Pass for 280 covers — 4 runners, 3 sections",
+    deadline: "11:30",
+    prepDay: "day-of",
+    note: "Set hot pass lamps. Garnish mise en place on pass: watercress, lemon wedges cut to 8ths, paprika. Béarnaise squeeze bottles from Hot Kitchen. Pre-service brief 11:45: course order (entrée 12:00 → main 12:35 → dessert 13:30), runner sections, kitchen radio comms check.",
+    completed: false,
+  },
+
+  // ── FUNCTION TEAM — f2 Corporate Boardroom ──────────────────────────────
+  {
+    id: "p_f2a", functionId: "f2", category: "Room Setup",
+    team: "Function Team",
+    dish: "Suite 3 — Boardroom Setup",
+    quantity: "18 covers — 1 boardroom table, 1 linen runner",
+    deadline: "11:30",
+    prepDay: "day-of",
+    note: "Crisp white linen runner centred. 5-piece cutlery per cover. Water goblet + red wine glass. Client name cards per seating list (provided by Events Manager). Low floral centrepiece. Still water poured at 12:30. Function Captain to greet client on arrival.",
+    completed: true,
+  },
+  {
+    id: "p_f2b", functionId: "f2", category: "Service",
+    team: "Function Team",
+    dish: "Antipasto Platters & Bread Service — Assembly",
+    quantity: "3 sharing platters (6 covers each). Grissini × 36. Ciabatta 18 slices",
+    deadline: "12:45",
+    prepDay: "day-of",
+    note: "Cold Larder to supply cured meats, giardiniera, olives. Function Team to arrange on slate platters. EVOO in ramekins. Slice ciabatta, fill bread baskets. Pre-set platters at 12:45 — antipasto on table before client seated. Dessert: Pastry to deliver fondants to pass at 14:00.",
+    completed: false,
+  },
+
+  // ── FUNCTION TEAM — f3 Gala Dinner ──────────────────────────────────────
+  {
+    id: "p_f3a", functionId: "f3", category: "Room Setup",
+    team: "Function Team",
+    dish: "Grand Ballroom — Gala Dinner Setup",
+    quantity: "50 rounds × 9 covers (450 total) + 3 VIP rounds × 10 covers",
+    deadline: "15:00",
+    prepDay: "day-of",
+    note: "Gold charger plates at every cover. White tablecloth + gold satin overlay. 5-piece cutlery PLUS fish knife & fork (scallop entrée). 4 glasses per cover: water, white wine, red wine, dessert wine. Menu cards & name cards on VIP tables. Candelabras lit at 18:30.",
+    completed: false,
+  },
+  {
+    id: "p_f3b", functionId: "f3", category: "Room Setup",
+    team: "Function Team",
+    dish: "Croquembouche — Table Placement",
+    quantity: "15 towers — 1 per 2 rounds (30 pax per tower). Do NOT move once set",
+    deadline: "18:45",
+    prepDay: "day-of",
+    note: "Coordinate with Pastry Chef (Amara Osei) before moving any tower. Carry on flat board — minimum 2 people per tower. Position centred on round. Spun toffee to face guests. Brief wait staff: towers are display AND service, do NOT pre-cut — Pastry Chef will portion at table.",
+    completed: false,
+  },
+  {
+    id: "p_f3c", functionId: "f3", category: "Service",
+    team: "Function Team",
+    dish: "Service Runners & Pass Communication Brief",
+    quantity: "15 runners — 3 runners per section (5 sections of 90 covers each)",
+    deadline: "18:30",
+    prepDay: "day-of",
+    note: "Pre-service brief at 18:00 sharp (Function Captain David Park leads). Course order: amuse-bouche 19:00 → entrée 19:30 → bisque 20:00 → main 20:30 → dessert 21:45. Head Chef calls 'away' via radio — runners pick up at main pass within 2min. 5-min window per 50 covers. No course goes before Head Chef 'away' call.",
+    completed: false,
+  },
 ];
 
 interface KitchenContextType {
@@ -323,7 +412,7 @@ interface KitchenContextType {
 const KitchenContext = createContext<KitchenContextType | null>(null);
 
 const STORAGE_KEY_FUNCTIONS = "@kitchen_functions_v2";
-const STORAGE_KEY_PREP = "@kitchen_prep_v2";
+const STORAGE_KEY_PREP = "@kitchen_prep_v3";
 const STORAGE_KEY_CURRENT_STAFF = "@kitchen_current_staff";
 const STORAGE_KEY_NOTIFS = "@kitchen_notifs_enabled";
 const STORAGE_KEY_BROADCAST = "@kitchen_broadcast";

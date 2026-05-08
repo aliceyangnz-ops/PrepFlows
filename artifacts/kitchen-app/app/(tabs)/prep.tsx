@@ -14,27 +14,27 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { PrepTeam, useKitchen } from "@/context/KitchenContext";
 import { useColors } from "@/hooks/useColors";
 
-const TEAM_ORDER: PrepTeam[] = ["Cold Larder", "Butchery", "Hot Kitchen", "Pastry", "Catering"];
+const TEAM_ORDER: PrepTeam[] = ["Cold Larder", "Butchery", "Hot Kitchen", "Pastry", "Function Team"];
 
-function getTeamColor(team: PrepTeam): string {
+export function getTeamColor(team: PrepTeam): string {
   switch (team) {
-    case "Cold Larder": return "#14B8A6";
-    case "Butchery":    return "#F97316";
-    case "Hot Kitchen": return "#EF4444";
-    case "Pastry":      return "#A78BFA";
-    case "Catering":    return "#3B82F6";
-    default:            return "#6B7A94";
+    case "Cold Larder":   return "#14B8A6";
+    case "Butchery":      return "#F97316";
+    case "Hot Kitchen":   return "#EF4444";
+    case "Pastry":        return "#A78BFA";
+    case "Function Team": return "#3B82F6";
+    default:              return "#6B7A94";
   }
 }
 
-function getTeamIcon(team: PrepTeam): string {
+function getTeamDescription(team: PrepTeam): string {
   switch (team) {
-    case "Cold Larder": return "thermometer";
-    case "Butchery":    return "scissors";
-    case "Hot Kitchen": return "zap";
-    case "Pastry":      return "star";
-    case "Catering":    return "users";
-    default:            return "circle";
+    case "Cold Larder":   return "Cold starters, salads, sauces, canapé prep";
+    case "Butchery":      return "Meat portioning, trimming & protein prep";
+    case "Hot Kitchen":   return "Hot mains, hot sauces, firing & cooking";
+    case "Pastry":        return "Desserts, pastry & baked goods";
+    case "Function Team": return "Room setup, food assembly & service running";
+    default:              return "";
   }
 }
 
@@ -44,7 +44,7 @@ export default function PrepScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { functions, prepItems, togglePrepItem } = useKitchen();
+  const { functions, prepItems, staff, togglePrepItem } = useKitchen();
   const [selectedFunctionId, setSelectedFunctionId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("by-team");
 
@@ -82,13 +82,21 @@ export default function PrepScreen() {
     });
   }, [filteredItems, functions]);
 
+  function getLeader(team: PrepTeam) {
+    return staff.find((s) => s.teamLeadFor === team) ?? null;
+  }
+
+  function getTeamMembers(team: PrepTeam) {
+    return staff.filter((s) => s.section === team && !s.teamLeadFor);
+  }
+
   const s = StyleSheet.create({
     root: { flex: 1, backgroundColor: colors.background },
     header: { paddingTop: topPad + 16, paddingHorizontal: 20, paddingBottom: 4, flexDirection: "row", alignItems: "flex-end" },
     headerLeft: { flex: 1 },
     title: { fontSize: 26, fontFamily: "Inter_700Bold", color: colors.foreground },
     subtitle: { fontSize: 13, fontFamily: "Inter_400Regular", color: colors.mutedForeground, marginTop: 2 },
-    printBtn: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.card, marginBottom: 4 },
+    printBtn: { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 11, paddingVertical: 7, borderRadius: 8, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.card, marginBottom: 4 },
     printBtnText: { fontSize: 12, fontFamily: "Inter_600SemiBold", color: colors.mutedForeground },
     progressArea: { paddingHorizontal: 20, paddingTop: 14, paddingBottom: 4 },
     progressRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 6 },
@@ -98,29 +106,53 @@ export default function PrepScreen() {
     progressFill: { height: 6, borderRadius: 3 },
     filterSection: { paddingHorizontal: 20, paddingTop: 14, paddingBottom: 4 },
     filterLabel: { fontSize: 10, fontFamily: "Inter_700Bold", color: colors.mutedForeground, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 },
-    filterRow: { flexDirection: "row", gap: 8 },
+    filterScroll: { flexDirection: "row", gap: 8 },
     filterChip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, borderWidth: 1 },
     filterText: { fontSize: 12, fontFamily: "Inter_600SemiBold" },
     viewToggle: { flexDirection: "row", marginHorizontal: 20, marginTop: 14, marginBottom: 2, borderRadius: 10, borderWidth: 1, borderColor: colors.border, overflow: "hidden", backgroundColor: colors.card },
-    toggleBtn: { flex: 1, paddingVertical: 9, alignItems: "center", justifyContent: "center" },
+    toggleBtn: { flex: 1, paddingVertical: 9, alignItems: "center" },
     toggleBtnText: { fontSize: 12, fontFamily: "Inter_600SemiBold" },
     teamSection: { marginTop: 16 },
-    teamHeader: { flexDirection: "row", alignItems: "center", paddingHorizontal: 20, paddingVertical: 10, gap: 10 },
-    teamStripe: { width: 4, height: 32, borderRadius: 2 },
-    teamHeaderInfo: { flex: 1 },
-    teamName: { fontSize: 14, fontFamily: "Inter_700Bold" },
-    teamSubLabel: { fontSize: 11, fontFamily: "Inter_400Regular", color: colors.mutedForeground, marginTop: 1 },
-    teamBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
-    teamBadgeText: { fontSize: 12, fontFamily: "Inter_700Bold" },
+    teamHeaderCard: {
+      marginHorizontal: 20, marginBottom: 2,
+      borderRadius: colors.radius, borderWidth: 1, overflow: "hidden",
+    },
+    teamCardTop: { flexDirection: "row", alignItems: "center", padding: 14, gap: 12 },
+    teamColorBlock: { width: 5, borderRadius: 3, alignSelf: "stretch", minHeight: 36 },
+    teamCardInfo: { flex: 1 },
+    teamName: { fontSize: 15, fontFamily: "Inter_700Bold" },
+    teamDesc: { fontSize: 11, fontFamily: "Inter_400Regular", color: colors.mutedForeground, marginTop: 2 },
+    teamBadge: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12 },
+    teamBadgeText: { fontSize: 13, fontFamily: "Inter_700Bold" },
+    leaderRow: {
+      flexDirection: "row", alignItems: "center", gap: 8,
+      paddingHorizontal: 14, paddingVertical: 10,
+      borderTopWidth: 1,
+    },
+    leaderAvatar: { width: 30, height: 30, borderRadius: 15, alignItems: "center", justifyContent: "center" },
+    leaderAvatarText: { fontSize: 11, fontFamily: "Inter_700Bold" },
+    leaderInfo: { flex: 1 },
+    leaderLabel: { fontSize: 10, fontFamily: "Inter_600SemiBold", textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 1 },
+    leaderName: { fontSize: 13, fontFamily: "Inter_700Bold" },
+    leaderRole: { fontSize: 11, fontFamily: "Inter_400Regular" },
+    membersRow: {
+      flexDirection: "row", alignItems: "center", gap: 6,
+      paddingHorizontal: 14, paddingVertical: 8,
+      borderTopWidth: 1, flexWrap: "wrap",
+    },
+    membersLabel: { fontSize: 10, fontFamily: "Inter_600SemiBold", color: colors.mutedForeground, textTransform: "uppercase", letterSpacing: 0.8, marginRight: 4 },
+    memberPill: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10, borderWidth: 1 },
+    memberPillText: { fontSize: 11, fontFamily: "Inter_500Medium" },
     eventBlock: { marginTop: 16 },
-    eventHeader: { flexDirection: "row", alignItems: "center", marginHorizontal: 20, marginBottom: 10, gap: 10 },
+    eventHeader: { flexDirection: "row", alignItems: "center", marginHorizontal: 20, marginBottom: 8, gap: 10 },
     eventTimePill: { backgroundColor: colors.primary, paddingHorizontal: 9, paddingVertical: 4, borderRadius: 6 },
     eventTimePillText: { fontSize: 13, fontFamily: "Inter_700Bold", color: "#fff" },
     eventName: { flex: 1, fontSize: 15, fontFamily: "Inter_700Bold", color: colors.foreground },
-    eventRoom: { fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground },
-    subTeamHeader: { flexDirection: "row", alignItems: "center", paddingHorizontal: 20, paddingVertical: 7, gap: 8, backgroundColor: colors.secondary },
+    eventRoom: { fontSize: 11, fontFamily: "Inter_400Regular", color: colors.mutedForeground, marginTop: 2 },
+    subTeamHeader: { flexDirection: "row", alignItems: "center", paddingHorizontal: 20, paddingVertical: 8, gap: 8, backgroundColor: colors.secondary },
     subTeamDot: { width: 8, height: 8, borderRadius: 4 },
     subTeamLabel: { flex: 1, fontSize: 11, fontFamily: "Inter_700Bold", letterSpacing: 0.8, textTransform: "uppercase" },
+    subLeaderText: { fontSize: 11, fontFamily: "Inter_500Medium", color: colors.mutedForeground },
     subTeamCount: { fontSize: 11, fontFamily: "Inter_500Medium", color: colors.mutedForeground },
     itemRow: { flexDirection: "row", alignItems: "flex-start", paddingHorizontal: 16, paddingVertical: 14, borderTopWidth: 1, borderTopColor: colors.border, gap: 12 },
     teamColorBar: { width: 3, borderRadius: 2, alignSelf: "stretch" },
@@ -133,8 +165,6 @@ export default function PrepScreen() {
     badgeRow: { flexDirection: "row", gap: 6, marginBottom: 4, flexWrap: "wrap" },
     prevDayBadge: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 7, paddingVertical: 3, borderRadius: 6, backgroundColor: "#8B5CF620" },
     prevDayText: { fontSize: 10, fontFamily: "Inter_700Bold", color: "#8B5CF6" },
-    teamTagPill: { paddingHorizontal: 7, paddingVertical: 3, borderRadius: 6 },
-    teamTagText: { fontSize: 10, fontFamily: "Inter_700Bold" },
     functionTag: { paddingHorizontal: 7, paddingVertical: 3, borderRadius: 6, backgroundColor: colors.secondary },
     functionTagText: { fontSize: 10, fontFamily: "Inter_500Medium", color: colors.mutedForeground },
     quantity: { fontSize: 12, fontFamily: "Inter_600SemiBold", color: colors.primary, marginBottom: 3 },
@@ -142,7 +172,7 @@ export default function PrepScreen() {
     bottomPad: { height: Platform.OS === "web" ? 34 : insets.bottom + 80 },
   });
 
-  function renderItem(item: ReturnType<typeof useKitchen>["prepItems"][0], showTeamTag = false, showFnTag = false) {
+  function renderItem(item: typeof filteredItems[0], showFnTag = false) {
     const tc = getTeamColor(item.team);
     const isDayBefore = item.prepDay === "day-before";
     const fn = functions.find((f) => f.id === item.functionId);
@@ -159,7 +189,7 @@ export default function PrepScreen() {
         </View>
         <View style={s.itemContent}>
           <View style={s.itemTopRow}>
-            <Text style={[s.dishName, { color: item.completed ? colors.mutedForeground : colors.foreground, textDecorationLine: item.completed ? "line-through" : "none", flex: 1 }]}>
+            <Text style={[s.dishName, { color: item.completed ? colors.mutedForeground : colors.foreground, textDecorationLine: item.completed ? "line-through" : "none" }]}>
               {item.dish}
             </Text>
             <View style={[s.deadlinePill, { backgroundColor: item.completed ? colors.accent + "20" : "#EF444420" }]}>
@@ -174,11 +204,6 @@ export default function PrepScreen() {
               <View style={s.prevDayBadge}>
                 <Ionicons name="moon" size={9} color="#8B5CF6" />
                 <Text style={s.prevDayText}>PREV DAY</Text>
-              </View>
-            )}
-            {showTeamTag && (
-              <View style={[s.teamTagPill, { backgroundColor: tc + "20" }]}>
-                <Text style={[s.teamTagText, { color: tc }]}>{item.team}</Text>
               </View>
             )}
             {showFnTag && fn && (
@@ -202,22 +227,19 @@ export default function PrepScreen() {
         <View style={s.header}>
           <View style={s.headerLeft}>
             <Text style={s.title}>Prep List</Text>
-            <Text style={s.subtitle}>Track what each team needs to complete</Text>
+            <Text style={s.subtitle}>By team — with leader, tasks & deadlines</Text>
           </View>
           {printFnId && (
-            <Pressable
-              style={({ pressed }) => [s.printBtn, pressed && { opacity: 0.7 }]}
-              onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push(`/prep-print/${printFnId}`); }}
-            >
-              <Feather name="printer" size={14} color={colors.mutedForeground} />
-              <Text style={s.printBtnText}>Print Sheet</Text>
+            <Pressable style={({ pressed }) => [s.printBtn, pressed && { opacity: 0.7 }]} onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push(`/prep-print/${printFnId}`); }}>
+              <Feather name="printer" size={13} color={colors.mutedForeground} />
+              <Text style={s.printBtnText}>Print</Text>
             </Pressable>
           )}
         </View>
 
         <View style={s.progressArea}>
           <View style={s.progressRow}>
-            <Text style={s.progressLabel}>Overall prep progress</Text>
+            <Text style={s.progressLabel}>Overall prep progress today</Text>
             <Text style={s.progressCount}>{completedItems} / {totalItems} done</Text>
           </View>
           <View style={s.progressBar}>
@@ -227,7 +249,7 @@ export default function PrepScreen() {
 
         <View style={s.filterSection}>
           <Text style={s.filterLabel}>Filter by event</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.filterRow}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.filterScroll}>
             <Pressable style={[s.filterChip, { backgroundColor: !selectedFunctionId ? colors.primary : "transparent", borderColor: !selectedFunctionId ? colors.primary : colors.border }]} onPress={() => setSelectedFunctionId(null)}>
               <Text style={[s.filterText, { color: !selectedFunctionId ? "#fff" : colors.mutedForeground }]}>All events</Text>
             </Pressable>
@@ -255,71 +277,97 @@ export default function PrepScreen() {
           </Pressable>
         </View>
 
-        {viewMode === "by-team" && (
-          <>
-            {TEAM_ORDER.map((team) => {
-              const items = byTeam[team];
-              if (!items || items.length === 0) return null;
-              const done = items.filter((i) => i.completed).length;
-              const tc = getTeamColor(team);
-              const icon = getTeamIcon(team) as any;
-              return (
-                <View key={team} style={s.teamSection}>
-                  <View style={s.teamHeader}>
-                    <View style={[s.teamStripe, { backgroundColor: tc }]} />
-                    <View style={s.teamHeaderInfo}>
-                      <Text style={[s.teamName, { color: tc }]}>{team}</Text>
-                      <Text style={s.teamSubLabel}>{done === items.length ? "All done ✓" : `${items.length - done} task${items.length - done > 1 ? "s" : ""} remaining`}</Text>
-                    </View>
-                    <View style={[s.teamBadge, { backgroundColor: done === items.length ? colors.accent + "20" : tc + "20" }]}>
-                      <Text style={[s.teamBadgeText, { color: done === items.length ? colors.accent : tc }]}>{done}/{items.length}</Text>
-                    </View>
-                  </View>
-                  {items.map((item) => renderItem(item, false, !selectedFunctionId))}
-                </View>
-              );
-            })}
-          </>
-        )}
+        {viewMode === "by-team" && TEAM_ORDER.map((team) => {
+          const items = byTeam[team];
+          if (!items || items.length === 0) return null;
+          const done = items.filter((i) => i.completed).length;
+          const tc = getTeamColor(team);
+          const allDone = done === items.length;
+          const leader = getLeader(team);
+          const members = getTeamMembers(team);
 
-        {viewMode === "by-event" && (
-          <>
-            {byEvent.map(({ fn, teamMap }) => {
-              const fnItems = filteredItems.filter((p) => p.functionId === fn.id);
-              const fnDone = fnItems.filter((p) => p.completed).length;
-              return (
-                <View key={fn.id} style={s.eventBlock}>
-                  <View style={s.eventHeader}>
-                    <View style={s.eventTimePill}><Text style={s.eventTimePillText}>{fn.startTime}</Text></View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={s.eventName} numberOfLines={1}>{fn.name}</Text>
-                      <Text style={s.eventRoom}>Room: {fn.room} · {fn.guestCount} guests · {fnDone}/{fnItems.length} done</Text>
-                    </View>
-                    <Pressable style={({ pressed }) => [s.printBtn, pressed && { opacity: 0.7 }]} onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push(`/prep-print/${fn.id}`); }}>
-                      <Feather name="printer" size={13} color={colors.mutedForeground} />
-                    </Pressable>
+          return (
+            <View key={team} style={s.teamSection}>
+              <View style={[s.teamHeaderCard, { borderColor: tc + "40" }]}>
+                <View style={[s.teamCardTop, { backgroundColor: tc + "12" }]}>
+                  <View style={[s.teamColorBlock, { backgroundColor: tc }]} />
+                  <View style={s.teamCardInfo}>
+                    <Text style={[s.teamName, { color: tc }]}>{team}</Text>
+                    <Text style={s.teamDesc}>{getTeamDescription(team)}</Text>
                   </View>
-                  {TEAM_ORDER.map((team) => {
-                    const items = teamMap[team];
-                    if (!items || items.length === 0) return null;
-                    const done = items.filter((i) => i.completed).length;
-                    const tc = getTeamColor(team);
-                    return (
-                      <View key={team}>
-                        <View style={s.subTeamHeader}>
-                          <View style={[s.subTeamDot, { backgroundColor: tc }]} />
-                          <Text style={[s.subTeamLabel, { color: tc }]}>{team}</Text>
-                          <Text style={s.subTeamCount}>{done}/{items.length}</Text>
-                        </View>
-                        {items.map((item) => renderItem(item, false, false))}
-                      </View>
-                    );
-                  })}
+                  <View style={[s.teamBadge, { backgroundColor: allDone ? colors.accent + "20" : tc + "20" }]}>
+                    <Text style={[s.teamBadgeText, { color: allDone ? colors.accent : tc }]}>{done}/{items.length}</Text>
+                  </View>
                 </View>
-              );
-            })}
-          </>
-        )}
+                {leader && (
+                  <View style={[s.leaderRow, { borderTopColor: tc + "30" , backgroundColor: tc + "08" }]}>
+                    <View style={[s.leaderAvatar, { backgroundColor: tc + "30" }]}>
+                      <Text style={[s.leaderAvatarText, { color: tc }]}>
+                        {leader.name.split(" ").map((n) => n[0]).join("")}
+                      </Text>
+                    </View>
+                    <View style={s.leaderInfo}>
+                      <Text style={[s.leaderLabel, { color: tc }]}>Chef in Charge / Team Leader</Text>
+                      <Text style={[s.leaderName, { color: colors.foreground }]}>{leader.name}</Text>
+                      <Text style={[s.leaderRole, { color: tc }]}>{leader.role}</Text>
+                    </View>
+                    <View style={{ alignItems: "center" }}>
+                      <Ionicons name="shield-checkmark" size={18} color={tc} />
+                    </View>
+                  </View>
+                )}
+                {members.length > 0 && (
+                  <View style={[s.membersRow, { borderTopColor: tc + "20" }]}>
+                    <Text style={s.membersLabel}>Team:</Text>
+                    {members.map((m) => (
+                      <View key={m.id} style={[s.memberPill, { backgroundColor: tc + "15", borderColor: tc + "35" }]}>
+                        <Text style={[s.memberPillText, { color: tc }]}>{m.name.split(" ")[0]}</Text>
+                      </View>
+                    ))}
+                  </View>
+                )}
+              </View>
+              {items.map((item) => renderItem(item, !selectedFunctionId))}
+            </View>
+          );
+        })}
+
+        {viewMode === "by-event" && byEvent.map(({ fn, teamMap }) => {
+          const fnItems = filteredItems.filter((p) => p.functionId === fn.id);
+          const fnDone = fnItems.filter((p) => p.completed).length;
+          return (
+            <View key={fn.id} style={s.eventBlock}>
+              <View style={s.eventHeader}>
+                <View style={s.eventTimePill}><Text style={s.eventTimePillText}>{fn.startTime}</Text></View>
+                <View style={{ flex: 1 }}>
+                  <Text style={s.eventName} numberOfLines={1}>{fn.name}</Text>
+                  <Text style={s.eventRoom}>Room: {fn.room} · {fn.guestCount} guests · {fnDone}/{fnItems.length} done</Text>
+                </View>
+                <Pressable style={({ pressed }) => [s.printBtn, pressed && { opacity: 0.7 }]} onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push(`/prep-print/${fn.id}`); }}>
+                  <Feather name="printer" size={13} color={colors.mutedForeground} />
+                </Pressable>
+              </View>
+              {TEAM_ORDER.map((team) => {
+                const items = teamMap[team];
+                if (!items || items.length === 0) return null;
+                const done = items.filter((i) => i.completed).length;
+                const tc = getTeamColor(team);
+                const leader = getLeader(team);
+                return (
+                  <View key={team}>
+                    <View style={s.subTeamHeader}>
+                      <View style={[s.subTeamDot, { backgroundColor: tc }]} />
+                      <Text style={[s.subTeamLabel, { color: tc }]}>{team}</Text>
+                      {leader && <Text style={s.subLeaderText}>{leader.name}</Text>}
+                      <Text style={s.subTeamCount}> · {done}/{items.length}</Text>
+                    </View>
+                    {items.map((item) => renderItem(item, false))}
+                  </View>
+                );
+              })}
+            </View>
+          );
+        })}
 
         <View style={s.bottomPad} />
       </ScrollView>
