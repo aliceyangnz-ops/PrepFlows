@@ -264,14 +264,18 @@ export default function FunctionDetailScreen() {
   }
 
   // Parse menu line into: course, dish, tags
-  function parseMenuLine(line: string): { course: string; dish: string; tags: string[] } {
+  function parseMenuLine(line: string): { course: string; name: string; desc: string; tags: string[] } {
     const pipeIdx = line.indexOf("|");
     const main = pipeIdx > -1 ? line.slice(0, pipeIdx).trim() : line;
     const tagStr = pipeIdx > -1 ? line.slice(pipeIdx + 1) : "";
-    const tags = tagStr.split("|").map((t) => t.trim()).filter(Boolean);
+    const tags = tagStr.split("|").map((t) => t.trim()).filter((t) => !t.toLowerCase().startsWith("alt:"));
     const colonIdx = main.indexOf(":");
-    if (colonIdx > -1) return { course: main.slice(0, colonIdx).trim(), dish: main.slice(colonIdx + 1).trim(), tags };
-    return { course: "", dish: main, tags };
+    const full = colonIdx > -1 ? main.slice(colonIdx + 1).trim() : main;
+    const course = colonIdx > -1 ? main.slice(0, colonIdx).trim() : "";
+    const dashIdx = full.indexOf(" — ");
+    const name = dashIdx > -1 ? full.slice(0, dashIdx).trim() : full;
+    const desc = dashIdx > -1 ? full.slice(dashIdx + 3).trim() : "";
+    return { course, name, desc, tags };
   }
 
   const courseOrder: Array<{ key: keyof NonNullable<typeof fn.serviceTimes>; label: string; draftKey: keyof DraftFunction }> = [
@@ -360,8 +364,9 @@ export default function FunctionDetailScreen() {
     checkBtn: { width: 30, height: 30, borderRadius: 8, borderWidth: 2, alignItems: "center", justifyContent: "center", marginTop: 8 },
     // Menu
     menuItem: { paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.border },
-    menuCourse: { fontSize: 10, fontFamily: "Inter_700Bold", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 4 },
-    menuDish: { fontSize: 14, fontFamily: "Inter_500Medium", color: colors.foreground, lineHeight: 21, marginBottom: 6 },
+    menuCourse: { fontSize: 10, fontFamily: "Inter_700Bold", textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 4 },
+    menuDishName: { fontSize: 15, fontFamily: "Inter_700Bold", color: colors.foreground, marginBottom: 3 },
+    menuDishDesc: { fontSize: 13, fontFamily: "Inter_400Regular", color: colors.mutedForeground, lineHeight: 19, marginBottom: 7 },
     menuTagRow: { flexDirection: "row", flexWrap: "wrap", gap: 5 },
     menuTag: { paddingHorizontal: 7, paddingVertical: 3, borderRadius: 6 },
     menuTagText: { fontSize: 11, fontFamily: "Inter_600SemiBold" },
@@ -715,23 +720,20 @@ export default function FunctionDetailScreen() {
 
             <View style={s.div} />
 
-            {/* ── Menu ────────────────────────────────────────────────────── */}
+            {/* ── Function Menu ─────────────────────────────────────────── */}
             <View style={s.section}>
-              <Text style={s.sectionTitle}>Menu</Text>
-              <Text style={s.sectionSub}>{fn.menu.length} course{fn.menu.length !== 1 ? "s" : ""} · Dietary tags shown per dish</Text>
+              <Text style={s.sectionTitle}>Function Menu</Text>
               {fn.menu.map((line, i) => {
-                const { course, dish, tags } = parseMenuLine(line);
+                const { course, name, desc, tags } = parseMenuLine(line);
                 return (
                   <View key={i} style={s.menuItem}>
-                    {course ? (
-                      <Text style={[s.menuCourse, { color: tc }]}>{course}</Text>
-                    ) : null}
-                    <Text style={s.menuDish}>{dish}</Text>
+                    {course ? <Text style={[s.menuCourse, { color: tc }]}>{course}</Text> : null}
+                    <Text style={s.menuDishName}>{name}</Text>
+                    {desc ? <Text style={s.menuDishDesc}>{desc}</Text> : null}
                     {tags.length > 0 && (
                       <View style={s.menuTagRow}>
                         {tags.map((tag, ti) => {
-                          const isAlt = tag.toLowerCase().startsWith("alt:");
-                          const tagColor = isAlt ? colors.mutedForeground : getDietaryColor(tag);
+                          const tagColor = getDietaryColor(tag);
                           return (
                             <View key={ti} style={[s.menuTag, { backgroundColor: tagColor + "20" }]}>
                               <Text style={[s.menuTagText, { color: tagColor }]}>{tag}</Text>
