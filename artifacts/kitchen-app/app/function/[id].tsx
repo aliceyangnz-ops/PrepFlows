@@ -2,6 +2,7 @@ import { Feather, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
+import QRCode from "react-native-qrcode-svg";
 import {
   Alert,
   KeyboardAvoidingView,
@@ -14,7 +15,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { DietaryRequirement, FunctionType, MANAGER_ROLES, useKitchen } from "@/context/KitchenContext";
+import { ACCESS_LEVEL_LABELS, DietaryRequirement, FunctionType, getAccessLevel, useKitchen } from "@/context/KitchenContext";
 import { useColors } from "@/hooks/useColors";
 
 const FUNCTION_TYPES: FunctionType[] = [
@@ -74,6 +75,7 @@ interface DraftFunction {
   amuse: string;
   supper: string;
   dietaryRequirements: DietaryRequirement[];
+  menu: string[];
 }
 
 
@@ -86,7 +88,10 @@ export default function FunctionDetailScreen() {
 
   const fn = functions.find((f) => f.id === id);
   const currentMember = staff.find((s) => s.id === currentStaffId) ?? null;
-  const canEdit = currentMember ? (MANAGER_ROLES as readonly string[]).includes(currentMember.role) : false;
+  const accessLevel  = currentMember ? getAccessLevel(currentMember) : "staff";
+  const canManage    = accessLevel === "manager";
+  const canLead      = accessLevel === "manager" || accessLevel === "team_leader";
+  const canEdit      = canLead;
 
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<DraftFunction | null>(null);
@@ -109,6 +114,7 @@ export default function FunctionDetailScreen() {
         amuse:    fn.serviceTimes?.amuse    ?? "",
         supper:   fn.serviceTimes?.supper   ?? "",
         dietaryRequirements: fn.dietaryRequirements ? fn.dietaryRequirements.map(d => ({ ...d })) : [],
+        menu: fn.menu ? [...fn.menu] : [],
       });
     }
   }, [fn?.id]);
@@ -168,6 +174,19 @@ export default function FunctionDetailScreen() {
     setHasUnsaved(true);
   }
 
+  function updateMenuItem(idx: number, value: string) {
+    setDraft((d) => { if (!d) return d; const m = [...d.menu]; m[idx] = value; return { ...d, menu: m }; });
+    setHasUnsaved(true);
+  }
+  function addMenuItem() {
+    setDraft((d) => { if (!d) return d; return { ...d, menu: [...d.menu, ""] }; });
+    setHasUnsaved(true);
+  }
+  function removeMenuItem(idx: number) {
+    setDraft((d) => { if (!d) return d; return { ...d, menu: d.menu.filter((_, i) => i !== idx) }; });
+    setHasUnsaved(true);
+  }
+
   function addDietaryReq() {
     setDraft((d) => {
       if (!d) return d;
@@ -210,6 +229,7 @@ export default function FunctionDetailScreen() {
       startTime:        draft.startTime.trim() || fn.startTime,
       endTime:          draft.endTime.trim()   || fn.endTime,
       guestCount:       guestNum,
+      menu: draft.menu.filter((m) => m.trim()),
       dietaryRequirements: draft.dietaryRequirements.filter((d) => d.count > 0 && d.name.trim()),
       serviceTimes: {
         amuse:   draft.amuse   || undefined,
@@ -510,7 +530,9 @@ export default function FunctionDetailScreen() {
               <View style={[s.editCardHeader, { backgroundColor: colors.primary + "15", borderBottomColor: colors.primary + "30" }]}>
                 <Feather name="edit-2" size={14} color={colors.primary} />
                 <Text style={[s.editCardTitle, { color: colors.primary }]}>Function Details</Text>
-                <Text style={{ fontSize: 11, fontFamily: "Inter_400Regular", color: colors.mutedForeground }}>{currentMember?.role}</Text>
+                <Text style={{ fontSize: 11, fontFamily: "Inter_400Regular", color: colors.primary }}>
+                {currentMember ? ACCESS_LEVEL_LABELS[accessLevel] : ""}
+              </Text>
               </View>
               <View style={s.fieldRow}>
                 <Text style={s.fieldLabel}>Name</Text>
@@ -551,6 +573,46 @@ export default function FunctionDetailScreen() {
                 </View>
               </View>
             </View>
+
+            {/* Function Menu — managers only */}
+            {canManage && (
+              <View style={[s.editCard, { borderColor: "#22C55E60", marginTop: 10 }]}>
+                <View style={[s.editCardHeader, { backgroundColor: "#22C55E15", borderBottomColor: "#22C55E30" }]}>
+                  <Feather name="coffee" size={14} color="#22C55E" />
+                  <Text style={[s.editCardTitle, { color: "#22C55E" }]}>Function Menu</Text>
+                  <Text style={{ fontSize: 11, fontFamily: "Inter_400Regular", color: colors.mutedForeground }}>Manager / Head Office only</Text>
+                </View>
+                <View style={{ paddingHorizontal: 14, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: colors.border, backgroundColor: colors.secondary }}>
+                  <Text style={{ fontSize: 11, fontFamily: "Inter_400Regular", color: colors.mutedForeground, lineHeight: 17 }}>
+                    Format: <Text style={{ fontFamily: "Inter_600SemiBold" }}>Course: Dish Name — description | Tag | Tag</Text>{"\n"}
+                    e.g. Entrée: Tiger Prawn Cocktail — Marie Rose sauce | GF | Alt: smoked salmon
+                  </Text>
+                </View>
+                {draft.menu.map((item, idx) => (
+                  <View key={idx} style={[s.fieldRow, { alignItems: "flex-start", paddingVertical: 10 }]}>
+                    <Text style={[s.fieldLabel, { paddingTop: 4, fontSize: 11 }]}>Course {idx + 1}</Text>
+                    <TextInput
+                      style={[s.fieldInput, { fontSize: 13, lineHeight: 20 }]}
+                      value={item}
+                      onChangeText={(v) => updateMenuItem(idx, v)}
+                      placeholder="e.g. Main: Beef Fillet — béarnaise, gratin | GF"
+                      placeholderTextColor={colors.mutedForeground}
+                      multiline
+                    />
+                    <Pressable onPress={() => removeMenuItem(idx)} style={{ paddingTop: 4, paddingLeft: 8 }}>
+                      <Feather name="x" size={16} color={colors.mutedForeground} />
+                    </Pressable>
+                  </View>
+                ))}
+                <Pressable
+                  style={{ flexDirection: "row", alignItems: "center", gap: 8, padding: 14 }}
+                  onPress={addMenuItem}
+                >
+                  <Feather name="plus-circle" size={16} color="#22C55E" />
+                  <Text style={{ fontSize: 13, fontFamily: "Inter_600SemiBold", color: "#22C55E" }}>Add menu item</Text>
+                </Pressable>
+              </View>
+            )}
 
             {/* Course fire times */}
             <View style={[s.editCard, { borderColor: tc + "60", marginTop: 10 }]}>
@@ -754,6 +816,36 @@ export default function FunctionDetailScreen() {
                   </View>
                 );
               })}
+            </View>
+
+            <View style={s.div} />
+
+            {/* ── Casual Staff QR ────────────────────────────────────────── */}
+            <View style={s.section}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                <Text style={s.sectionTitle}>Casual Staff Brief</Text>
+                <View style={{ paddingHorizontal: 7, paddingVertical: 3, backgroundColor: colors.accent + "20", borderRadius: 6 }}>
+                  <Text style={{ fontSize: 10, fontFamily: "Inter_700Bold", color: colors.accent }}>QR</Text>
+                </View>
+              </View>
+              <Text style={s.sectionSub}>Show this QR code to casual chefs — they scan to see their team and contacts</Text>
+              <View style={{ alignItems: "center", marginTop: 14, marginBottom: 10 }}>
+                <View style={{ padding: 16, backgroundColor: "#FFFFFF", borderRadius: 16, shadowColor: "#000", shadowOpacity: 0.12, shadowRadius: 8, shadowOffset: { width: 0, height: 2 } }}>
+                  <QRCode
+                    value={
+                      Platform.OS === "web" && typeof window !== "undefined"
+                        ? `${window.location.origin}/brief/${fn.id}`
+                        : `kitchencommand://brief/${fn.id}`
+                    }
+                    size={180}
+                    color="#0D1117"
+                    backgroundColor="#FFFFFF"
+                  />
+                </View>
+                <Text style={{ fontSize: 11, fontFamily: "Inter_500Medium", color: colors.mutedForeground, marginTop: 10, textAlign: "center" }}>
+                  Scan · View team, leader & contact info
+                </Text>
+              </View>
             </View>
 
             <View style={s.div} />

@@ -66,17 +66,34 @@ export interface PrepItem {
   completed: boolean;
 }
 
+export type AccessLevel = "manager" | "team_leader" | "staff";
+
 export interface StaffMember {
   id: string;
   staffNumber: string;
   name: string;
   role: "Head Chef" | "Sous Chef" | "Pastry Chef" | "Function Captain" | "Casual";
+  phone?: string;
   shiftStart: string;
   shiftEnd: string;
   functionIds: string[];
   teamLeadFor?: PrepTeam;
   section?: PrepTeam;
+  accessLevel?: AccessLevel;
 }
+
+export function getAccessLevel(member: StaffMember): AccessLevel {
+  if (member.accessLevel) return member.accessLevel;
+  if (member.role === "Head Chef" || member.role === "Sous Chef") return "manager";
+  if (member.role === "Pastry Chef" || member.role === "Function Captain") return "team_leader";
+  return "staff";
+}
+
+export const ACCESS_LEVEL_LABELS: Record<AccessLevel, string> = {
+  manager:     "Kitchen Manager / Head Office",
+  team_leader: "Team Leader",
+  staff:       "Kitchen Staff",
+};
 
 export interface BroadcastMessage {
   id: string;
@@ -87,12 +104,12 @@ export interface BroadcastMessage {
 }
 
 const SAMPLE_STAFF: StaffMember[] = [
-  { id: "s1", staffNumber: "#0001", name: "Marco Ricci",   role: "Head Chef",        shiftStart: "05:00", shiftEnd: "14:00", functionIds: ["f1","f2","f3"], teamLeadFor: "Hot Kitchen",   section: "Hot Kitchen" },
-  { id: "s2", staffNumber: "#0002", name: "Sarah Chen",    role: "Sous Chef",        shiftStart: "07:00", shiftEnd: "16:00", functionIds: ["f1","f3"],      teamLeadFor: "Cold Larder",   section: "Cold Larder" },
-  { id: "s3", staffNumber: "#0047", name: "Jake Morrison", role: "Casual",           shiftStart: "09:00", shiftEnd: "17:00", functionIds: ["f1","f2","f3"],                                section: "Function Team" },
-  { id: "s4", staffNumber: "#0003", name: "Amara Osei",    role: "Pastry Chef",      shiftStart: "06:00", shiftEnd: "15:00", functionIds: ["f1","f2","f3"], teamLeadFor: "Pastry",        section: "Pastry" },
-  { id: "s5", staffNumber: "#0063", name: "Liam Walsh",    role: "Casual",           shiftStart: "10:00", shiftEnd: "18:00", functionIds: ["f1","f2","f3"],                                section: "Function Team" },
-  { id: "s6", staffNumber: "#0012", name: "David Park",    role: "Function Captain", shiftStart: "08:00", shiftEnd: "22:00", functionIds: ["f1","f2","f3"], teamLeadFor: "Function Team", section: "Function Team" },
+  { id: "s1", staffNumber: "#0001", name: "Marco Ricci",   role: "Head Chef",        phone: "0412 000 001", shiftStart: "05:00", shiftEnd: "14:00", functionIds: ["f1","f2","f3"], teamLeadFor: "Hot Kitchen",   section: "Hot Kitchen" },
+  { id: "s2", staffNumber: "#0002", name: "Sarah Chen",    role: "Sous Chef",        phone: "0412 000 002", shiftStart: "07:00", shiftEnd: "16:00", functionIds: ["f1","f3"],      teamLeadFor: "Cold Larder",   section: "Cold Larder" },
+  { id: "s3", staffNumber: "#0047", name: "Jake Morrison", role: "Casual",           phone: "0412 000 047", shiftStart: "09:00", shiftEnd: "17:00", functionIds: ["f1","f2","f3"],                                section: "Function Team" },
+  { id: "s4", staffNumber: "#0003", name: "Amara Osei",    role: "Pastry Chef",      phone: "0412 000 003", shiftStart: "06:00", shiftEnd: "15:00", functionIds: ["f1","f2","f3"], teamLeadFor: "Pastry",        section: "Pastry" },
+  { id: "s5", staffNumber: "#0063", name: "Liam Walsh",    role: "Casual",           phone: "0412 000 063", shiftStart: "10:00", shiftEnd: "18:00", functionIds: ["f1","f2","f3"],                                section: "Function Team" },
+  { id: "s6", staffNumber: "#0012", name: "David Park",    role: "Function Captain", phone: "0412 000 012", shiftStart: "08:00", shiftEnd: "22:00", functionIds: ["f1","f2","f3"], teamLeadFor: "Function Team", section: "Function Team" },
 ];
 
 const SAMPLE_FUNCTIONS: KitchenFunction[] = [
