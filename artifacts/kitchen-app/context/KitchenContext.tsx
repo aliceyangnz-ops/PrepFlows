@@ -40,6 +40,14 @@ export interface StaffMember {
   functionIds: string[];
 }
 
+export interface BroadcastMessage {
+  id: string;
+  text: string;
+  senderName: string;
+  senderRole: string;
+  sentAt: string;
+}
+
 const SAMPLE_STAFF: StaffMember[] = [
   { id: "s1", name: "Marco Ricci", role: "Head Chef", shiftStart: "05:00", shiftEnd: "14:00", functionIds: ["f1", "f2", "f3"] },
   { id: "s2", name: "Sarah Chen", role: "Sous Chef", shiftStart: "07:00", shiftEnd: "16:00", functionIds: ["f1", "f3"] },
@@ -124,7 +132,12 @@ interface KitchenContextType {
   staff: StaffMember[];
   currentStaffId: string | null;
   notificationsEnabled: boolean;
+  broadcastMessage: BroadcastMessage | null;
+  dismissedBroadcastId: string | null;
   setCurrentStaff: (id: string | null, notificationsOn: boolean) => void;
+  setBroadcast: (msg: BroadcastMessage) => void;
+  clearBroadcast: () => void;
+  dismissBroadcast: (id: string) => void;
   togglePrepItem: (id: string) => void;
   toggleTimelineItem: (functionId: string, timelineId: string) => void;
   todayDate: string;
@@ -136,6 +149,8 @@ const STORAGE_KEY_FUNCTIONS = "@kitchen_functions";
 const STORAGE_KEY_PREP = "@kitchen_prep";
 const STORAGE_KEY_CURRENT_STAFF = "@kitchen_current_staff";
 const STORAGE_KEY_NOTIFS = "@kitchen_notifs_enabled";
+const STORAGE_KEY_BROADCAST = "@kitchen_broadcast";
+const STORAGE_KEY_DISMISSED = "@kitchen_dismissed_broadcast";
 
 export function KitchenProvider({ children }: { children: React.ReactNode }) {
   const [functions, setFunctions] = useState<KitchenFunction[]>(SAMPLE_FUNCTIONS);
@@ -143,6 +158,8 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
   const [staff] = useState<StaffMember[]>(SAMPLE_STAFF);
   const [currentStaffId, setCurrentStaffIdState] = useState<string | null>(null);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [broadcastMessage, setBroadcastState] = useState<BroadcastMessage | null>(null);
+  const [dismissedBroadcastId, setDismissedBroadcastId] = useState<string | null>(null);
 
   const today = new Date();
   const todayDate = today.toLocaleDateString("en-AU", { weekday: "long", day: "numeric", month: "long" });
@@ -150,16 +167,21 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     (async () => {
       try {
-        const [storedFunctions, storedPrep, storedStaff, storedNotifs] = await Promise.all([
-          AsyncStorage.getItem(STORAGE_KEY_FUNCTIONS),
-          AsyncStorage.getItem(STORAGE_KEY_PREP),
-          AsyncStorage.getItem(STORAGE_KEY_CURRENT_STAFF),
-          AsyncStorage.getItem(STORAGE_KEY_NOTIFS),
-        ]);
+        const [storedFunctions, storedPrep, storedStaff, storedNotifs, storedBroadcast, storedDismissed] =
+          await Promise.all([
+            AsyncStorage.getItem(STORAGE_KEY_FUNCTIONS),
+            AsyncStorage.getItem(STORAGE_KEY_PREP),
+            AsyncStorage.getItem(STORAGE_KEY_CURRENT_STAFF),
+            AsyncStorage.getItem(STORAGE_KEY_NOTIFS),
+            AsyncStorage.getItem(STORAGE_KEY_BROADCAST),
+            AsyncStorage.getItem(STORAGE_KEY_DISMISSED),
+          ]);
         if (storedFunctions) setFunctions(JSON.parse(storedFunctions));
         if (storedPrep) setPrepItems(JSON.parse(storedPrep));
         if (storedStaff) setCurrentStaffIdState(storedStaff);
         if (storedNotifs) setNotificationsEnabled(storedNotifs === "true");
+        if (storedBroadcast) setBroadcastState(JSON.parse(storedBroadcast));
+        if (storedDismissed) setDismissedBroadcastId(storedDismissed);
       } catch {
         // use defaults
       }
@@ -171,6 +193,23 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
     setNotificationsEnabled(notificationsOn);
     AsyncStorage.setItem(STORAGE_KEY_CURRENT_STAFF, id ?? "");
     AsyncStorage.setItem(STORAGE_KEY_NOTIFS, String(notificationsOn));
+  }, []);
+
+  const setBroadcast = useCallback((msg: BroadcastMessage) => {
+    setBroadcastState(msg);
+    AsyncStorage.setItem(STORAGE_KEY_BROADCAST, JSON.stringify(msg));
+  }, []);
+
+  const clearBroadcast = useCallback(() => {
+    setBroadcastState(null);
+    setDismissedBroadcastId(null);
+    AsyncStorage.removeItem(STORAGE_KEY_BROADCAST);
+    AsyncStorage.removeItem(STORAGE_KEY_DISMISSED);
+  }, []);
+
+  const dismissBroadcast = useCallback((id: string) => {
+    setDismissedBroadcastId(id);
+    AsyncStorage.setItem(STORAGE_KEY_DISMISSED, id);
   }, []);
 
   const togglePrepItem = useCallback((id: string) => {
@@ -208,7 +247,12 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
         staff,
         currentStaffId,
         notificationsEnabled,
+        broadcastMessage,
+        dismissedBroadcastId,
         setCurrentStaff,
+        setBroadcast,
+        clearBroadcast,
+        dismissBroadcast,
         togglePrepItem,
         toggleTimelineItem,
         todayDate,

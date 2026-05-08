@@ -1,17 +1,22 @@
 import { Feather, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
-import React, { useMemo } from "react";
+import React, { useRef, useState } from "react";
 import {
+  Alert,
+  KeyboardAvoidingView,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
+  TouchableWithoutFeedback,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useKitchen } from "@/context/KitchenContext";
+import { BroadcastMessage, useKitchen } from "@/context/KitchenContext";
 import { useColors } from "@/hooks/useColors";
 
 function timeToMinutes(t: string) {
@@ -29,16 +34,36 @@ function getRoleColor(role: string, colors: ReturnType<typeof useColors>) {
   }
 }
 
+function formatRelativeTime(isoString: string): string {
+  const sent = new Date(isoString);
+  const now = new Date();
+  const diffMs = now.getTime() - sent.getTime();
+  const diffMin = Math.floor(diffMs / 60000);
+  if (diffMin < 1) return "just now";
+  if (diffMin < 60) return `${diffMin}min ago`;
+  const diffH = Math.floor(diffMin / 60);
+  if (diffH < 24) return `${diffH}h ago`;
+  return sent.toLocaleDateString("en-AU", { day: "numeric", month: "short" });
+}
+
+const MANAGER_ROLES = ["Head Chef", "Sous Chef", "Pastry Chef"];
+
 export default function TodayScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { functions, prepItems, staff, todayDate, currentStaffId, notificationsEnabled } = useKitchen();
+  const {
+    functions, prepItems, staff, todayDate,
+    currentStaffId, notificationsEnabled,
+    broadcastMessage, dismissedBroadcastId,
+    setBroadcast, clearBroadcast, dismissBroadcast,
+  } = useKitchen();
 
   const now = new Date();
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
 
   const currentMember = currentStaffId ? staff.find((s) => s.id === currentStaffId) ?? null : null;
+  const isManager = currentMember ? MANAGER_ROLES.includes(currentMember.role) : false;
   const myFunctions = currentMember
     ? functions.filter((f) => currentMember.functionIds.includes(f.id))
     : [];
@@ -47,16 +72,61 @@ export default function TodayScreen() {
   const completedPrep = prepItems.filter((p) => p.completed).length;
   const prepPercent = totalPrep > 0 ? completedPrep / totalPrep : 0;
 
-  const nextFunction = useMemo(() => {
+  const nextFunction = (() => {
     const pool = currentMember ? myFunctions : functions;
     return pool
       .filter((f) => timeToMinutes(f.startTime) > nowMinutes)
       .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime))[0];
-  }, [functions, myFunctions, currentMember, nowMinutes]);
+  })();
+  const minutesUntilNext = nextFunction ? timeToMinutes(nextFunction.startTime) - nowMinutes : null;
 
-  const minutesUntilNext = nextFunction
-    ? timeToMinutes(nextFunction.startTime) - nowMinutes
-    : null;
+  const showBroadcast =
+    broadcastMessage !== null &&
+    broadcastMessage.id !== dismissedBroadcastId;
+
+  const [composeVisible, setComposeVisible] = useState(false);
+  const [draftText, setDraftText] = useState("");
+  const inputRef = useRef<TextInput>(null);
+
+  function openCompose() {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setDraftText("");
+    setComposeVisible(true);
+  }
+
+  function sendBroadcast() {
+    const trimmed = draftText.trim();
+    if (!trimmed || !currentMember) return;
+    const msg: BroadcastMessage = {
+      id: Date.now().toString(),
+      text: trimmed,
+      senderName: currentMember.name,
+      senderRole: currentMember.role,
+      sentAt: new Date().toISOString(),
+    };
+    setBroadcast(msg);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    setComposeVisible(false);
+    setDraftText("");
+  }
+
+  function handleClearBroadcast() {
+    Alert.alert(
+      "Cancel alert",
+      "Remove this broadcast for all staff?",
+      [
+        { text: "Keep it", style: "cancel" },
+        {
+          text: "Remove",
+          style: "destructive",
+          onPress: () => {
+            clearBroadcast();
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          },
+        },
+      ]
+    );
+  }
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
 
@@ -67,9 +137,62 @@ export default function TodayScreen() {
       paddingTop: topPad + 16,
       paddingHorizontal: 20,
       paddingBottom: currentMember ? 8 : 16,
+      flexDirection: "row",
+      alignItems: "flex-end",
     },
+    headerLeft: { flex: 1 },
     dateLabel: { fontSize: 12, fontFamily: "Inter_500Medium", color: colors.mutedForeground, letterSpacing: 1, textTransform: "uppercase" },
     headerTitle: { fontSize: 26, fontFamily: "Inter_700Bold", color: colors.foreground, marginTop: 2 },
+    broadcastBtn: {
+      width: 38,
+      height: 38,
+      borderRadius: 19,
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: 4,
+    },
+    broadcastBanner: {
+      marginHorizontal: 20,
+      marginBottom: 16,
+      borderRadius: colors.radius,
+      borderWidth: 1.5,
+      overflow: "hidden",
+    },
+    broadcastTop: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      padding: 14,
+      gap: 10,
+    },
+    broadcastIconWrap: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      alignItems: "center",
+      justifyContent: "center",
+      marginTop: 1,
+    },
+    broadcastBody: { flex: 1 },
+    broadcastLabel: {
+      fontSize: 10,
+      fontFamily: "Inter_600SemiBold",
+      letterSpacing: 1.1,
+      textTransform: "uppercase",
+      marginBottom: 4,
+    },
+    broadcastText: { fontSize: 14, fontFamily: "Inter_500Medium", lineHeight: 20 },
+    broadcastMeta: { fontSize: 11, fontFamily: "Inter_400Regular", marginTop: 6 },
+    broadcastActions: {
+      flexDirection: "row",
+      borderTopWidth: 1,
+    },
+    broadcastActionBtn: {
+      flex: 1,
+      paddingVertical: 11,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    broadcastActionText: { fontSize: 13, fontFamily: "Inter_600SemiBold" },
     myDayCard: {
       marginHorizontal: 20,
       marginBottom: 16,
@@ -172,15 +295,160 @@ export default function TodayScreen() {
     avatar: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20 },
     avatarText: { fontSize: 11, fontFamily: "Inter_600SemiBold" },
     bottomPad: { height: Platform.OS === "web" ? 34 : insets.bottom + 80 },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: "rgba(0,0,0,0.6)",
+      justifyContent: "flex-end",
+    },
+    modalSheet: {
+      backgroundColor: colors.card,
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+      paddingBottom: Platform.OS === "ios" ? insets.bottom + 8 : 24,
+      borderTopWidth: 1,
+      borderColor: colors.border,
+    },
+    modalHandle: {
+      width: 36,
+      height: 4,
+      borderRadius: 2,
+      backgroundColor: colors.border,
+      alignSelf: "center",
+      marginTop: 12,
+      marginBottom: 4,
+    },
+    modalHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: 20,
+      paddingVertical: 14,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+      gap: 10,
+    },
+    modalTitle: { flex: 1, fontSize: 17, fontFamily: "Inter_700Bold", color: colors.foreground },
+    modalSubtitle: { fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground, marginTop: 2 },
+    modalCloseBtn: {
+      width: 30,
+      height: 30,
+      borderRadius: 15,
+      backgroundColor: colors.secondary,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    inputWrap: {
+      margin: 16,
+      backgroundColor: colors.background,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: colors.border,
+      padding: 14,
+      minHeight: 100,
+    },
+    textInput: {
+      fontSize: 15,
+      fontFamily: "Inter_400Regular",
+      color: colors.foreground,
+      lineHeight: 22,
+    },
+    charCount: { fontSize: 11, fontFamily: "Inter_400Regular", textAlign: "right", marginRight: 16, marginTop: -8, marginBottom: 8 },
+    sendBtn: {
+      marginHorizontal: 16,
+      marginTop: 4,
+      borderRadius: 12,
+      paddingVertical: 15,
+      alignItems: "center",
+      flexDirection: "row",
+      justifyContent: "center",
+      gap: 8,
+    },
+    sendBtnText: { fontSize: 15, fontFamily: "Inter_700Bold", color: "#fff" },
+    tipRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+      marginHorizontal: 16,
+      marginTop: 12,
+    },
+    tipText: { fontSize: 11, fontFamily: "Inter_400Regular", color: colors.mutedForeground, flex: 1 },
   });
+
+  const accentAmber = "#F59E0B";
 
   return (
     <View style={s.root}>
       <ScrollView style={s.scroll} showsVerticalScrollIndicator={false}>
         <View style={s.header}>
-          <Text style={s.dateLabel}>{todayDate}</Text>
-          <Text style={s.headerTitle}>Today's Service</Text>
+          <View style={s.headerLeft}>
+            <Text style={s.dateLabel}>{todayDate}</Text>
+            <Text style={s.headerTitle}>Today's Service</Text>
+          </View>
+          {isManager && (
+            <Pressable
+              style={({ pressed }) => [
+                s.broadcastBtn,
+                {
+                  backgroundColor: showBroadcast ? accentAmber + "25" : colors.card,
+                  borderWidth: 1,
+                  borderColor: showBroadcast ? accentAmber + "60" : colors.border,
+                  opacity: pressed ? 0.75 : 1,
+                },
+              ]}
+              onPress={openCompose}
+            >
+              <Ionicons
+                name="megaphone"
+                size={18}
+                color={showBroadcast ? accentAmber : colors.mutedForeground}
+              />
+            </Pressable>
+          )}
         </View>
+
+        {showBroadcast && broadcastMessage && (
+          <View style={[s.broadcastBanner, { backgroundColor: accentAmber + "12", borderColor: accentAmber + "50" }]}>
+            <View style={s.broadcastTop}>
+              <View style={[s.broadcastIconWrap, { backgroundColor: accentAmber + "25" }]}>
+                <Ionicons name="megaphone" size={16} color={accentAmber} />
+              </View>
+              <View style={s.broadcastBody}>
+                <Text style={[s.broadcastLabel, { color: accentAmber }]}>All-Staff Alert</Text>
+                <Text style={[s.broadcastText, { color: colors.foreground }]}>{broadcastMessage.text}</Text>
+                <Text style={[s.broadcastMeta, { color: colors.mutedForeground }]}>
+                  {broadcastMessage.senderName} · {broadcastMessage.senderRole} · {formatRelativeTime(broadcastMessage.sentAt)}
+                </Text>
+              </View>
+            </View>
+            <View style={[s.broadcastActions, { borderTopColor: accentAmber + "30" }]}>
+              {isManager ? (
+                <>
+                  <Pressable
+                    style={({ pressed }) => [s.broadcastActionBtn, { opacity: pressed ? 0.7 : 1, borderRightWidth: 1, borderRightColor: accentAmber + "30" }]}
+                    onPress={openCompose}
+                  >
+                    <Text style={[s.broadcastActionText, { color: colors.info }]}>Edit</Text>
+                  </Pressable>
+                  <Pressable
+                    style={({ pressed }) => [s.broadcastActionBtn, { opacity: pressed ? 0.7 : 1 }]}
+                    onPress={handleClearBroadcast}
+                  >
+                    <Text style={[s.broadcastActionText, { color: colors.destructive ?? "#EF4444" }]}>Cancel alert</Text>
+                  </Pressable>
+                </>
+              ) : (
+                <Pressable
+                  style={({ pressed }) => [s.broadcastActionBtn, { opacity: pressed ? 0.7 : 1 }]}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    dismissBroadcast(broadcastMessage.id);
+                  }}
+                >
+                  <Text style={[s.broadcastActionText, { color: colors.mutedForeground }]}>Got it</Text>
+                </Pressable>
+              )}
+            </View>
+          </View>
+        )}
 
         {currentMember && (() => {
           const rc = getRoleColor(currentMember.role, colors);
@@ -209,7 +477,6 @@ export default function TodayScreen() {
                   </Text>
                 </View>
               </View>
-
               {myFunctions.length > 0 && (
                 <>
                   <View style={[s.myDayDivider, { backgroundColor: rc + "30" }]} />
@@ -318,6 +585,81 @@ export default function TodayScreen() {
         })}
         <View style={s.bottomPad} />
       </ScrollView>
+
+      <Modal
+        visible={composeVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setComposeVisible(false)}
+      >
+        <TouchableWithoutFeedback onPress={() => setComposeVisible(false)}>
+          <View style={s.modalOverlay}>
+            <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "position" : undefined}>
+              <TouchableWithoutFeedback>
+                <View style={s.modalSheet}>
+                  <View style={s.modalHandle} />
+                  <View style={s.modalHeader}>
+                    <Ionicons name="megaphone" size={20} color={accentAmber} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={s.modalTitle}>Broadcast to all staff</Text>
+                      {currentMember && (
+                        <Text style={s.modalSubtitle}>Sending as {currentMember.name} · {currentMember.role}</Text>
+                      )}
+                    </View>
+                    <Pressable
+                      style={({ pressed }) => [s.modalCloseBtn, { opacity: pressed ? 0.6 : 1 }]}
+                      onPress={() => setComposeVisible(false)}
+                    >
+                      <Feather name="x" size={16} color={colors.mutedForeground} />
+                    </Pressable>
+                  </View>
+
+                  <Pressable style={s.inputWrap} onPress={() => inputRef.current?.focus()}>
+                    <TextInput
+                      ref={inputRef}
+                      style={s.textInput}
+                      placeholder="Type your message to all kitchen staff…"
+                      placeholderTextColor={colors.mutedForeground}
+                      multiline
+                      maxLength={200}
+                      value={draftText}
+                      onChangeText={setDraftText}
+                      autoFocus
+                    />
+                  </Pressable>
+                  <Text style={[s.charCount, { color: draftText.length > 160 ? colors.warning : colors.mutedForeground }]}>
+                    {draftText.length}/200
+                  </Text>
+
+                  <Pressable
+                    style={({ pressed }) => [
+                      s.sendBtn,
+                      {
+                        backgroundColor: draftText.trim().length > 0 ? accentAmber : colors.secondary,
+                        opacity: pressed ? 0.85 : 1,
+                      },
+                    ]}
+                    onPress={sendBroadcast}
+                    disabled={draftText.trim().length === 0}
+                  >
+                    <Ionicons name="megaphone" size={16} color={draftText.trim().length > 0 ? "#fff" : colors.mutedForeground} />
+                    <Text style={[s.sendBtnText, { color: draftText.trim().length > 0 ? "#fff" : colors.mutedForeground }]}>
+                      Send to all staff
+                    </Text>
+                  </Pressable>
+
+                  <View style={s.tipRow}>
+                    <Ionicons name="information-circle-outline" size={14} color={colors.mutedForeground} />
+                    <Text style={s.tipText}>
+                      The alert banner appears on every device when staff open the app today.
+                    </Text>
+                  </View>
+                </View>
+              </TouchableWithoutFeedback>
+            </KeyboardAvoidingView>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
     </View>
   );
 }
