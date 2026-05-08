@@ -1,8 +1,10 @@
 import { Feather, Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import { useRouter } from "expo-router";
 import React, { useMemo, useState } from "react";
 import {
   Alert,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -68,9 +70,11 @@ function getFunctionTypeColor(type: string): string {
 export default function RosterScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { staff, functions, prepItems, currentStaffId, notificationsEnabled, sickStaffIds, setCurrentStaff, markStaffSick } = useKitchen();
+  const router = useRouter();
+  const { staff, functions, prepItems, currentStaffId, notificationsEnabled, sickStaffIds, setCurrentStaff, markStaffSick, resetToSampleData, clearAllData } = useKitchen();
   const [loading, setLoading] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [showSettings, setShowSettings] = useState(false);
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const minHour = HOURS[0];
@@ -153,6 +157,8 @@ export default function RosterScreen() {
     header: { paddingTop: topPad + 16, paddingHorizontal: 20, paddingBottom: 10 },
     title: { fontSize: 26, fontFamily: "Inter_700Bold", color: colors.foreground },
     subtitle: { fontSize: 13, fontFamily: "Inter_400Regular", color: colors.mutedForeground, marginTop: 2 },
+    headerBtn: { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border },
+    headerBtnText: { fontSize: 13, fontFamily: "Inter_600SemiBold" },
     searchRow: { flexDirection: "row", alignItems: "center", marginHorizontal: 20, marginBottom: 14, backgroundColor: colors.card, borderRadius: 12, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 12, gap: 10, height: 44 },
     searchInput: { flex: 1, fontSize: 14, fontFamily: "Inter_400Regular", color: colors.foreground },
     clearBtn: { padding: 4 },
@@ -235,8 +241,27 @@ export default function RosterScreen() {
     <View style={s.root}>
       <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         <View style={s.header}>
-          <Text style={s.title}>Roster</Text>
-          <Text style={s.subtitle}>{staff.length} staff today · {functions.length} functions</Text>
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <View style={{ flex: 1 }}>
+              <Text style={s.title}>Roster</Text>
+              <Text style={s.subtitle}>{staff.length} staff today · {functions.length} functions</Text>
+            </View>
+            <View style={{ flexDirection: "row", gap: 8 }}>
+              <Pressable
+                style={({ pressed }) => [s.headerBtn, { opacity: pressed ? 0.7 : 1 }]}
+                onPress={() => router.push("/staff/new")}
+              >
+                <Feather name="user-plus" size={15} color={colors.accent} />
+                <Text style={[s.headerBtnText, { color: colors.accent }]}>Add</Text>
+              </Pressable>
+              <Pressable
+                style={({ pressed }) => [s.headerBtn, { opacity: pressed ? 0.7 : 1 }]}
+                onPress={() => setShowSettings(true)}
+              >
+                <Feather name="settings" size={15} color={colors.mutedForeground} />
+              </Pressable>
+            </View>
+          </View>
         </View>
 
         {/* Search */}
@@ -465,6 +490,19 @@ export default function RosterScreen() {
                 <View style={s.rightActions}>
                   <Text style={s.shiftTime}>{member.shiftStart}–{member.shiftEnd}</Text>
                   <View style={s.actionBtnRow}>
+                    {/* Edit — managers only */}
+                    {isManager && (
+                      <Pressable
+                        style={({ pressed }) => [
+                          s.sickBtn,
+                          { backgroundColor: "transparent", borderColor: colors.border, opacity: pressed ? 0.7 : 1 },
+                        ]}
+                        onPress={() => router.push(`/staff/${member.id}`)}
+                      >
+                        <Feather name="edit-2" size={11} color={colors.mutedForeground} />
+                        <Text style={[s.sickBtnText, { color: colors.mutedForeground }]}>Edit</Text>
+                      </Pressable>
+                    )}
                     {/* Sick call button — managers only, not on themselves */}
                     {isManager && member.id !== currentStaffId && (
                       <Pressable
@@ -551,8 +589,118 @@ export default function RosterScreen() {
           );
         })}
 
+        {/* Empty state */}
+        {staff.length === 0 && search.length === 0 && (
+          <View style={{ alignItems: "center", padding: 40, gap: 12 }}>
+            <Feather name="users" size={40} color={colors.mutedForeground} />
+            <Text style={{ fontSize: 18, fontFamily: "Inter_700Bold", color: colors.foreground }}>No staff yet</Text>
+            <Text style={{ fontSize: 14, fontFamily: "Inter_400Regular", color: colors.mutedForeground, textAlign: "center" }}>
+              Tap "Add" to add your first team member, or load sample data from settings.
+            </Text>
+            <Pressable
+              style={{ marginTop: 8, flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 20, paddingVertical: 12, borderRadius: 12, backgroundColor: colors.accent }}
+              onPress={() => router.push("/staff/new")}
+            >
+              <Feather name="user-plus" size={16} color="#fff" />
+              <Text style={{ fontSize: 14, fontFamily: "Inter_700Bold", color: "#fff" }}>Add first staff member</Text>
+            </Pressable>
+          </View>
+        )}
+
         <View style={s.bottomPad} />
       </ScrollView>
+
+      {/* Settings Modal */}
+      <Modal visible={showSettings} transparent animationType="slide" onRequestClose={() => setShowSettings(false)}>
+        <Pressable style={{ flex: 1, backgroundColor: "#00000060" }} onPress={() => setShowSettings(false)} />
+        <View style={{
+          backgroundColor: colors.card, borderTopLeftRadius: 20, borderTopRightRadius: 20,
+          paddingHorizontal: 20, paddingTop: 16, paddingBottom: insets.bottom + 20,
+          borderTopWidth: 1, borderTopColor: colors.border,
+        }}>
+          {/* Handle */}
+          <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: colors.border, alignSelf: "center", marginBottom: 16 }} />
+          <Text style={{ fontSize: 18, fontFamily: "Inter_700Bold", color: colors.foreground, marginBottom: 4 }}>Settings & Data</Text>
+          <Text style={{ fontSize: 13, fontFamily: "Inter_400Regular", color: colors.mutedForeground, marginBottom: 20 }}>
+            Manage staff, app data and reset options
+          </Text>
+
+          {/* Manage staff */}
+          <Pressable
+            style={({ pressed }) => ({
+              flexDirection: "row", alignItems: "center", gap: 14,
+              padding: 16, borderRadius: 12, borderWidth: 1, borderColor: colors.border,
+              backgroundColor: colors.background, marginBottom: 10, opacity: pressed ? 0.7 : 1,
+            })}
+            onPress={() => { setShowSettings(false); router.push("/staff/new"); }}
+          >
+            <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: colors.accent + "20", alignItems: "center", justifyContent: "center" }}>
+              <Feather name="user-plus" size={18} color={colors.accent} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: 15, fontFamily: "Inter_600SemiBold", color: colors.foreground }}>Add Staff Member</Text>
+              <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground }}>Add a new person to your roster</Text>
+            </View>
+            <Feather name="chevron-right" size={16} color={colors.mutedForeground} />
+          </Pressable>
+
+          {/* Reset to sample */}
+          <Pressable
+            style={({ pressed }) => ({
+              flexDirection: "row", alignItems: "center", gap: 14,
+              padding: 16, borderRadius: 12, borderWidth: 1, borderColor: "#F59E0B40",
+              backgroundColor: "#F59E0B08", marginBottom: 10, opacity: pressed ? 0.7 : 1,
+            })}
+            onPress={() => {
+              setShowSettings(false);
+              Alert.alert(
+                "Load Sample Data?",
+                "This will replace all current staff, functions and prep lists with the built-in demo data. Your changes will be lost.",
+                [
+                  { text: "Cancel", style: "cancel" },
+                  { text: "Load sample data", onPress: () => { resetToSampleData(); Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); } },
+                ]
+              );
+            }}
+          >
+            <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: "#F59E0B20", alignItems: "center", justifyContent: "center" }}>
+              <Feather name="refresh-cw" size={18} color="#F59E0B" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: 15, fontFamily: "Inter_600SemiBold", color: "#F59E0B" }}>Load Sample Data</Text>
+              <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground }}>Restore demo staff, functions and prep lists</Text>
+            </View>
+          </Pressable>
+
+          {/* Clear all */}
+          <Pressable
+            style={({ pressed }) => ({
+              flexDirection: "row", alignItems: "center", gap: 14,
+              padding: 16, borderRadius: 12, borderWidth: 1, borderColor: "#EF444440",
+              backgroundColor: "#EF444408", opacity: pressed ? 0.7 : 1,
+            })}
+            onPress={() => {
+              setShowSettings(false);
+              Alert.alert(
+                "Clear All Data?",
+                "This will permanently delete all staff, functions, prep lists and your sign-in. You will start with a blank slate.",
+                [
+                  { text: "Cancel", style: "cancel" },
+                  { text: "Clear everything", style: "destructive", onPress: () => { clearAllData(); Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning); } },
+                ]
+              );
+            }}
+          >
+            <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: "#EF444420", alignItems: "center", justifyContent: "center" }}>
+              <Feather name="trash-2" size={18} color="#EF4444" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: 15, fontFamily: "Inter_600SemiBold", color: "#EF4444" }}>Clear All Data</Text>
+              <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground }}>Start fresh with a blank app — cannot be undone</Text>
+            </View>
+          </Pressable>
+        </View>
+      </Modal>
     </View>
   );
 }

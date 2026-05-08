@@ -455,6 +455,11 @@ interface KitchenContextType {
   addFunction: (fn: KitchenFunction) => void;
   deleteFunction: (id: string) => void;
   markStaffSick: (staffId: string, sick: boolean) => void;
+  addStaff: (member: StaffMember) => void;
+  updateStaff: (id: string, updates: Partial<StaffMember>) => void;
+  removeStaff: (id: string) => void;
+  resetToSampleData: () => void;
+  clearAllData: () => void;
   todayDate: string;
 }
 
@@ -467,11 +472,12 @@ const STORAGE_KEY_CURRENT_STAFF = "@kitchen_current_staff";
 const STORAGE_KEY_NOTIFS = "@kitchen_notifs_enabled";
 const STORAGE_KEY_BROADCAST = "@kitchen_broadcast";
 const STORAGE_KEY_DISMISSED = "@kitchen_dismissed_broadcast";
+const STORAGE_KEY_STAFF = "@kitchen_staff_v1";
 
 export function KitchenProvider({ children }: { children: React.ReactNode }) {
   const [functions, setFunctions] = useState<KitchenFunction[]>(SAMPLE_FUNCTIONS);
   const [prepItems, setPrepItems] = useState<PrepItem[]>(SAMPLE_PREP);
-  const [staff] = useState<StaffMember[]>(SAMPLE_STAFF);
+  const [staff, setStaff] = useState<StaffMember[]>(SAMPLE_STAFF);
   const [sickStaffIds, setSickStaffIds] = useState<string[]>([]);
   const [currentStaffId, setCurrentStaffIdState] = useState<string | null>(null);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
@@ -484,7 +490,7 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     (async () => {
       try {
-        const [storedFunctions, storedPrep, storedStaff, storedNotifs, storedBroadcast, storedDismissed, storedSick] =
+        const [storedFunctions, storedPrep, storedCurrentStaff, storedNotifs, storedBroadcast, storedDismissed, storedSick, storedStaffList] =
           await Promise.all([
             AsyncStorage.getItem(STORAGE_KEY_FUNCTIONS),
             AsyncStorage.getItem(STORAGE_KEY_PREP),
@@ -493,14 +499,16 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
             AsyncStorage.getItem(STORAGE_KEY_BROADCAST),
             AsyncStorage.getItem(STORAGE_KEY_DISMISSED),
             AsyncStorage.getItem(STORAGE_KEY_SICK),
+            AsyncStorage.getItem(STORAGE_KEY_STAFF),
           ]);
         if (storedFunctions) setFunctions(JSON.parse(storedFunctions));
         if (storedPrep) setPrepItems(JSON.parse(storedPrep));
-        if (storedStaff) setCurrentStaffIdState(storedStaff);
+        if (storedCurrentStaff) setCurrentStaffIdState(storedCurrentStaff);
         if (storedNotifs) setNotificationsEnabled(storedNotifs === "true");
         if (storedBroadcast) setBroadcastState(JSON.parse(storedBroadcast));
         if (storedDismissed) setDismissedBroadcastId(storedDismissed);
         if (storedSick) setSickStaffIds(JSON.parse(storedSick));
+        if (storedStaffList) setStaff(JSON.parse(storedStaffList));
       } catch {
         // use defaults
       }
@@ -585,6 +593,68 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
+  const addStaff = useCallback((member: StaffMember) => {
+    setStaff((prev) => {
+      const updated = [...prev, member];
+      AsyncStorage.setItem(STORAGE_KEY_STAFF, JSON.stringify(updated));
+      return updated;
+    });
+  }, []);
+
+  const updateStaff = useCallback((id: string, updates: Partial<StaffMember>) => {
+    setStaff((prev) => {
+      const updated = prev.map((m) => m.id === id ? { ...m, ...updates } : m);
+      AsyncStorage.setItem(STORAGE_KEY_STAFF, JSON.stringify(updated));
+      return updated;
+    });
+  }, []);
+
+  const removeStaff = useCallback((id: string) => {
+    setStaff((prev) => {
+      const updated = prev.filter((m) => m.id !== id);
+      AsyncStorage.setItem(STORAGE_KEY_STAFF, JSON.stringify(updated));
+      return updated;
+    });
+    setSickStaffIds((prev) => prev.filter((x) => x !== id));
+    setCurrentStaffIdState((prev) => {
+      if (prev === id) {
+        AsyncStorage.setItem(STORAGE_KEY_CURRENT_STAFF, "");
+        return null;
+      }
+      return prev;
+    });
+  }, []);
+
+  const resetToSampleData = useCallback(() => {
+    setStaff(SAMPLE_STAFF);
+    setFunctions(SAMPLE_FUNCTIONS);
+    setPrepItems(SAMPLE_PREP);
+    setSickStaffIds([]);
+    setCurrentStaffIdState(null);
+    Promise.all([
+      AsyncStorage.setItem(STORAGE_KEY_STAFF, JSON.stringify(SAMPLE_STAFF)),
+      AsyncStorage.setItem(STORAGE_KEY_FUNCTIONS, JSON.stringify(SAMPLE_FUNCTIONS)),
+      AsyncStorage.setItem(STORAGE_KEY_PREP, JSON.stringify(SAMPLE_PREP)),
+      AsyncStorage.setItem(STORAGE_KEY_SICK, JSON.stringify([])),
+      AsyncStorage.setItem(STORAGE_KEY_CURRENT_STAFF, ""),
+    ]);
+  }, []);
+
+  const clearAllData = useCallback(() => {
+    setStaff([]);
+    setFunctions([]);
+    setPrepItems([]);
+    setSickStaffIds([]);
+    setCurrentStaffIdState(null);
+    Promise.all([
+      AsyncStorage.setItem(STORAGE_KEY_STAFF, JSON.stringify([])),
+      AsyncStorage.setItem(STORAGE_KEY_FUNCTIONS, JSON.stringify([])),
+      AsyncStorage.setItem(STORAGE_KEY_PREP, JSON.stringify([])),
+      AsyncStorage.setItem(STORAGE_KEY_SICK, JSON.stringify([])),
+      AsyncStorage.setItem(STORAGE_KEY_CURRENT_STAFF, ""),
+    ]);
+  }, []);
+
   return (
     <KitchenContext.Provider
       value={{
@@ -592,7 +662,8 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
         currentStaffId, notificationsEnabled,
         broadcastMessage, dismissedBroadcastId,
         setCurrentStaff, setBroadcast, clearBroadcast, dismissBroadcast,
-        togglePrepItem, toggleTimelineItem, updateFunction, addFunction, deleteFunction, markStaffSick, todayDate,
+        togglePrepItem, toggleTimelineItem, updateFunction, addFunction, deleteFunction, markStaffSick,
+        addStaff, updateStaff, removeStaff, resetToSampleData, clearAllData, todayDate,
       }}
     >
       {children}
