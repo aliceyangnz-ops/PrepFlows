@@ -5,7 +5,14 @@ export interface TimelineItem {
   id: string;
   time: string;
   task: string;
+  category: "setup" | "venue" | "service" | "brief" | "close";
   completed: boolean;
+}
+
+export interface DietaryRequirement {
+  name: string;
+  count: number;
+  note?: string;
 }
 
 export type FunctionType =
@@ -37,6 +44,7 @@ export interface KitchenFunction {
   guestCount: number;
   status: "upcoming" | "active" | "completed";
   menu: string[];
+  dietaryRequirements: DietaryRequirement[];
   serviceTimes?: ServiceTimes;
   teamIds: string[];
   timeline: TimelineItem[];
@@ -98,25 +106,36 @@ const SAMPLE_FUNCTIONS: KitchenFunction[] = [
     endTime: "15:00",
     guestCount: 280,
     status: "upcoming",
+    dietaryRequirements: [
+      { name: "Gluten Free", count: 12, note: "Separate plating — GF label on pass. No croutons, GF gratin." },
+      { name: "Vegan", count: 4, note: "Portobello mushroom main. Panna cotta — coconut milk set, check berry coulis." },
+      { name: "Nut Allergy", count: 3, note: "SEVERE — no shared boards. Check truffle gratin (contains pine nuts). Epinephrine on site." },
+      { name: "Dairy Free", count: 2, note: "No béarnaise. DF margarine sub. Panna cotta coconut milk — confirm with Pastry." },
+      { name: "Shellfish Allergy", count: 1, note: "No prawn cocktail. Replace with smoked salmon alternative — confirm with Head Chef." },
+    ],
     serviceTimes: {
       entree: "12:00",
       main: "12:35",
       dessert: "13:30",
     },
     menu: [
-      "Entrée: Prawn Cocktail — tiger prawns, Marie Rose, iceberg, lemon",
-      "Main: Roasted MSA Eye Fillet — béarnaise, truffle gratin, broccolini",
-      "Dessert: Vanilla Panna Cotta — berry coulis, micro herbs",
+      "Entrée: Tiger Prawn Cocktail — 5 poached tiger prawns, Marie Rose, iceberg lettuce, lemon | GF | Alt: smoked salmon (shellfish allergy)",
+      "Main: Roasted MSA Eye Fillet 220g — béarnaise sauce, truffle potato gratin, charred broccolini | GF | Alt: portobello mushroom stack (V, GF, DF)",
+      "Dessert: Vanilla Panna Cotta — berry coulis, micro herbs, shortbread tuile | GF (without tuile) | Alt: poached pear (V, GF, DF)",
     ],
     teamIds: ["s1", "s2", "s3", "s6"],
     timeline: [
-      { id: "t1", time: "06:00", task: "Mise en place — all stations set, benches clear, HACCP sheets started", completed: true },
-      { id: "t2", time: "08:00", task: "Eye fillet: trim sinew, truss, portion 220g × 280. Season & hold chilled", completed: true },
-      { id: "t3", time: "10:00", task: "Béarnaise reduction on. Gratin into deck oven 180°C. Cocktail sauce bottled", completed: false },
-      { id: "t4", time: "11:30", task: "Ballroom A service check — crockery polished, mise en place on pass", completed: false },
-      { id: "t5", time: "12:00", task: "Entrée away — prawn cocktail plated & fired", completed: false },
-      { id: "t6", time: "12:35", task: "Fire mains — sear fillet in clarified butter, finish 180°C to 54°C core", completed: false },
-      { id: "t7", time: "13:30", task: "Dessert away — panna cotta garnished & plated", completed: false },
+      { id: "t1",  time: "06:00", task: "KITCHEN OPEN — Mise en place. All stations set, benches clear, HACCP sheets started. Cold room temp check.", category: "setup", completed: true },
+      { id: "t2",  time: "08:00", task: "Eye fillet: trim sinew, truss, portion 220g × 280. Season. Hold chilled on trays. GF gratin trays labelled.", category: "setup", completed: true },
+      { id: "t3",  time: "10:00", task: "Béarnaise reduction on. Gratin into deck oven 180°C/45min. Marie Rose & cocktail sauce bottled. Allergen alternates prepped.", category: "setup", completed: false },
+      { id: "t4",  time: "11:30", task: "VENUE CHECK — Ballroom A: crockery polished, mise en place on pass, lamps on. Table numbers confirmed vs seating chart.", category: "venue", completed: false },
+      { id: "t5",  time: "11:45", task: "PRE-SERVICE BRIEF — All team. Runner sections confirmed. Allergen plan reviewed. Kitchen radio comms check. Head Chef to sign off.", category: "brief", completed: false },
+      { id: "t6",  time: "12:00", task: "GUESTS ARRIVE — Ballroom A, Level 1. Function Captain David Park at entrance. Dietary alternates on separate tray — labelled & ready.", category: "service", completed: false },
+      { id: "t7",  time: "12:00", task: "ENTRÉE AWAY — Prawn cocktail × 268 standard + 1 × salmon (shellfish alt). Fire all simultaneously. Garnish: lemon wedge, paprika dust.", category: "service", completed: false },
+      { id: "t8",  time: "12:35", task: "FIRE MAINS — Sear fillet clarified butter all sides. Finish 180°C/54°C core. Rest 3min tented. GF plates: no truffle crouton.", category: "service", completed: false },
+      { id: "t9",  time: "13:30", task: "DESSERT AWAY — Panna cotta × 276 standard + 4 × poached pear (V alt). Garnish: berry coulis, micro herbs. GF: no shortbread.", category: "service", completed: false },
+      { id: "t10", time: "14:30", task: "Last covers cleared. Pass broken down. Leftover food labelled & chilled for HACCP. Function Captain signs off room with Events.", category: "close", completed: false },
+      { id: "t11", time: "15:00", task: "KITCHEN CLEAR — All surfaces sanitised. HACCP sheets completed & signed off by Head Chef. Waste logged.", category: "close", completed: false },
     ],
   },
   {
@@ -129,23 +148,32 @@ const SAMPLE_FUNCTIONS: KitchenFunction[] = [
     endTime: "14:30",
     guestCount: 18,
     status: "upcoming",
+    dietaryRequirements: [
+      { name: "Vegetarian", count: 2, note: "Mushroom risotto main. Antipasto: remove prosciutto & salami. EVOO & giardiniera OK." },
+      { name: "Gluten Free", count: 1, note: "No grissini on platter. GF bread roll available. Confirm fondant — use GF flour sub." },
+      { name: "Halal", count: 1, note: "No prosciutto, no salami. Replace with halal chicken/roasted capsicum on platter. Confirm with Events Manager." },
+    ],
     serviceTimes: {
       entree: "13:00",
       main: "13:25",
       dessert: "14:05",
     },
     menu: [
-      "Starter: Antipasto — cured meats, giardiniera, grissini, EVOO",
-      "Main: Chicken Supreme — airline breast, jus lié, pomme purée, seasonal greens",
-      "Dessert: Chocolate Fondant — Valrhona 70%, crème anglaise, vanilla ice cream",
+      "Starter: Antipasto Sharing Platter — cured meats, giardiniera, grissini, EVOO, olives, marinated artichoke | GF on request (no grissini) | V: remove cured meats | Halal: halal meats only",
+      "Main: Chicken Supreme 200g — airline breast, jus lié, pomme purée, seasonal greens | GF | Alt: wild mushroom risotto (V, GF)",
+      "Dessert: Chocolate Fondant — Valrhona 70%, crème anglaise, vanilla bean ice cream | Alt: seasonal fruit plate (V, GF, DF)",
     ],
     teamIds: ["s1", "s3", "s6"],
     timeline: [
-      { id: "t8", time: "09:00", task: "Mise en place — fondant batter made & chilled. Chicken trimmed & portioned 200g", completed: true },
-      { id: "t9", time: "12:30", task: "Suite 3 set — crockery & cutlery polished, water poured", completed: false },
-      { id: "t10", time: "13:00", task: "Fire entrée — antipasto platters dressed & away", completed: false },
-      { id: "t11", time: "13:25", task: "Fire mains — sear chicken skin-down 3min, flip, finish 180°C to 74°C core. Rest 5min", completed: false },
-      { id: "t12", time: "14:05", task: "Fire fondants 200°C/8min to order — jiggly centre only. Plate immediately", completed: false },
+      { id: "t12", time: "09:00", task: "KITCHEN OPEN — Fondant batter made & chilled. Chicken trimmed & portioned 200g × 18 + 2 spares. Mushroom risotto base on.", category: "setup", completed: true },
+      { id: "t13", time: "10:00", task: "Dietary alternates: GF fondant batter made (separate bowl, labelled). Halal antipasto tray prepped & wrapped. Vegetarian risotto portioned.", category: "setup", completed: false },
+      { id: "t14", time: "12:30", task: "VENUE CHECK — Suite 3: white linen runner, polished crockery, 5-piece cutlery, water goblet. Client seating cards per Events list.", category: "venue", completed: false },
+      { id: "t15", time: "12:45", task: "PRE-SERVICE BRIEF — 3 staff: Function Captain David Park, plus runners. Allergen seats confirmed (GF seat 4, V seats 7 & 12, Halal seat 15).", category: "brief", completed: false },
+      { id: "t16", time: "12:50", task: "Function Captain greets client in Level 2 lobby. Welcome drinks poured. Still & sparkling water on table.", category: "venue", completed: false },
+      { id: "t17", time: "13:00", task: "CLIENT SEATED — Suite 3, Level 2. Antipasto platters pre-set on table. Halal platter to seat 15, V platter centre.", category: "service", completed: false },
+      { id: "t18", time: "13:25", task: "FIRE MAINS — Chicken sear skin-down 3min (do not move), flip, 180°C/74°C core. Rest 5min. Risotto reheated, adjust seasoning.", category: "service", completed: false },
+      { id: "t19", time: "14:05", task: "FIRE DESSERT — Fondants 200°C/8min to order. Jiggly centre only. GF fondant in separate ramekin (clearly marked). Plate immediately.", category: "service", completed: false },
+      { id: "t20", time: "14:30", task: "SERVICE COMPLETE — Room cleared. Client farewell. HACCP sheets signed. Suite 3 reset for next booking.", category: "close", completed: false },
     ],
   },
   {
@@ -158,6 +186,14 @@ const SAMPLE_FUNCTIONS: KitchenFunction[] = [
     endTime: "23:00",
     guestCount: 450,
     status: "upcoming",
+    dietaryRequirements: [
+      { name: "Gluten Free", count: 28, note: "Wellington: deconstructed fillet + duxelles, no filo. GF trays clearly labelled. Separate pass section for GF." },
+      { name: "Vegan", count: 12, note: "Mushroom Wellington (V, GF). No bisque — tomato consommé. No wagyu amuse — beet tartare. Check croquembouche (contains egg)." },
+      { name: "Nut Allergy", count: 8, note: "SEVERE — check all sauces. Truffle oil OK. Pine nuts in duxelles — REMOVE for nut allergy plates. Epinephrine on site, notify Function Captain." },
+      { name: "Dairy Free", count: 6, note: "No crème anglaise, no butter sauces. DF margarine for searing. Bisque: coconut cream sub. Croquembouche: no crème pât — sorbet alt." },
+      { name: "Shellfish Allergy", count: 4, note: "No scallop entrée — mushroom bruschetta alt. No bisque — tomato consommé. Check Madeira jus (shellfish-free stock confirmed)." },
+      { name: "Halal", count: 2, note: "Halal beef fillet confirmed with supplier. No alcohol sauces (brandy bisque replaced with tomato consommé). Confirm with Head Chef." },
+    ],
     serviceTimes: {
       amuse: "19:00",
       entree: "19:30",
@@ -165,25 +201,29 @@ const SAMPLE_FUNCTIONS: KitchenFunction[] = [
       dessert: "21:45",
     },
     menu: [
-      "Amuse-bouche: Wagyu Tartare — shallot, capers, Dijon, quail yolk, crostini",
-      "Entrée: Seared Scallop — U10, cauliflower purée, crispy pancetta, micro watercress",
-      "Soup: Lobster Bisque — roasted shell base, brandy flambe, 35% cream",
-      "Main: Beef Wellington — MSA fillet, duxelles, filo, Madeira jus",
-      "Dessert: Croquembouche — choux, crème pât, spun toffee (30 pax per tower)",
+      "Amuse-bouche: Wagyu Beef Tartare — shallot, capers, Dijon, quail yolk, crostini | Alt: roasted beet tartare (V, GF)",
+      "Entrée: Seared U10 Scallop — cauliflower purée, crispy pancetta, micro watercress | Alt: mushroom bruschetta (V, shellfish allergy)",
+      "Soup: Lobster Bisque — roasted shell base, brandy flambe, 35% cream | Alt: tomato consommé (V, GF, shellfish & alcohol alt)",
+      "Main: Beef Wellington — MSA fillet, wild mushroom duxelles, filo pastry, Madeira jus | GF: deconstructed | Alt: mushroom Wellington (V, GF)",
+      "Dessert: Croquembouche — choux, crème pâtissière, spun toffee (30 pax per tower) | Alt: dark chocolate fondant (GF) | DF: mango sorbet",
     ],
     teamIds: ["s1", "s2", "s4", "s5", "s6"],
     timeline: [
-      { id: "t13", time: "07:00", task: "Wellington: sear fillet all sides smoking pan 30sec/side. Chill to 4°C. Duxelles on", completed: false },
-      { id: "t14", time: "09:00", task: "Duxelles reduce dry — no moisture. Assemble Wellingtons, wrap filo, chill", completed: false },
-      { id: "t15", time: "10:00", task: "Pastry: choux batter, bake 200°C/18min no peeking. Fill with crème pât < 5°C", completed: false },
-      { id: "t16", time: "13:00", task: "Bisque: roast shells, flambe brandy, add stock, reduce by 1/3. Strain. Taste & season", completed: false },
-      { id: "t17", time: "15:00", task: "Scallops dry on paper towel — critical for sear. Cauliflower purée blended smooth", completed: false },
-      { id: "t18", time: "17:00", task: "Grand Ballroom set — all crockery polished, pass mise en place complete", completed: false },
-      { id: "t19", time: "18:30", task: "Croquembouche assembly. 15 towers × 30 pax. Keep dry — NO humidity", completed: false },
-      { id: "t20", time: "19:00", task: "Amuse away — wagyu tartare plated × 450", completed: false },
-      { id: "t21", time: "19:30", task: "Fire entrée — scallops: sear smoking clarified butter 90sec/side, do NOT move", completed: false },
-      { id: "t22", time: "20:30", task: "Fire Wellingtons: 220°C/12min to 54°C core. Rest 5min tented. Madeira jus reheated", completed: false },
-      { id: "t23", time: "21:45", task: "Dessert away — croquembouche on tables, spun toffee on last", completed: false },
+      { id: "t21", time: "07:00", task: "KITCHEN OPEN — Wellington: sear fillet smoking pan 30sec/side. Deep Maillard crust. Chill to 4°C before wrapping. Duxelles on (no pine nuts for nut allergy batch).", category: "setup", completed: false },
+      { id: "t22", time: "09:00", task: "Duxelles reduce bone dry — zero moisture or pastry weeps. Wellingtons wrapped filo, seam-down, chilled. Allergen batch labelled & separated.", category: "setup", completed: false },
+      { id: "t23", time: "10:00", task: "Pastry: choux puffs baked 200°C/18min — NO peeking. Cool on rack. Fill crème pât cooled < 5°C. GF fondant batter prepared (separate bowl).", category: "setup", completed: false },
+      { id: "t24", time: "13:00", task: "Bisque: roast lobster shells 220°C/20min. Sweat mirepoix, brandy flambe, add stock, reduce by 1/3. Strain fine chinois. Taste & season.", category: "setup", completed: false },
+      { id: "t25", time: "15:00", task: "Scallops dry on paper towel minimum 2h — CRITICAL for sear. Cauliflower purée blended smooth, seasoned. Vegan amuse (beet tartare) prepped.", category: "setup", completed: false },
+      { id: "t26", time: "17:00", task: "VENUE CHECK — Grand Ballroom: 53 rounds set (50 × 9 + 3 VIP × 10). Charger plates, gold overlay, 4-glass set, menu & name cards on VIP tables.", category: "venue", completed: false },
+      { id: "t27", time: "18:00", task: "PRE-SERVICE BRIEF — Function Captain David Park leads. Full allergen seat map reviewed. Runner sections × 5 (90 covers each). Kitchen radio test. Head Chef sign-off.", category: "brief", completed: false },
+      { id: "t28", time: "18:30", task: "Croquembouche towers placed: 15 towers × 30 pax. Minimum 2 people per tower — carry flat board. Spun toffee facing guests. Candelabras lit.", category: "venue", completed: false },
+      { id: "t29", time: "19:00", task: "GUESTS ARRIVE — Grand Ballroom, Ground Floor. Allergen alternates on separate labelled tray at pass. Amuse-bouche away: wagyu × 438, beet × 12 (V/GF).", category: "service", completed: false },
+      { id: "t30", time: "19:30", task: "ENTRÉE AWAY — Scallops: sear smoking clarified butter 90sec each side, do NOT move. Alt plates (mushroom bruschetta) fired simultaneously. 5-min window per 90 covers.", category: "service", completed: false },
+      { id: "t31", time: "20:00", task: "SOUP COURSE AWAY — Bisque finish with 35% cream, 75°C+. Alt: tomato consommé for V/shellfish/halal (22 covers). Serve simultaneously.", category: "service", completed: false },
+      { id: "t32", time: "20:30", task: "FIRE MAINS — Wellingtons: 220°C/12min to 54°C core. Rest 5min tented. GF deconstructed batch (28): fillet + duxelles, no filo, separately plated.", category: "service", completed: false },
+      { id: "t33", time: "21:45", task: "DESSERT AWAY — Croquembouche portioned tableside by Pastry Chef Amara Osei. GF fondant (28) fired simultaneously. DF mango sorbet (6) pre-scooped.", category: "service", completed: false },
+      { id: "t34", time: "22:30", task: "Last covers cleared. Pass broken down. Leftovers labelled & chilled. Function Captain signs off room with Events Manager.", category: "close", completed: false },
+      { id: "t35", time: "23:00", task: "KITCHEN CLEAR — All surfaces sanitised. HACCP sheets completed & signed by Head Chef. Waste logged. Cold room final temp check.", category: "close", completed: false },
     ],
   },
 ];

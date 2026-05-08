@@ -14,7 +14,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { FunctionType, MANAGER_ROLES, useKitchen } from "@/context/KitchenContext";
+import { DietaryRequirement, FunctionType, MANAGER_ROLES, useKitchen } from "@/context/KitchenContext";
 import { useColors } from "@/hooks/useColors";
 
 const FUNCTION_TYPES: FunctionType[] = [
@@ -23,15 +23,40 @@ const FUNCTION_TYPES: FunctionType[] = [
 
 function getFunctionTypeColor(type: FunctionType): string {
   switch (type) {
-    case "A-la-carte": return "#F59E0B";
-    case "Buffet": return "#3B82F6";
-    case "Cocktail": return "#8B5CF6";
-    case "Canapés": return "#22C55E";
-    case "Canapés + A-la-carte": return "#F97316";
-    case "School Ball": return "#EC4899";
-    case "Set Menu": return "#14B8A6";
-    case "High Tea": return "#F43F5E";
-    default: return "#6B7A94";
+    case "A-la-carte":            return "#F59E0B";
+    case "Buffet":                return "#3B82F6";
+    case "Cocktail":              return "#8B5CF6";
+    case "Canapés":               return "#22C55E";
+    case "Canapés + A-la-carte":  return "#F97316";
+    case "School Ball":           return "#EC4899";
+    case "Set Menu":              return "#14B8A6";
+    case "High Tea":              return "#F43F5E";
+    default:                      return "#6B7A94";
+  }
+}
+
+function getDietaryColor(name: string): string {
+  const n = name.toLowerCase();
+  if (n.includes("gluten"))                     return "#22C55E";
+  if (n.includes("vegan"))                      return "#84CC16";
+  if (n.includes("vegetarian"))                 return "#4ADE80";
+  if (n.includes("nut"))                        return "#F59E0B";
+  if (n.includes("dairy"))                      return "#60A5FA";
+  if (n.includes("shellfish") || n.includes("seafood")) return "#F97316";
+  if (n.includes("halal"))                      return "#14B8A6";
+  if (n.includes("kosher"))                     return "#8B5CF6";
+  if (n.includes("egg"))                        return "#FCD34D";
+  return "#94A3B8";
+}
+
+function getCategoryStyle(category: string): { color: string; icon: React.ComponentProps<typeof Feather>["name"]; label: string; prominent: boolean } {
+  switch (category) {
+    case "setup":   return { color: "#F59E0B", icon: "tool",         label: "PREP",    prominent: false };
+    case "venue":   return { color: "#3B82F6", icon: "map-pin",      label: "VENUE",   prominent: false };
+    case "brief":   return { color: "#8B5CF6", icon: "users",        label: "BRIEF",   prominent: false };
+    case "service": return { color: "#F97316", icon: "star",         label: "SERVICE", prominent: true  };
+    case "close":   return { color: "#22C55E", icon: "check-circle", label: "CLOSE",   prominent: false };
+    default:        return { color: "#6B7A94", icon: "circle",       label: "",        prominent: false };
   }
 }
 
@@ -48,7 +73,9 @@ interface DraftFunction {
   dessert: string;
   amuse: string;
   supper: string;
+  dietaryRequirements: DietaryRequirement[];
 }
+
 
 export default function FunctionDetailScreen() {
   const colors = useColors();
@@ -64,9 +91,10 @@ export default function FunctionDetailScreen() {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<DraftFunction | null>(null);
   const [hasUnsaved, setHasUnsaved] = useState(false);
+  const [expandedDietary, setExpandedDietary] = useState<string | null>(null);
 
   useEffect(() => {
-    if (fn && !draft) {
+    if (fn) {
       setDraft({
         name: fn.name,
         room: fn.room,
@@ -75,14 +103,15 @@ export default function FunctionDetailScreen() {
         startTime: fn.startTime,
         endTime: fn.endTime,
         guestCount: String(fn.guestCount),
-        entree: fn.serviceTimes?.entree ?? "",
-        main: fn.serviceTimes?.main ?? "",
-        dessert: fn.serviceTimes?.dessert ?? "",
-        amuse: fn.serviceTimes?.amuse ?? "",
-        supper: fn.serviceTimes?.supper ?? "",
+        entree:   fn.serviceTimes?.entree   ?? "",
+        main:     fn.serviceTimes?.main     ?? "",
+        dessert:  fn.serviceTimes?.dessert  ?? "",
+        amuse:    fn.serviceTimes?.amuse    ?? "",
+        supper:   fn.serviceTimes?.supper   ?? "",
+        dietaryRequirements: fn.dietaryRequirements ? fn.dietaryRequirements.map(d => ({ ...d })) : [],
       });
     }
-  }, [fn]);
+  }, [fn?.id]);
 
   if (!fn || !draft) {
     return (
@@ -97,54 +126,126 @@ export default function FunctionDetailScreen() {
   const prepDone = fnPrep.filter((p) => p.completed).length;
   const stepsDone = fn.timeline.filter((t) => t.completed).length;
   const tc = getFunctionTypeColor(editing ? draft.functionType : fn.functionType);
-  const isAlaCarte = fn.functionType === "A-la-carte" || fn.functionType === "Canapés + A-la-carte";
   const topPad = Platform.OS === "web" ? 67 : insets.top;
+
+  const dietaryReqs = fn.dietaryRequirements ?? [];
+  const totalDietary = dietaryReqs.reduce((sum, d) => sum + d.count, 0);
+
+  const hasSevereAllergen = dietaryReqs.some(
+    (d) => d.name.toLowerCase().includes("nut") || d.name.toLowerCase().includes("shellfish")
+  );
 
   const timeChanged =
     fn.startTime !== draft.startTime ||
-    fn.endTime !== draft.endTime ||
+    fn.endTime   !== draft.endTime   ||
     (fn.serviceTimes?.entree ?? "") !== draft.entree ||
-    (fn.serviceTimes?.main ?? "") !== draft.main;
+    (fn.serviceTimes?.main   ?? "") !== draft.main;
 
   function updateDraft(field: keyof DraftFunction, value: string) {
     setDraft((d) => d ? { ...d, [field]: value } : d);
     setHasUnsaved(true);
   }
 
+  function updateDietaryCount(idx: number, count: string) {
+    setDraft((d) => {
+      if (!d) return d;
+      const updated = d.dietaryRequirements.map((item, i) =>
+        i === idx ? { ...item, count: parseInt(count, 10) || 0 } : item
+      );
+      return { ...d, dietaryRequirements: updated };
+    });
+    setHasUnsaved(true);
+  }
+
+  function updateDietaryNote(idx: number, note: string) {
+    setDraft((d) => {
+      if (!d) return d;
+      const updated = d.dietaryRequirements.map((item, i) =>
+        i === idx ? { ...item, note } : item
+      );
+      return { ...d, dietaryRequirements: updated };
+    });
+    setHasUnsaved(true);
+  }
+
+  function addDietaryReq() {
+    setDraft((d) => {
+      if (!d) return d;
+      return { ...d, dietaryRequirements: [...d.dietaryRequirements, { name: "New Requirement", count: 1, note: "" }] };
+    });
+    setHasUnsaved(true);
+  }
+
+  function removeDietaryReq(idx: number) {
+    setDraft((d) => {
+      if (!d) return d;
+      return { ...d, dietaryRequirements: d.dietaryRequirements.filter((_, i) => i !== idx) };
+    });
+    setHasUnsaved(true);
+  }
+
+  function updateDietaryName(idx: number, name: string) {
+    setDraft((d) => {
+      if (!d) return d;
+      const updated = d.dietaryRequirements.map((item, i) =>
+        i === idx ? { ...item, name } : item
+      );
+      return { ...d, dietaryRequirements: updated };
+    });
+    setHasUnsaved(true);
+  }
+
   function handleSave() {
-    if (!draft) return;
+    if (!draft || !fn) return;
     const guestNum = parseInt(draft.guestCount, 10);
     if (isNaN(guestNum) || guestNum < 1) {
       Alert.alert("Invalid guest count", "Please enter a valid number of guests.");
       return;
     }
     updateFunction(fn.id, {
-      name: draft.name.trim() || fn.name,
-      room: draft.room.trim() || fn.room,
-      floor: draft.floor.trim() || fn.floor,
-      functionType: draft.functionType,
-      startTime: draft.startTime.trim() || fn.startTime,
-      endTime: draft.endTime.trim() || fn.endTime,
-      guestCount: guestNum,
+      name:             draft.name.trim()      || fn.name,
+      room:             draft.room.trim()      || fn.room,
+      floor:            draft.floor.trim()     || fn.floor,
+      functionType:     draft.functionType,
+      startTime:        draft.startTime.trim() || fn.startTime,
+      endTime:          draft.endTime.trim()   || fn.endTime,
+      guestCount:       guestNum,
+      dietaryRequirements: draft.dietaryRequirements.filter((d) => d.count > 0 && d.name.trim()),
       serviceTimes: {
-        amuse: draft.amuse || undefined,
-        entree: draft.entree || undefined,
-        main: draft.main || undefined,
+        amuse:   draft.amuse   || undefined,
+        entree:  draft.entree  || undefined,
+        main:    draft.main    || undefined,
         dessert: draft.dessert || undefined,
-        supper: draft.supper || undefined,
+        supper:  draft.supper  || undefined,
       },
     });
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     setEditing(false);
     setHasUnsaved(false);
-    Alert.alert("Saved", "Function details updated. All team members will see the changes.", [{ text: "OK" }]);
+    Alert.alert("Saved", "Function updated — all team members will see the changes.", [{ text: "OK" }]);
   }
 
   function handleCancelEdit() {
+    if (!fn) { setEditing(false); return; }
     if (hasUnsaved) {
+      const snap = fn;
       Alert.alert("Discard changes?", "You have unsaved changes.", [
         { text: "Keep editing", style: "cancel" },
-        { text: "Discard", style: "destructive", onPress: () => { setDraft({ name: fn.name, room: fn.room, floor: fn.floor, functionType: fn.functionType, startTime: fn.startTime, endTime: fn.endTime, guestCount: String(fn.guestCount), entree: fn.serviceTimes?.entree ?? "", main: fn.serviceTimes?.main ?? "", dessert: fn.serviceTimes?.dessert ?? "", amuse: fn.serviceTimes?.amuse ?? "", supper: fn.serviceTimes?.supper ?? "" }); setEditing(false); setHasUnsaved(false); } },
+        {
+          text: "Discard", style: "destructive", onPress: () => {
+            setDraft({
+              name: snap.name, room: snap.room, floor: snap.floor, functionType: snap.functionType,
+              startTime: snap.startTime, endTime: snap.endTime, guestCount: String(snap.guestCount),
+              entree:   snap.serviceTimes?.entree   ?? "",
+              main:     snap.serviceTimes?.main     ?? "",
+              dessert:  snap.serviceTimes?.dessert  ?? "",
+              amuse:    snap.serviceTimes?.amuse    ?? "",
+              supper:   snap.serviceTimes?.supper   ?? "",
+              dietaryRequirements: snap.dietaryRequirements ? snap.dietaryRequirements.map((d) => ({ ...d })) : [],
+            });
+            setEditing(false); setHasUnsaved(false);
+          },
+        },
       ]);
     } else {
       setEditing(false);
@@ -153,28 +254,48 @@ export default function FunctionDetailScreen() {
 
   function getRoleColor(role: string) {
     switch (role) {
-      case "Head Chef": return colors.primary;
-      case "Sous Chef": return colors.info;
-      case "Pastry Chef": return "#A78BFA";
+      case "Head Chef":        return colors.primary;
+      case "Sous Chef":        return colors.info;
+      case "Pastry Chef":      return "#A78BFA";
       case "Function Captain": return "#3B82F6";
-      case "Casual": return colors.warning;
-      default: return colors.mutedForeground;
+      case "Casual":           return colors.warning;
+      default:                 return colors.mutedForeground;
     }
   }
 
+  // Parse menu line into: course, dish, tags
+  function parseMenuLine(line: string): { course: string; dish: string; tags: string[] } {
+    const pipeIdx = line.indexOf("|");
+    const main = pipeIdx > -1 ? line.slice(0, pipeIdx).trim() : line;
+    const tagStr = pipeIdx > -1 ? line.slice(pipeIdx + 1) : "";
+    const tags = tagStr.split("|").map((t) => t.trim()).filter(Boolean);
+    const colonIdx = main.indexOf(":");
+    if (colonIdx > -1) return { course: main.slice(0, colonIdx).trim(), dish: main.slice(colonIdx + 1).trim(), tags };
+    return { course: "", dish: main, tags };
+  }
+
+  const courseOrder: Array<{ key: keyof NonNullable<typeof fn.serviceTimes>; label: string; draftKey: keyof DraftFunction }> = [
+    { key: "amuse",   label: "Amuse-bouche", draftKey: "amuse"   },
+    { key: "entree",  label: "Entrée",        draftKey: "entree"  },
+    { key: "main",    label: "Main",          draftKey: "main"    },
+    { key: "dessert", label: "Dessert",       draftKey: "dessert" },
+    { key: "supper",  label: "Supper",        draftKey: "supper"  },
+  ];
+  const activeCourses = fn.serviceTimes
+    ? courseOrder.filter((c) => fn.serviceTimes![c.key])
+    : [];
+
   const s = StyleSheet.create({
     root: { flex: 1, backgroundColor: colors.background },
-    toolbar: { position: "absolute", top: topPad + 8, left: 0, right: 0, zIndex: 10, flexDirection: "row", alignItems: "center", paddingHorizontal: 16, gap: 10 },
+    toolbar: { position: "absolute", top: topPad + 8, left: 0, right: 0, zIndex: 10, flexDirection: "row", alignItems: "center", paddingHorizontal: 16, gap: 8 },
     backBtn: { width: 38, height: 38, borderRadius: 19, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, alignItems: "center", justifyContent: "center" },
     toolbarSpacer: { flex: 1 },
     editBtn: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10, borderWidth: 1 },
     editBtnText: { fontSize: 13, fontFamily: "Inter_700Bold" },
     saveBtn: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10, backgroundColor: colors.accent },
     saveBtnText: { fontSize: 13, fontFamily: "Inter_700Bold", color: "#fff" },
-    cancelBtn: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10, borderWidth: 1, borderColor: colors.border },
+    cancelBtn: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, borderWidth: 1, borderColor: colors.border },
     cancelBtnText: { fontSize: 13, fontFamily: "Inter_600SemiBold", color: colors.mutedForeground },
-    timeChangedBanner: { marginHorizontal: 20, marginTop: 8, padding: 10, borderRadius: 8, flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: "#F59E0B20", borderWidth: 1, borderColor: "#F59E0B60" },
-    timeChangedText: { flex: 1, fontSize: 12, fontFamily: "Inter_600SemiBold", color: "#F59E0B" },
     hero: { paddingTop: topPad + 62, paddingHorizontal: 20, paddingBottom: 20, backgroundColor: colors.card, borderBottomWidth: 1, borderBottomColor: colors.border },
     typePill: { alignSelf: "flex-start", paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, borderWidth: 1.5, marginBottom: 10 },
     typeText: { fontSize: 13, fontFamily: "Inter_700Bold" },
@@ -192,36 +313,71 @@ export default function FunctionDetailScreen() {
     statBox: { flex: 1, backgroundColor: colors.secondary, borderRadius: 10, padding: 12, alignItems: "center" },
     statNum: { fontSize: 18, fontFamily: "Inter_700Bold" },
     statLabel: { fontSize: 10, fontFamily: "Inter_600SemiBold", color: colors.mutedForeground, textTransform: "uppercase", letterSpacing: 0.7, marginTop: 3 },
-    courseCard: { marginHorizontal: 20, marginTop: 18, backgroundColor: tc + "12", borderRadius: colors.radius, borderWidth: 1.5, borderColor: tc + "40", overflow: "hidden" },
-    courseCardHeader: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 14, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: tc + "30" },
-    courseCardTitle: { fontSize: 13, fontFamily: "Inter_700Bold", color: tc },
+    banner: { marginHorizontal: 20, marginTop: 8, padding: 10, borderRadius: 8, flexDirection: "row", alignItems: "center", gap: 8 },
+    bannerText: { flex: 1, fontSize: 12, fontFamily: "Inter_600SemiBold" },
+    courseCard: { marginHorizontal: 20, marginTop: 16, borderRadius: colors.radius, borderWidth: 1.5, overflow: "hidden" },
+    courseCardHeader: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 14, paddingVertical: 10, borderBottomWidth: 1 },
+    courseCardTitle: { fontSize: 13, fontFamily: "Inter_700Bold" },
     courseRow: { flexDirection: "row" },
-    courseBox: { flex: 1, alignItems: "center", paddingVertical: 14, paddingHorizontal: 6, borderRightWidth: 1, borderRightColor: tc + "25" },
+    courseBox: { flex: 1, alignItems: "center", paddingVertical: 14, paddingHorizontal: 6, borderRightWidth: 1 },
     courseLabel: { fontSize: 10, fontFamily: "Inter_700Bold", textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 },
     courseTime: { fontSize: 20, fontFamily: "Inter_700Bold" },
+    // Dietary section
+    dietaryCard: { marginHorizontal: 20, marginTop: 16, borderRadius: colors.radius, borderWidth: 1.5, overflow: "hidden" },
+    dietaryHeader: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 14, paddingVertical: 12, borderBottomWidth: 1 },
+    dietaryTitle: { flex: 1, fontSize: 14, fontFamily: "Inter_700Bold" },
+    dietaryTotalBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
+    dietaryTotalText: { fontSize: 12, fontFamily: "Inter_700Bold", color: "#fff" },
+    severeWarning: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 14, paddingVertical: 8, borderBottomWidth: 1 },
+    severeText: { flex: 1, fontSize: 12, fontFamily: "Inter_600SemiBold" },
+    dietaryList: { padding: 10, gap: 8 },
+    dietaryRow: { borderRadius: 10, overflow: "hidden", borderWidth: 1 },
+    dietaryBadgeRow: { flexDirection: "row", alignItems: "center", padding: 10, gap: 10 },
+    dietaryCount: { width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center" },
+    dietaryCountText: { fontSize: 16, fontFamily: "Inter_700Bold" },
+    dietaryName: { flex: 1, fontSize: 14, fontFamily: "Inter_600SemiBold" },
+    dietaryNoteToggle: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
+    dietaryNoteToggleText: { fontSize: 11, fontFamily: "Inter_600SemiBold" },
+    dietaryNote: { paddingHorizontal: 14, paddingBottom: 12 },
+    dietaryNoteText: { fontSize: 12, fontFamily: "Inter_400Regular", lineHeight: 18 },
+    // Run sheet
     section: { paddingHorizontal: 20, paddingTop: 22, paddingBottom: 4 },
-    sectionTitle: { fontSize: 15, fontFamily: "Inter_700Bold", color: colors.foreground, marginBottom: 4 },
+    sectionTitle: { fontSize: 16, fontFamily: "Inter_700Bold", color: colors.foreground, marginBottom: 2 },
     sectionSub: { fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground, marginBottom: 14 },
     div: { height: 1, backgroundColor: colors.border, marginHorizontal: 20, marginTop: 16 },
-    taskRow: { flexDirection: "row", alignItems: "flex-start", paddingVertical: 13, gap: 12, borderBottomWidth: 1, borderBottomColor: colors.border },
-    taskTime: { fontSize: 13, fontFamily: "Inter_700Bold", color: colors.primary, width: 52, paddingTop: 2 },
-    taskText: { flex: 1, fontSize: 15, fontFamily: "Inter_500Medium", lineHeight: 22 },
-    checkBtn: { width: 36, height: 36, borderRadius: 8, borderWidth: 2, alignItems: "center", justifyContent: "center" },
-    menuItem: { flexDirection: "row", alignItems: "flex-start", gap: 10, paddingVertical: 11, borderBottomWidth: 1, borderBottomColor: colors.border },
-    menuCourse: { fontSize: 10, fontFamily: "Inter_700Bold", textTransform: "uppercase", letterSpacing: 0.6, width: 58, paddingTop: 3 },
-    menuDish: { flex: 1, fontSize: 14, fontFamily: "Inter_400Regular", color: colors.foreground, lineHeight: 21 },
+    runSheetContainer: { paddingHorizontal: 16, paddingBottom: 12 },
+    runSheetItem: { flexDirection: "row", alignItems: "flex-start", gap: 12, marginBottom: 4 },
+    runSheetLine: { width: 2, flex: 1, position: "absolute", left: 57, top: 0, bottom: 0 },
+    timeCol: { width: 48, alignItems: "flex-end", paddingTop: 10 },
+    timeText: { fontSize: 12, fontFamily: "Inter_700Bold" },
+    iconCol: { width: 28, alignItems: "center", paddingTop: 8, zIndex: 1 },
+    iconCircle: { width: 28, height: 28, borderRadius: 14, alignItems: "center", justifyContent: "center" },
+    taskCard: { flex: 1, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, borderWidth: 1, marginBottom: 8 },
+    taskCardHeader: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 4 },
+    categoryLabel: { fontSize: 9, fontFamily: "Inter_700Bold", textTransform: "uppercase", letterSpacing: 0.8 },
+    taskText: { fontSize: 13, fontFamily: "Inter_400Regular", lineHeight: 20 },
+    taskTextDone: { textDecorationLine: "line-through", opacity: 0.5 },
+    checkBtn: { width: 30, height: 30, borderRadius: 8, borderWidth: 2, alignItems: "center", justifyContent: "center", marginTop: 8 },
+    // Menu
+    menuItem: { paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.border },
+    menuCourse: { fontSize: 10, fontFamily: "Inter_700Bold", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 4 },
+    menuDish: { fontSize: 14, fontFamily: "Inter_500Medium", color: colors.foreground, lineHeight: 21, marginBottom: 6 },
+    menuTagRow: { flexDirection: "row", flexWrap: "wrap", gap: 5 },
+    menuTag: { paddingHorizontal: 7, paddingVertical: 3, borderRadius: 6 },
+    menuTagText: { fontSize: 11, fontFamily: "Inter_600SemiBold" },
+    // Staff
     memberRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: colors.border },
     memberAvatar: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center" },
     memberAvatarText: { fontSize: 14, fontFamily: "Inter_700Bold" },
     memberName: { fontSize: 15, fontFamily: "Inter_600SemiBold", color: colors.foreground },
     memberRole: { fontSize: 12, fontFamily: "Inter_400Regular", marginTop: 1 },
-    memberNumLabel: { fontSize: 10, fontFamily: "Inter_500Medium", color: colors.mutedForeground },
-    memberShiftTime: { fontSize: 13, fontFamily: "Inter_600SemiBold", color: colors.foreground, marginTop: 1 },
-    // Edit mode styles
-    editSection: { marginHorizontal: 20, marginTop: 18, backgroundColor: colors.card, borderRadius: colors.radius, borderWidth: 1.5, borderColor: colors.primary + "60", overflow: "hidden" },
-    editSectionHeader: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 14, paddingVertical: 12, backgroundColor: colors.primary + "15", borderBottomWidth: 1, borderBottomColor: colors.primary + "30" },
-    editSectionTitle: { fontSize: 13, fontFamily: "Inter_700Bold", color: colors.primary, flex: 1 },
-    fieldRow: { flexDirection: "row", alignItems: "center", paddingHorizontal: 14, paddingVertical: 3, borderBottomWidth: 1, borderBottomColor: colors.border, minHeight: 50 },
+    memberNum: { fontSize: 11, fontFamily: "Inter_500Medium", color: colors.mutedForeground, marginTop: 1 },
+    memberShift: { fontSize: 13, fontFamily: "Inter_600SemiBold", color: colors.foreground },
+    // Edit mode
+    editCard: { marginHorizontal: 20, marginTop: 14, borderRadius: colors.radius, borderWidth: 1.5, overflow: "hidden" },
+    editCardHeader: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 14, paddingVertical: 12, borderBottomWidth: 1 },
+    editCardTitle: { flex: 1, fontSize: 13, fontFamily: "Inter_700Bold" },
+    fieldRow: { flexDirection: "row", alignItems: "center", paddingHorizontal: 14, borderBottomWidth: 1, borderBottomColor: colors.border, minHeight: 50 },
     fieldLabel: { fontSize: 12, fontFamily: "Inter_600SemiBold", color: colors.mutedForeground, width: 80 },
     fieldInput: { flex: 1, fontSize: 14, fontFamily: "Inter_600SemiBold", color: colors.foreground, paddingVertical: 10 },
     typeSelectRow: { paddingHorizontal: 14, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.border },
@@ -229,41 +385,39 @@ export default function FunctionDetailScreen() {
     typeChipRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
     typeChip: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, borderWidth: 1.5 },
     typeChipText: { fontSize: 12, fontFamily: "Inter_700Bold" },
-    courseEditRow: { flexDirection: "row", alignItems: "center", paddingHorizontal: 14, paddingVertical: 3, borderBottomWidth: 1, borderBottomColor: colors.border, minHeight: 46 },
-    courseEditLabel: { fontSize: 12, fontFamily: "Inter_600SemiBold", color: tc, width: 72 },
-    courseEditInput: { flex: 1, fontSize: 14, fontFamily: "Inter_700Bold", color: tc, paddingVertical: 8 },
+    courseEditRow: { flexDirection: "row", alignItems: "center", paddingHorizontal: 14, borderBottomWidth: 1, borderBottomColor: colors.border, minHeight: 46 },
+    courseEditLabel: { fontSize: 12, fontFamily: "Inter_600SemiBold", width: 110 },
+    courseEditInput: { flex: 1, fontSize: 14, fontFamily: "Inter_700Bold", paddingVertical: 8 },
     editHint: { paddingHorizontal: 14, paddingVertical: 10 },
     editHintText: { fontSize: 11, fontFamily: "Inter_400Regular", color: colors.mutedForeground },
+    dietaryEditRow: { paddingHorizontal: 14, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.border, gap: 6 },
+    dietaryEditNameRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+    dietaryEditNameInput: { flex: 1, fontSize: 14, fontFamily: "Inter_600SemiBold", color: colors.foreground, paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: colors.border },
+    dietaryEditCountRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+    dietaryEditCountLabel: { fontSize: 12, fontFamily: "Inter_500Medium", color: colors.mutedForeground },
+    dietaryEditCountInput: { width: 60, fontSize: 16, fontFamily: "Inter_700Bold", color: colors.foreground, borderBottomWidth: 1, borderBottomColor: colors.border, paddingVertical: 4 },
+    dietaryEditNoteInput: { fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground, paddingVertical: 4, borderBottomWidth: 1, borderBottomColor: colors.border },
+    addDietaryBtn: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 14, paddingVertical: 12 },
+    addDietaryText: { fontSize: 13, fontFamily: "Inter_600SemiBold", color: colors.primary },
     bottomPad: { height: Platform.OS === "web" ? 34 : insets.bottom + 40 },
   });
-
-  const courseOrder: Array<{ key: keyof typeof fn.serviceTimes; label: string; draftKey: keyof DraftFunction }> = [
-    { key: "amuse", label: "Amuse", draftKey: "amuse" },
-    { key: "entree", label: "Entrée", draftKey: "entree" },
-    { key: "main", label: "Main", draftKey: "main" },
-    { key: "dessert", label: "Dessert", draftKey: "dessert" },
-    { key: "supper", label: "Supper", draftKey: "supper" },
-  ];
-  const activeCourses = fn.serviceTimes
-    ? courseOrder.filter((c) => fn.serviceTimes![c.key])
-    : [];
-
-  function parseMenuCourse(item: string): { course: string; dish: string } {
-    const colonIdx = item.indexOf(":");
-    if (colonIdx > -1) return { course: item.slice(0, colonIdx).trim(), dish: item.slice(colonIdx + 1).trim() };
-    return { course: "", dish: item };
-  }
 
   return (
     <KeyboardAvoidingView style={s.root} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       {/* Toolbar */}
       <View style={s.toolbar}>
-        <Pressable style={({ pressed }) => [s.backBtn, pressed && { opacity: 0.7 }]} onPress={() => { if (editing && hasUnsaved) { handleCancelEdit(); } else { router.back(); } }}>
+        <Pressable
+          style={({ pressed }) => [s.backBtn, pressed && { opacity: 0.7 }]}
+          onPress={() => { if (editing && hasUnsaved) { handleCancelEdit(); } else { router.back(); } }}
+        >
           <Feather name="arrow-left" size={18} color={colors.foreground} />
         </Pressable>
         <View style={s.toolbarSpacer} />
         {canEdit && !editing && (
-          <Pressable style={({ pressed }) => [s.editBtn, { backgroundColor: colors.card, borderColor: colors.primary + "60", opacity: pressed ? 0.7 : 1 }]} onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setEditing(true); }}>
+          <Pressable
+            style={({ pressed }) => [s.editBtn, { backgroundColor: colors.card, borderColor: colors.primary + "60", opacity: pressed ? 0.7 : 1 }]}
+            onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setEditing(true); }}
+          >
             <Feather name="edit-2" size={14} color={colors.primary} />
             <Text style={[s.editBtnText, { color: colors.primary }]}>Edit</Text>
           </Pressable>
@@ -282,14 +436,12 @@ export default function FunctionDetailScreen() {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-        {/* Hero */}
+        {/* ── HERO ──────────────────────────────────────────────────────────── */}
         <View style={s.hero}>
           <View style={[s.typePill, { backgroundColor: tc + "20", borderColor: tc + "60" }]}>
             <Text style={[s.typeText, { color: tc }]}>{editing ? draft.functionType : fn.functionType}</Text>
           </View>
-
           <Text style={s.eventName}>{editing ? draft.name || fn.name : fn.name}</Text>
-
           <View style={s.roomRow}>
             <MaterialCommunityIcons name="door" size={16} color={colors.mutedForeground} />
             <Text style={s.roomLabel}>Room</Text>
@@ -298,7 +450,6 @@ export default function FunctionDetailScreen() {
               <Text style={s.floorTagText}>{editing ? draft.floor || fn.floor : fn.floor}</Text>
             </View>
           </View>
-
           <View style={s.infoGrid}>
             <View style={s.infoBox}>
               <Text style={[s.infoNum, { color: colors.foreground }]}>{editing ? draft.guestCount : fn.guestCount}</Text>
@@ -313,7 +464,6 @@ export default function FunctionDetailScreen() {
               <Text style={s.infoLabel}>Finish</Text>
             </View>
           </View>
-
           <View style={s.statsRow}>
             <View style={s.statBox}>
               <Text style={[s.statNum, { color: prepDone === fnPrep.length && fnPrep.length > 0 ? colors.accent : colors.warning }]}>{prepDone}/{fnPrep.length}</Text>
@@ -323,32 +473,30 @@ export default function FunctionDetailScreen() {
               <Text style={[s.statNum, { color: stepsDone === fn.timeline.length && fn.timeline.length > 0 ? colors.accent : colors.primary }]}>{stepsDone}/{fn.timeline.length}</Text>
               <Text style={s.statLabel}>Tasks done</Text>
             </View>
-            <View style={s.statBox}>
-              <Text style={[s.statNum, { color: colors.foreground }]}>{fnStaff.length}</Text>
-              <Text style={s.statLabel}>Staff</Text>
+            <View style={[s.statBox, totalDietary > 0 && hasSevereAllergen && { backgroundColor: "#F59E0B15" }]}>
+              <Text style={[s.statNum, { color: hasSevereAllergen ? "#F59E0B" : totalDietary > 0 ? colors.info : colors.foreground }]}>{totalDietary}</Text>
+              <Text style={s.statLabel}>Dietary</Text>
             </View>
           </View>
         </View>
 
         {/* Time changed banner */}
         {!editing && timeChanged && (
-          <View style={s.timeChangedBanner}>
+          <View style={[s.banner, { backgroundColor: "#F59E0B20", borderWidth: 1, borderColor: "#F59E0B60" }]}>
             <Ionicons name="time" size={16} color="#F59E0B" />
-            <Text style={s.timeChangedText}>Times have been updated — check course fire times below</Text>
+            <Text style={[s.bannerText, { color: "#F59E0B" }]}>Times have been updated — check the run sheet below</Text>
           </View>
         )}
 
-        {/* ── EDIT MODE PANELS ────────────────────────────────────────────── */}
+        {/* ── EDIT MODE ──────────────────────────────────────────────────────── */}
         {editing && (
           <>
             {/* Function details */}
-            <View style={s.editSection}>
-              <View style={s.editSectionHeader}>
+            <View style={[s.editCard, { borderColor: colors.primary + "60" }]}>
+              <View style={[s.editCardHeader, { backgroundColor: colors.primary + "15", borderBottomColor: colors.primary + "30" }]}>
                 <Feather name="edit-2" size={14} color={colors.primary} />
-                <Text style={s.editSectionTitle}>Function Details</Text>
-                <Text style={{ fontSize: 11, fontFamily: "Inter_400Regular", color: colors.mutedForeground }}>
-                  {currentMember?.role}
-                </Text>
+                <Text style={[s.editCardTitle, { color: colors.primary }]}>Function Details</Text>
+                <Text style={{ fontSize: 11, fontFamily: "Inter_400Regular", color: colors.mutedForeground }}>{currentMember?.role}</Text>
               </View>
               <View style={s.fieldRow}>
                 <Text style={s.fieldLabel}>Name</Text>
@@ -367,11 +515,11 @@ export default function FunctionDetailScreen() {
                 <TextInput style={s.fieldInput} value={draft.guestCount} onChangeText={(v) => updateDraft("guestCount", v)} keyboardType="number-pad" placeholder={String(fn.guestCount)} placeholderTextColor={colors.mutedForeground} />
               </View>
               <View style={s.fieldRow}>
-                <Text style={s.fieldLabel}>Start</Text>
+                <Text style={s.fieldLabel}>Start time</Text>
                 <TextInput style={s.fieldInput} value={draft.startTime} onChangeText={(v) => updateDraft("startTime", v)} placeholder="HH:MM" placeholderTextColor={colors.mutedForeground} />
               </View>
               <View style={s.fieldRow}>
-                <Text style={s.fieldLabel}>Finish</Text>
+                <Text style={s.fieldLabel}>Finish time</Text>
                 <TextInput style={s.fieldInput} value={draft.endTime} onChangeText={(v) => updateDraft("endTime", v)} placeholder="HH:MM" placeholderTextColor={colors.mutedForeground} />
               </View>
               <View style={s.typeSelectRow}>
@@ -391,43 +539,67 @@ export default function FunctionDetailScreen() {
             </View>
 
             {/* Course fire times */}
-            <View style={[s.editSection, { marginTop: 12 }]}>
-              <View style={s.editSectionHeader}>
+            <View style={[s.editCard, { borderColor: tc + "60", marginTop: 10 }]}>
+              <View style={[s.editCardHeader, { backgroundColor: tc + "15", borderBottomColor: tc + "30" }]}>
                 <Feather name="clock" size={14} color={tc} />
-                <Text style={[s.editSectionTitle, { color: tc }]}>Course Fire Times</Text>
-                <Text style={{ fontSize: 11, fontFamily: "Inter_400Regular", color: colors.mutedForeground }}>HH:MM format</Text>
+                <Text style={[s.editCardTitle, { color: tc }]}>Course / Service Times</Text>
+                <Text style={{ fontSize: 11, fontFamily: "Inter_400Regular", color: colors.mutedForeground }}>HH:MM — leave blank to hide</Text>
               </View>
               {courseOrder.map((c) => (
                 <View key={c.key} style={s.courseEditRow}>
-                  <Text style={s.courseEditLabel}>{c.label}</Text>
-                  <TextInput
-                    style={s.courseEditInput}
-                    value={draft[c.draftKey] as string}
-                    onChangeText={(v) => updateDraft(c.draftKey, v)}
-                    placeholder="--:--"
-                    placeholderTextColor={colors.mutedForeground}
-                  />
+                  <Text style={[s.courseEditLabel, { color: tc }]}>{c.label}</Text>
+                  <TextInput style={[s.courseEditInput, { color: tc }]} value={draft[c.draftKey] as string} onChangeText={(v) => updateDraft(c.draftKey, v)} placeholder="--:--" placeholderTextColor={colors.mutedForeground} />
                 </View>
               ))}
-              <View style={s.editHint}>
-                <Text style={s.editHintText}>Leave blank to hide that course. Changes are visible to all team members immediately after saving.</Text>
+            </View>
+
+            {/* Dietary requirements edit */}
+            <View style={[s.editCard, { borderColor: "#F59E0B60", marginTop: 10 }]}>
+              <View style={[s.editCardHeader, { backgroundColor: "#F59E0B15", borderBottomColor: "#F59E0B30" }]}>
+                <Ionicons name="warning" size={14} color="#F59E0B" />
+                <Text style={[s.editCardTitle, { color: "#F59E0B" }]}>Dietary Requirements</Text>
+                <Text style={{ fontSize: 11, fontFamily: "Inter_400Regular", color: colors.mutedForeground }}>Set count to 0 to remove</Text>
               </View>
+              {draft.dietaryRequirements.map((req, idx) => {
+                const dc = getDietaryColor(req.name);
+                return (
+                  <View key={idx} style={s.dietaryEditRow}>
+                    <View style={s.dietaryEditNameRow}>
+                      <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: dc, marginTop: 2 }} />
+                      <TextInput style={[s.dietaryEditNameInput, { color: dc }]} value={req.name} onChangeText={(v) => updateDietaryName(idx, v)} placeholder="Requirement name" placeholderTextColor={colors.mutedForeground} />
+                      <Pressable onPress={() => removeDietaryReq(idx)}>
+                        <Feather name="x" size={16} color={colors.mutedForeground} />
+                      </Pressable>
+                    </View>
+                    <View style={s.dietaryEditCountRow}>
+                      <Text style={s.dietaryEditCountLabel}>Number of guests:</Text>
+                      <TextInput style={s.dietaryEditCountInput} value={String(req.count)} onChangeText={(v) => updateDietaryCount(idx, v)} keyboardType="number-pad" />
+                    </View>
+                    <TextInput style={s.dietaryEditNoteInput} value={req.note ?? ""} onChangeText={(v) => updateDietaryNote(idx, v)} placeholder="Special instructions (optional)" placeholderTextColor={colors.mutedForeground} multiline />
+                  </View>
+                );
+              })}
+              <Pressable style={s.addDietaryBtn} onPress={addDietaryReq}>
+                <Feather name="plus-circle" size={16} color={colors.primary} />
+                <Text style={s.addDietaryText}>Add dietary requirement</Text>
+              </Pressable>
             </View>
           </>
         )}
 
-        {/* ── VIEW MODE ────────────────────────────────────────────────────── */}
+        {/* ── VIEW MODE ──────────────────────────────────────────────────────── */}
         {!editing && (
           <>
-            {isAlaCarte && activeCourses.length > 0 && (
-              <View style={s.courseCard}>
-                <View style={s.courseCardHeader}>
+            {/* Course fire times */}
+            {activeCourses.length > 0 && (
+              <View style={[s.courseCard, { backgroundColor: tc + "12", borderColor: tc + "40" }]}>
+                <View style={[s.courseCardHeader, { borderBottomColor: tc + "30" }]}>
                   <Feather name="clock" size={14} color={tc} />
-                  <Text style={s.courseCardTitle}>Course Fire Times — {fn.functionType}</Text>
+                  <Text style={[s.courseCardTitle, { color: tc }]}>Course / Service Times — {fn.functionType}</Text>
                 </View>
                 <View style={s.courseRow}>
                   {activeCourses.map((c, idx) => (
-                    <View key={c.key} style={[s.courseBox, idx === activeCourses.length - 1 && { borderRightWidth: 0 }]}>
+                    <View key={c.key} style={[s.courseBox, { borderRightColor: tc + "25" }, idx === activeCourses.length - 1 && { borderRightWidth: 0 }]}>
                       <Text style={[s.courseLabel, { color: tc + "AA" }]}>{c.label}</Text>
                       <Text style={[s.courseTime, { color: tc }]}>{fn.serviceTimes![c.key]}</Text>
                     </View>
@@ -436,36 +608,106 @@ export default function FunctionDetailScreen() {
               </View>
             )}
 
-            <View style={s.section}>
-              <Text style={s.sectionTitle}>Work Plan</Text>
-              <Text style={s.sectionSub}>Tap the box to mark each task done</Text>
-              {fn.timeline.map((item) => (
-                <View key={item.id} style={s.taskRow}>
-                  <Text style={s.taskTime}>{item.time}</Text>
-                  <Text style={[s.taskText, { color: item.completed ? colors.mutedForeground : colors.foreground, textDecorationLine: item.completed ? "line-through" : "none" }]}>
-                    {item.task}
-                  </Text>
-                  <Pressable
-                    style={({ pressed }) => [s.checkBtn, { backgroundColor: item.completed ? colors.accent : "transparent", borderColor: item.completed ? colors.accent : colors.border, opacity: pressed ? 0.7 : 1 }]}
-                    onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); toggleTimelineItem(fn.id, item.id); }}
-                  >
-                    {item.completed && <Feather name="check" size={18} color="#fff" />}
-                  </Pressable>
+            {/* ── Dietary Requirements ─────────────────────────────────────── */}
+            {dietaryReqs.length > 0 && (
+              <View style={[s.dietaryCard, { borderColor: hasSevereAllergen ? "#F59E0B80" : colors.border }]}>
+                <View style={[s.dietaryHeader, { borderBottomColor: hasSevereAllergen ? "#F59E0B30" : colors.border, backgroundColor: hasSevereAllergen ? "#F59E0B10" : colors.card }]}>
+                  <Ionicons name="warning" size={16} color={hasSevereAllergen ? "#F59E0B" : colors.mutedForeground} />
+                  <Text style={[s.dietaryTitle, { color: hasSevereAllergen ? "#F59E0B" : colors.foreground }]}>Dietary Requirements</Text>
+                  <View style={[s.dietaryTotalBadge, { backgroundColor: hasSevereAllergen ? "#F59E0B" : colors.info }]}>
+                    <Text style={s.dietaryTotalText}>{totalDietary} guests</Text>
+                  </View>
                 </View>
-              ))}
+
+                {hasSevereAllergen && (
+                  <View style={[s.severeWarning, { backgroundColor: "#EF444410", borderBottomColor: "#EF444430" }]}>
+                    <Ionicons name="alert-circle" size={14} color="#EF4444" />
+                    <Text style={[s.severeText, { color: "#EF4444" }]}>Severe allergen on this function — check notes before service. Epinephrine on site.</Text>
+                  </View>
+                )}
+
+                <View style={s.dietaryList}>
+                  {dietaryReqs.map((req, idx) => {
+                    const dc = getDietaryColor(req.name);
+                    const isExpanded = expandedDietary === req.name + idx;
+                    const isSevere = req.name.toLowerCase().includes("nut") || req.name.toLowerCase().includes("shellfish");
+                    return (
+                      <View key={idx} style={[s.dietaryRow, { backgroundColor: dc + "12", borderColor: dc + "40" }]}>
+                        <View style={s.dietaryBadgeRow}>
+                          <View style={[s.dietaryCount, { backgroundColor: dc + "25" }]}>
+                            <Text style={[s.dietaryCountText, { color: dc }]}>{req.count}</Text>
+                          </View>
+                          <Text style={[s.dietaryName, { color: colors.foreground }]}>
+                            {req.name}
+                            {isSevere ? " ⚠" : ""}
+                          </Text>
+                          {req.note ? (
+                            <Pressable
+                              style={[s.dietaryNoteToggle, { backgroundColor: dc + "25" }]}
+                              onPress={() => setExpandedDietary(isExpanded ? null : req.name + idx)}
+                            >
+                              <Text style={[s.dietaryNoteToggleText, { color: dc }]}>{isExpanded ? "Hide" : "Notes"}</Text>
+                            </Pressable>
+                          ) : null}
+                        </View>
+                        {isExpanded && req.note ? (
+                          <View style={s.dietaryNote}>
+                            <Text style={[s.dietaryNoteText, { color: colors.mutedForeground }]}>{req.note}</Text>
+                          </View>
+                        ) : null}
+                      </View>
+                    );
+                  })}
+                </View>
+              </View>
+            )}
+
+            {/* ── Service Run Sheet ────────────────────────────────────────── */}
+            <View style={s.section}>
+              <Text style={s.sectionTitle}>Service Run Sheet</Text>
+              <Text style={s.sectionSub}>Tap the box on each task to mark it done</Text>
             </View>
 
-            <View style={s.div} />
+            <View style={s.runSheetContainer}>
+              {fn.timeline.map((item, idx) => {
+                const cat = getCategoryStyle(item.category ?? "setup");
+                const isProminentService = cat.prominent;
+                const cardBg = isProminentService ? cat.color + "18" : colors.card;
+                const cardBorder = isProminentService ? cat.color + "50" : colors.border;
 
-            <View style={s.section}>
-              <Text style={s.sectionTitle}>What's Being Served</Text>
-              <Text style={s.sectionSub}>{fn.menu.length} courses</Text>
-              {fn.menu.map((item, i) => {
-                const { course, dish } = parseMenuCourse(item);
                 return (
-                  <View key={i} style={s.menuItem}>
-                    {course ? <Text style={[s.menuCourse, { color: tc }]}>{course}</Text> : <Feather name="circle" size={6} color={colors.primary} style={{ marginTop: 6, marginRight: 4 }} />}
-                    <Text style={s.menuDish}>{dish}</Text>
+                  <View key={item.id} style={s.runSheetItem}>
+                    {/* Time */}
+                    <View style={s.timeCol}>
+                      <Text style={[s.timeText, { color: cat.color, fontSize: isProminentService ? 13 : 11 }]}>{item.time}</Text>
+                    </View>
+                    {/* Icon */}
+                    <View style={s.iconCol}>
+                      <View style={[s.iconCircle, { backgroundColor: cat.color + "25" }]}>
+                        <Feather name={cat.icon} size={12} color={cat.color} />
+                      </View>
+                    </View>
+                    {/* Task card */}
+                    <View style={[s.taskCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+                      <View style={s.taskCardHeader}>
+                        <Text style={[s.categoryLabel, { color: cat.color }]}>{cat.label}</Text>
+                        {isProminentService && (
+                          <View style={{ paddingHorizontal: 5, paddingVertical: 2, backgroundColor: cat.color + "25", borderRadius: 4 }}>
+                            <Text style={{ fontSize: 9, fontFamily: "Inter_700Bold", color: cat.color }}>KEY EVENT</Text>
+                          </View>
+                        )}
+                        <View style={{ flex: 1 }} />
+                        <Pressable
+                          style={({ pressed }) => [s.checkBtn, { backgroundColor: item.completed ? colors.accent : "transparent", borderColor: item.completed ? colors.accent : colors.border, opacity: pressed ? 0.7 : 1 }]}
+                          onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); toggleTimelineItem(fn.id, item.id); }}
+                        >
+                          {item.completed && <Feather name="check" size={14} color="#fff" />}
+                        </Pressable>
+                      </View>
+                      <Text style={[s.taskText, item.completed && s.taskTextDone, { color: item.completed ? colors.mutedForeground : colors.foreground }]}>
+                        {item.task}
+                      </Text>
+                    </View>
                   </View>
                 );
               })}
@@ -473,6 +715,39 @@ export default function FunctionDetailScreen() {
 
             <View style={s.div} />
 
+            {/* ── Menu ────────────────────────────────────────────────────── */}
+            <View style={s.section}>
+              <Text style={s.sectionTitle}>Menu</Text>
+              <Text style={s.sectionSub}>{fn.menu.length} course{fn.menu.length !== 1 ? "s" : ""} · Dietary tags shown per dish</Text>
+              {fn.menu.map((line, i) => {
+                const { course, dish, tags } = parseMenuLine(line);
+                return (
+                  <View key={i} style={s.menuItem}>
+                    {course ? (
+                      <Text style={[s.menuCourse, { color: tc }]}>{course}</Text>
+                    ) : null}
+                    <Text style={s.menuDish}>{dish}</Text>
+                    {tags.length > 0 && (
+                      <View style={s.menuTagRow}>
+                        {tags.map((tag, ti) => {
+                          const isAlt = tag.toLowerCase().startsWith("alt:");
+                          const tagColor = isAlt ? colors.mutedForeground : getDietaryColor(tag);
+                          return (
+                            <View key={ti} style={[s.menuTag, { backgroundColor: tagColor + "20" }]}>
+                              <Text style={[s.menuTagText, { color: tagColor }]}>{tag}</Text>
+                            </View>
+                          );
+                        })}
+                      </View>
+                    )}
+                  </View>
+                );
+              })}
+            </View>
+
+            <View style={s.div} />
+
+            {/* ── Staff ───────────────────────────────────────────────────── */}
             <View style={s.section}>
               <Text style={s.sectionTitle}>Staff Working This Event</Text>
               <Text style={s.sectionSub}>{fnStaff.length} people on this team</Text>
@@ -486,10 +761,11 @@ export default function FunctionDetailScreen() {
                     <View style={{ flex: 1 }}>
                       <Text style={s.memberName}>{member.name}</Text>
                       <Text style={[s.memberRole, { color: rc }]}>{member.role}</Text>
+                      <Text style={s.memberNum}>{member.staffNumber}</Text>
                     </View>
                     <View style={{ alignItems: "flex-end" }}>
-                      <Text style={s.memberNumLabel}>{member.staffNumber}</Text>
-                      <Text style={s.memberShiftTime}>{member.shiftStart}–{member.shiftEnd}</Text>
+                      <Text style={{ fontSize: 10, fontFamily: "Inter_500Medium", color: colors.mutedForeground }}>Shift</Text>
+                      <Text style={s.memberShift}>{member.shiftStart}–{member.shiftEnd}</Text>
                     </View>
                   </View>
                 );

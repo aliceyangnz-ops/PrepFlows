@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "KitchenCommand",
-    "slug": "kitchen-app",
+    "name": "Events Kitchen",
+    "slug": "eventskitchen",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "kitchen-app",
+    "scheme": "eventskitchen",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "splash": {
@@ -14,9 +14,12 @@
       "backgroundColor": "#0D1117"
     },
     "ios": {
-      "supportsTablet": false
+      "supportsTablet": false,
+      "bundleIdentifier": "com.eventskitchen.app"
     },
-    "android": {},
+    "android": {
+      "package": "com.eventskitchen.app"
+    },
     "web": {
       "favicon": "./assets/images/icon.png"
     },

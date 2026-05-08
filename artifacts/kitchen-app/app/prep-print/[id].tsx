@@ -138,6 +138,7 @@ export default function PrepPrintScreen() {
   });
 
   async function handleShare() {
+    if (!fn) return;
     const lines: string[] = [
       "FUNCTION PREP RUN SHEET",
       fn.name.toUpperCase(),
