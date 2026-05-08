@@ -435,6 +435,8 @@ interface KitchenContextType {
   togglePrepItem: (id: string) => void;
   toggleTimelineItem: (functionId: string, timelineId: string) => void;
   updateFunction: (id: string, updates: Partial<Omit<KitchenFunction, "id" | "timeline">>) => void;
+  addFunction: (fn: KitchenFunction) => void;
+  deleteFunction: (id: string) => void;
   markStaffSick: (staffId: string, sick: boolean) => void;
   todayDate: string;
 }
@@ -542,6 +544,22 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
+  const addFunction = useCallback((fn: KitchenFunction) => {
+    setFunctions((prev) => {
+      const updated = [...prev, fn].sort((a, b) => a.startTime.localeCompare(b.startTime));
+      AsyncStorage.setItem(STORAGE_KEY_FUNCTIONS, JSON.stringify(updated));
+      return updated;
+    });
+  }, []);
+
+  const deleteFunction = useCallback((id: string) => {
+    setFunctions((prev) => {
+      const updated = prev.filter((fn) => fn.id !== id);
+      AsyncStorage.setItem(STORAGE_KEY_FUNCTIONS, JSON.stringify(updated));
+      return updated;
+    });
+  }, []);
+
   const markStaffSick = useCallback((staffId: string, sick: boolean) => {
     setSickStaffIds((prev) => {
       const updated = sick ? [...prev.filter((x) => x !== staffId), staffId] : prev.filter((x) => x !== staffId);
@@ -557,7 +575,7 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
         currentStaffId, notificationsEnabled,
         broadcastMessage, dismissedBroadcastId,
         setCurrentStaff, setBroadcast, clearBroadcast, dismissBroadcast,
-        togglePrepItem, toggleTimelineItem, updateFunction, markStaffSick, todayDate,
+        togglePrepItem, toggleTimelineItem, updateFunction, addFunction, deleteFunction, markStaffSick, todayDate,
       }}
     >
       {children}

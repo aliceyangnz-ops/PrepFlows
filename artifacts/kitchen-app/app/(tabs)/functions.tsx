@@ -28,6 +28,7 @@ export default function FunctionsScreen() {
   const { functions, staff, prepItems } = useKitchen();
   const topPad = Platform.OS === "web" ? 67 : insets.top;
 
+
   function getRoleColor(role: string) {
     switch (role) {
       case "Head Chef": return colors.primary;
@@ -40,7 +41,7 @@ export default function FunctionsScreen() {
 
   const s = StyleSheet.create({
     root: { flex: 1, backgroundColor: colors.background },
-    header: { paddingTop: topPad + 16, paddingHorizontal: 20, paddingBottom: 16 },
+    header: { paddingTop: topPad + 16, paddingHorizontal: 20, paddingBottom: 16, flexDirection: "row", alignItems: "center" },
     title: { fontSize: 26, fontFamily: "Inter_700Bold", color: colors.foreground },
     subtitle: { fontSize: 13, fontFamily: "Inter_400Regular", color: colors.mutedForeground, marginTop: 2 },
     card: { marginHorizontal: 20, marginBottom: 16, backgroundColor: colors.card, borderRadius: colors.radius, borderWidth: 1, borderColor: colors.border, overflow: "hidden" },
@@ -81,8 +82,22 @@ export default function FunctionsScreen() {
     <View style={s.root}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={s.header}>
-          <Text style={s.title}>Events</Text>
-          <Text style={s.subtitle}>{functions.length} events today — tap any event for full details</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={s.title}>Events</Text>
+            <Text style={s.subtitle}>{functions.length} events today — tap any event for full details</Text>
+          </View>
+          <Pressable
+            style={({ pressed }) => [{
+              flexDirection: "row", alignItems: "center", gap: 6,
+              paddingHorizontal: 14, paddingVertical: 9,
+              borderRadius: 10, backgroundColor: colors.primary,
+              opacity: pressed ? 0.8 : 1, marginBottom: 4,
+            }]}
+            onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push("/function/add"); }}
+          >
+            <Feather name="plus" size={16} color="#fff" />
+            <Text style={{ fontSize: 13, fontFamily: "Inter_700Bold", color: "#fff" }}>Add Event</Text>
+          </Pressable>
         </View>
 
         {functions.map((fn) => {
