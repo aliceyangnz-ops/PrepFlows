@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 
 export interface TimelineItem {
   id: string;
@@ -74,6 +74,7 @@ export interface StaffMember {
   name: string;
   role: "Head Chef" | "Sous Chef" | "Pastry Chef" | "Function Captain" | "Casual";
   phone?: string;
+  pin?: string;
   shiftStart: string;
   shiftEnd: string;
   functionIds: string[];
@@ -484,6 +485,19 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
   const [broadcastMessage, setBroadcastState] = useState<BroadcastMessage | null>(null);
   const [dismissedBroadcastId, setDismissedBroadcastId] = useState<string | null>(null);
 
+  const staffRef = useRef(staff);
+  const currentStaffIdRef = useRef(currentStaffId);
+  useEffect(() => { staffRef.current = staff; }, [staff]);
+  useEffect(() => { currentStaffIdRef.current = currentStaffId; }, [currentStaffId]);
+
+  function isCallerManager(): boolean {
+    if (staffRef.current.length === 0) return true;
+    const id = currentStaffIdRef.current;
+    if (!id) return false;
+    const member = staffRef.current.find((m) => m.id === id) ?? null;
+    return member ? getAccessLevel(member) === "manager" : false;
+  }
+
   const today = new Date();
   const todayDate = today.toLocaleDateString("en-AU", { weekday: "long", day: "numeric", month: "long" });
 
@@ -523,11 +537,13 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const setBroadcast = useCallback((msg: BroadcastMessage) => {
+    if (!isCallerManager()) return;
     setBroadcastState(msg);
     AsyncStorage.setItem(STORAGE_KEY_BROADCAST, JSON.stringify(msg));
   }, []);
 
   const clearBroadcast = useCallback(() => {
+    if (!isCallerManager()) return;
     setBroadcastState(null);
     setDismissedBroadcastId(null);
     AsyncStorage.removeItem(STORAGE_KEY_BROADCAST);
@@ -562,6 +578,13 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const updateFunction = useCallback((id: string, updates: Partial<Omit<KitchenFunction, "id" | "timeline">>) => {
+    const callerLevel = (() => {
+      const cid = currentStaffIdRef.current;
+      if (!cid) return null;
+      const m = staffRef.current.find((x) => x.id === cid) ?? null;
+      return m ? getAccessLevel(m) : null;
+    })();
+    if (callerLevel !== "manager" && callerLevel !== "team_leader") return;
     setFunctions((prev) => {
       const updated = prev.map((fn) => fn.id === id ? { ...fn, ...updates } : fn);
       AsyncStorage.setItem(STORAGE_KEY_FUNCTIONS, JSON.stringify(updated));
@@ -570,6 +593,7 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const addFunction = useCallback((fn: KitchenFunction) => {
+    if (!isCallerManager()) return;
     setFunctions((prev) => {
       const updated = [...prev, fn].sort((a, b) => a.startTime.localeCompare(b.startTime));
       AsyncStorage.setItem(STORAGE_KEY_FUNCTIONS, JSON.stringify(updated));
@@ -578,6 +602,7 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const deleteFunction = useCallback((id: string) => {
+    if (!isCallerManager()) return;
     setFunctions((prev) => {
       const updated = prev.filter((fn) => fn.id !== id);
       AsyncStorage.setItem(STORAGE_KEY_FUNCTIONS, JSON.stringify(updated));
@@ -586,6 +611,7 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const markStaffSick = useCallback((staffId: string, sick: boolean) => {
+    if (!isCallerManager()) return;
     setSickStaffIds((prev) => {
       const updated = sick ? [...prev.filter((x) => x !== staffId), staffId] : prev.filter((x) => x !== staffId);
       AsyncStorage.setItem(STORAGE_KEY_SICK, JSON.stringify(updated));
@@ -594,6 +620,7 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const addStaff = useCallback((member: StaffMember) => {
+    if (!isCallerManager()) return;
     setStaff((prev) => {
       const updated = [...prev, member];
       AsyncStorage.setItem(STORAGE_KEY_STAFF, JSON.stringify(updated));
@@ -602,6 +629,7 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const updateStaff = useCallback((id: string, updates: Partial<StaffMember>) => {
+    if (!isCallerManager()) return;
     setStaff((prev) => {
       const updated = prev.map((m) => m.id === id ? { ...m, ...updates } : m);
       AsyncStorage.setItem(STORAGE_KEY_STAFF, JSON.stringify(updated));
@@ -610,6 +638,7 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const removeStaff = useCallback((id: string) => {
+    if (!isCallerManager()) return;
     setStaff((prev) => {
       const updated = prev.filter((m) => m.id !== id);
       AsyncStorage.setItem(STORAGE_KEY_STAFF, JSON.stringify(updated));
@@ -626,6 +655,7 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const resetToSampleData = useCallback(() => {
+    if (!isCallerManager()) return;
     setStaff(SAMPLE_STAFF);
     setFunctions(SAMPLE_FUNCTIONS);
     setPrepItems(SAMPLE_PREP);
@@ -641,6 +671,7 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const clearAllData = useCallback(() => {
+    if (!isCallerManager()) return;
     setStaff([]);
     setFunctions([]);
     setPrepItems([]);

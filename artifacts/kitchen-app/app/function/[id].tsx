@@ -216,6 +216,10 @@ export default function FunctionDetailScreen() {
 
   function handleSave() {
     if (!draft || !fn) return;
+    if (!canEdit) {
+      Alert.alert("Access denied", "You don't have permission to edit this event.");
+      return;
+    }
     const guestNum = parseInt(draft.guestCount, 10);
     if (isNaN(guestNum) || guestNum < 1) {
       Alert.alert("Invalid guest count", "Please enter a valid number of guests.");

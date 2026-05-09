@@ -4,7 +4,7 @@ import { useRouter } from "expo-router";
 import React from "react";
 import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { FunctionType, useKitchen } from "@/context/KitchenContext";
+import { FunctionType, getAccessLevel, useKitchen } from "@/context/KitchenContext";
 import { useColors } from "@/hooks/useColors";
 
 function getFunctionTypeColor(type: FunctionType): string {
@@ -25,8 +25,10 @@ export default function FunctionsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { functions, staff, prepItems } = useKitchen();
+  const { functions, staff, prepItems, currentStaffId } = useKitchen();
   const topPad = Platform.OS === "web" ? 67 : insets.top;
+  const currentMember = currentStaffId ? staff.find((s) => s.id === currentStaffId) ?? null : null;
+  const isManager = currentMember ? getAccessLevel(currentMember) === "manager" : false;
 
 
   function getRoleColor(role: string) {
@@ -86,18 +88,20 @@ export default function FunctionsScreen() {
             <Text style={s.title}>Events</Text>
             <Text style={s.subtitle}>{functions.length} events today — tap any event for full details</Text>
           </View>
-          <Pressable
-            style={({ pressed }) => [{
-              flexDirection: "row", alignItems: "center", gap: 6,
-              paddingHorizontal: 14, paddingVertical: 9,
-              borderRadius: 10, backgroundColor: colors.primary,
-              opacity: pressed ? 0.8 : 1, marginBottom: 4,
-            }]}
-            onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push("/function/add"); }}
-          >
-            <Feather name="plus" size={16} color="#fff" />
-            <Text style={{ fontSize: 13, fontFamily: "Inter_700Bold", color: "#fff" }}>Add Event</Text>
-          </Pressable>
+          {isManager && (
+            <Pressable
+              style={({ pressed }) => [{
+                flexDirection: "row", alignItems: "center", gap: 6,
+                paddingHorizontal: 14, paddingVertical: 9,
+                borderRadius: 10, backgroundColor: colors.primary,
+                opacity: pressed ? 0.8 : 1, marginBottom: 4,
+              }]}
+              onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push("/function/add"); }}
+            >
+              <Feather name="plus" size={16} color="#fff" />
+              <Text style={{ fontSize: 13, fontFamily: "Inter_700Bold", color: "#fff" }}>Add Event</Text>
+            </Pressable>
+          )}
         </View>
 
         {functions.map((fn) => {

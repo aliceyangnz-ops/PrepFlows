@@ -16,7 +16,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { BroadcastMessage, FunctionType, useKitchen } from "@/context/KitchenContext";
+import { BroadcastMessage, FunctionType, getAccessLevel, useKitchen } from "@/context/KitchenContext";
 import { useColors } from "@/hooks/useColors";
 
 function timeToMinutes(t: string) {
@@ -57,7 +57,6 @@ function formatRelativeTime(isoString: string): string {
   return diffH < 24 ? `${diffH}h ago` : sent.toLocaleDateString("en-AU", { day: "numeric", month: "short" });
 }
 
-const MANAGER_ROLES = ["Head Chef", "Sous Chef", "Pastry Chef"];
 const AMBER = "#F59E0B";
 
 export default function TodayScreen() {
@@ -74,7 +73,7 @@ export default function TodayScreen() {
   const now = new Date();
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
   const currentMember = currentStaffId ? staff.find((s) => s.id === currentStaffId) ?? null : null;
-  const isManager = currentMember ? MANAGER_ROLES.includes(currentMember.role) : false;
+  const isManager = currentMember ? getAccessLevel(currentMember) === "manager" : false;
   const myFunctions = currentMember ? functions.filter((f) => currentMember.functionIds.includes(f.id)) : [];
 
   const totalPrep = prepItems.length;

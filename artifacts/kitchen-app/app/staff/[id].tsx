@@ -14,7 +14,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ACCESS_LEVEL_LABELS, AccessLevel, PrepTeam, StaffMember, useKitchen } from "@/context/KitchenContext";
+import { ACCESS_LEVEL_LABELS, AccessLevel, PrepTeam, StaffMember, getAccessLevel, useKitchen } from "@/context/KitchenContext";
 import { useColors } from "@/hooks/useColors";
 
 type StaffRole = StaffMember["role"];
@@ -49,6 +49,8 @@ export default function StaffEditScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { staff, addStaff, updateStaff, removeStaff, currentStaffId } = useKitchen();
+  const currentMember = currentStaffId ? staff.find((m) => m.id === currentStaffId) ?? null : null;
+  const isManager = currentMember ? getAccessLevel(currentMember) === "manager" : false;
 
   const isNew = id === "new";
   const existing = isNew ? null : staff.find((m) => m.id === id) ?? null;
@@ -56,6 +58,7 @@ export default function StaffEditScreen() {
   const [name, setName]               = useState(existing?.name ?? "");
   const [staffNumber, setStaffNumber] = useState(existing?.staffNumber ?? "");
   const [phone, setPhone]             = useState(existing?.phone ?? "");
+  const [pin, setPin]                 = useState(existing?.pin ?? "");
   const [role, setRole]               = useState<StaffRole>(existing?.role ?? "Casual");
   const [shiftStart, setShiftStart]   = useState(existing?.shiftStart ?? "08:00");
   const [shiftEnd, setShiftEnd]       = useState(existing?.shiftEnd ?? "16:00");
@@ -66,6 +69,10 @@ export default function StaffEditScreen() {
   const topPad = Platform.OS === "web" ? 67 : insets.top;
 
   function handleSave() {
+    if (!isManager && !isBootstrap) {
+      Alert.alert("Access denied", "Only managers can add or edit staff members.");
+      return;
+    }
     if (!name.trim()) {
       Alert.alert("Name required", "Please enter the staff member's name.");
       return;
@@ -78,6 +85,7 @@ export default function StaffEditScreen() {
         name: name.trim(),
         role,
         phone: phone.trim() || undefined,
+        pin: pin.trim() || undefined,
         shiftStart: shiftStart.trim() || "08:00",
         shiftEnd: shiftEnd.trim() || "16:00",
         functionIds: [],
@@ -93,6 +101,7 @@ export default function StaffEditScreen() {
         name: name.trim(),
         staffNumber: staffNumber.trim() || existing.staffNumber,
         phone: phone.trim() || undefined,
+        pin: pin.trim() || undefined,
         role,
         shiftStart: shiftStart.trim() || existing.shiftStart,
         shiftEnd: shiftEnd.trim() || existing.shiftEnd,
@@ -107,6 +116,10 @@ export default function StaffEditScreen() {
 
   function handleDelete() {
     if (!existing) return;
+    if (!isManager) {
+      Alert.alert("Access denied", "Only managers can remove staff members.");
+      return;
+    }
     if (existing.id === currentStaffId) {
       Alert.alert(
         "Can't remove",
@@ -196,6 +209,27 @@ export default function StaffEditScreen() {
     bottomPad: { height: Platform.OS === "web" ? 34 : insets.bottom + 40 },
   });
 
+  const isBootstrap = staff.length === 0;
+  if (!isManager && !isBootstrap) {
+    return (
+      <View style={[s.root, { justifyContent: "center", alignItems: "center", padding: 32 }]}>
+        <Ionicons name="lock-closed" size={48} color={colors.mutedForeground} />
+        <Text style={{ fontSize: 20, fontFamily: "Inter_700Bold", color: colors.foreground, marginTop: 20, textAlign: "center" }}>
+          Manager access only
+        </Text>
+        <Text style={{ fontSize: 14, fontFamily: "Inter_400Regular", color: colors.mutedForeground, marginTop: 10, textAlign: "center", lineHeight: 22 }}>
+          Only managers can add or edit staff members. Sign in as a manager on the Roster tab to continue.
+        </Text>
+        <Pressable
+          style={{ marginTop: 24, paddingHorizontal: 20, paddingVertical: 12, borderRadius: 12, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }}
+          onPress={() => router.back()}
+        >
+          <Text style={{ fontSize: 14, fontFamily: "Inter_600SemiBold", color: colors.foreground }}>Go back</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
   return (
     <KeyboardAvoidingView style={s.root} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       {/* Toolbar */}
@@ -246,7 +280,7 @@ export default function StaffEditScreen() {
                 placeholder="e.g. #0042" placeholderTextColor={colors.mutedForeground}
               />
             </View>
-            <View style={[s.fieldRow, { borderBottomWidth: 0 }]}>
+            <View style={s.fieldRow}>
               <Text style={s.fieldLabel}>Phone</Text>
               <TextInput
                 style={s.fieldInput} value={phone} onChangeText={setPhone}
@@ -254,7 +288,19 @@ export default function StaffEditScreen() {
                 keyboardType="phone-pad"
               />
             </View>
+            <View style={[s.fieldRow, { borderBottomWidth: 0 }]}>
+              <Ionicons name="shield-checkmark-outline" size={14} color={colors.mutedForeground} style={{ marginRight: 4 }} />
+              <Text style={s.fieldLabel}>Sign-in PIN</Text>
+              <TextInput
+                style={s.fieldInput} value={pin} onChangeText={setPin}
+                placeholder="e.g. 1234" placeholderTextColor={colors.mutedForeground}
+                keyboardType="numeric" secureTextEntry maxLength={10}
+              />
+            </View>
           </View>
+          <Text style={{ fontSize: 11, fontFamily: "Inter_400Regular", color: colors.mutedForeground, marginHorizontal: 16, marginTop: -8, marginBottom: 14, lineHeight: 17 }}>
+            The PIN lets this person sign in on the Roster screen. Use their phone number (last 4 digits) as a backup if PIN is not set. PINs are never shown in the app.
+          </Text>
 
           {/* Role */}
           <View style={[s.card, { borderColor: colors.border }]}>

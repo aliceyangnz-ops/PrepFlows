@@ -14,7 +14,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { DietaryRequirement, FunctionType, KitchenFunction, useKitchen } from "@/context/KitchenContext";
+import { DietaryRequirement, FunctionType, KitchenFunction, getAccessLevel, useKitchen } from "@/context/KitchenContext";
 import { useColors } from "@/hooks/useColors";
 
 const FUNCTION_TYPES: FunctionType[] = [
@@ -265,7 +265,9 @@ export default function AddFunctionScreen() {
   const colors   = useColors();
   const insets   = useSafeAreaInsets();
   const router   = useRouter();
-  const { addFunction } = useKitchen();
+  const { addFunction, currentStaffId, staff } = useKitchen();
+  const currentMember = currentStaffId ? staff.find((s) => s.id === currentStaffId) ?? null : null;
+  const isManager = currentMember ? getAccessLevel(currentMember) === "manager" : false;
   const topPad   = Platform.OS === "web" ? 67 : insets.top;
   const scrollRef = useRef<ScrollView>(null);
 
@@ -274,6 +276,28 @@ export default function AddFunctionScreen() {
   const [parsed, setParsed]       = useState<ParseResult | null>(null);
   const [form, setForm]           = useState<FormState>(EMPTY_FORM);
   const [showCourseTimes, setShowCourseTimes] = useState(false);
+
+  if (!isManager) {
+    const noAccessStyles = StyleSheet.create({
+      root: { flex: 1, backgroundColor: colors.background, justifyContent: "center", alignItems: "center", padding: 32 },
+      title: { fontSize: 20, fontFamily: "Inter_700Bold", color: colors.foreground, marginTop: 20, textAlign: "center" },
+      sub: { fontSize: 14, fontFamily: "Inter_400Regular", color: colors.mutedForeground, marginTop: 10, textAlign: "center", lineHeight: 22 },
+      btn: { marginTop: 24, paddingHorizontal: 20, paddingVertical: 12, borderRadius: 12, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border },
+      btnText: { fontSize: 14, fontFamily: "Inter_600SemiBold", color: colors.foreground },
+    });
+    return (
+      <View style={noAccessStyles.root}>
+        <Ionicons name="lock-closed" size={48} color={colors.mutedForeground} />
+        <Text style={noAccessStyles.title}>Manager access only</Text>
+        <Text style={noAccessStyles.sub}>
+          Only managers can add events. Sign in as a manager on the Roster tab to continue.
+        </Text>
+        <Pressable style={noAccessStyles.btn} onPress={() => router.back()}>
+          <Text style={noAccessStyles.btnText}>Go back</Text>
+        </Pressable>
+      </View>
+    );
+  }
 
   function updateForm(field: keyof FormState, value: string) {
     setForm((f) => ({ ...f, [field]: value }));
@@ -311,6 +335,10 @@ export default function AddFunctionScreen() {
   }
 
   function handleSave() {
+    if (!isManager) {
+      Alert.alert("Access denied", "Only managers can add new events.");
+      return;
+    }
     const guestNum = parseInt(form.guestCount, 10);
     if (!form.name.trim()) {
       Alert.alert("Missing name", "Please enter a function name."); return;

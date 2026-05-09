@@ -14,7 +14,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { PrepTeam, MANAGER_ROLES, useKitchen } from "@/context/KitchenContext";
+import { PrepTeam, MANAGER_ROLES, StaffMember, getAccessLevel, useKitchen } from "@/context/KitchenContext";
 import { useColors } from "@/hooks/useColors";
 import {
   cancelAllNotifications,
@@ -67,6 +67,28 @@ function getFunctionTypeColor(type: string): string {
   }
 }
 
+function canVerify(member: StaffMember): boolean {
+  return !!(member.pin || (member.phone && member.phone.replace(/\D/g, "").length >= 4));
+}
+
+function verificationHint(member: StaffMember): string {
+  if (member.pin) return "Enter your sign-in PIN to confirm your identity.";
+  return "Enter the last 4 digits of your phone number to confirm your identity.";
+}
+
+function checkVerification(member: StaffMember, input: string): boolean {
+  const trimmed = input.trim();
+  if (!trimmed) return false;
+  if (member.pin) {
+    return trimmed === member.pin;
+  }
+  if (member.phone) {
+    const digits = member.phone.replace(/\D/g, "");
+    if (digits.length >= 4 && trimmed === digits.slice(-4)) return true;
+  }
+  return false;
+}
+
 export default function RosterScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
@@ -75,12 +97,14 @@ export default function RosterScreen() {
   const [loading, setLoading] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [showSettings, setShowSettings] = useState(false);
+  const [verifyTarget, setVerifyTarget] = useState<StaffMember | null>(null);
+  const [verifyInput, setVerifyInput] = useState("");
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const minHour = HOURS[0];
 
   const currentMember = staff.find((s) => s.id === currentStaffId) ?? null;
-  const isManager = currentMember ? (MANAGER_ROLES as readonly string[]).includes(currentMember.role) : false;
+  const isManager = currentMember ? getAccessLevel(currentMember) === "manager" : false;
 
   const filteredStaff = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -96,15 +120,7 @@ export default function RosterScreen() {
   const sickCount = sickStaffIds.length;
   const casualCount = staff.filter((s) => s.role === "Casual").length;
 
-  async function handleSelectMe(memberId: string) {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-
-    if (currentStaffId === memberId) {
-      await cancelAllNotifications();
-      setCurrentStaff(null, false);
-      return;
-    }
-
+  async function doSignIn(memberId: string) {
     setLoading(memberId);
     const member = staff.find((s) => s.id === memberId)!;
     const assignedFunctions = functions.filter((f) => member.functionIds.includes(f.id));
@@ -126,6 +142,42 @@ export default function RosterScreen() {
       setCurrentStaff(memberId, false);
     }
     setLoading(null);
+  }
+
+  async function handleSelectMe(memberId: string) {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+    if (currentStaffId === memberId) {
+      await cancelAllNotifications();
+      setCurrentStaff(null, false);
+      return;
+    }
+
+    const member = staff.find((s) => s.id === memberId)!;
+    if (!canVerify(member)) {
+      Alert.alert(
+        "Sign-in not set up",
+        `${member.name.split(" ")[0]} doesn't have a sign-in PIN or phone number set up. Ask a manager to add one via the staff edit screen.`,
+        [{ text: "OK" }]
+      );
+      return;
+    }
+    setVerifyTarget(member);
+    setVerifyInput("");
+  }
+
+  function handleVerifyConfirm() {
+    if (!verifyTarget) return;
+    if (!checkVerification(verifyTarget, verifyInput)) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      Alert.alert("Incorrect", "That doesn't match. Please check and try again.", [{ text: "Try again" }]);
+      setVerifyInput("");
+      return;
+    }
+    const memberId = verifyTarget.id;
+    setVerifyTarget(null);
+    setVerifyInput("");
+    doSignIn(memberId);
   }
 
   function handleSickToggle(memberId: string, currentlySick: boolean) {
@@ -247,19 +299,23 @@ export default function RosterScreen() {
               <Text style={s.subtitle}>{staff.length} staff today · {functions.length} functions</Text>
             </View>
             <View style={{ flexDirection: "row", gap: 8 }}>
-              <Pressable
-                style={({ pressed }) => [s.headerBtn, { opacity: pressed ? 0.7 : 1 }]}
-                onPress={() => router.push("/staff/new")}
-              >
-                <Feather name="user-plus" size={15} color={colors.accent} />
-                <Text style={[s.headerBtnText, { color: colors.accent }]}>Add</Text>
-              </Pressable>
-              <Pressable
-                style={({ pressed }) => [s.headerBtn, { opacity: pressed ? 0.7 : 1 }]}
-                onPress={() => setShowSettings(true)}
-              >
-                <Feather name="settings" size={15} color={colors.mutedForeground} />
-              </Pressable>
+              {(isManager || staff.length === 0) && (
+                <Pressable
+                  style={({ pressed }) => [s.headerBtn, { opacity: pressed ? 0.7 : 1 }]}
+                  onPress={() => router.push("/staff/new")}
+                >
+                  <Feather name="user-plus" size={15} color={colors.accent} />
+                  <Text style={[s.headerBtnText, { color: colors.accent }]}>Add</Text>
+                </Pressable>
+              )}
+              {(isManager || staff.length === 0) && (
+                <Pressable
+                  style={({ pressed }) => [s.headerBtn, { opacity: pressed ? 0.7 : 1 }]}
+                  onPress={() => setShowSettings(true)}
+                >
+                  <Feather name="settings" size={15} color={colors.mutedForeground} />
+                </Pressable>
+              )}
             </View>
           </View>
         </View>
@@ -595,7 +651,7 @@ export default function RosterScreen() {
             <Feather name="users" size={40} color={colors.mutedForeground} />
             <Text style={{ fontSize: 18, fontFamily: "Inter_700Bold", color: colors.foreground }}>No staff yet</Text>
             <Text style={{ fontSize: 14, fontFamily: "Inter_400Regular", color: colors.mutedForeground, textAlign: "center" }}>
-              Tap "Add" to add your first team member, or load sample data from settings.
+              {isManager ? 'Tap "Add" to add your first team member, or load sample data from settings.' : "A manager can add staff from this screen."}
             </Text>
             <Pressable
               style={{ marginTop: 8, flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 20, paddingVertical: 12, borderRadius: 12, backgroundColor: colors.accent }}
@@ -609,6 +665,57 @@ export default function RosterScreen() {
 
         <View style={s.bottomPad} />
       </ScrollView>
+
+      {/* Identity verification Modal */}
+      <Modal visible={verifyTarget !== null} transparent animationType="fade" onRequestClose={() => { setVerifyTarget(null); setVerifyInput(""); }}>
+        <Pressable style={{ flex: 1, backgroundColor: "#00000070", justifyContent: "center", alignItems: "center", padding: 24 }} onPress={() => { setVerifyTarget(null); setVerifyInput(""); }}>
+          <Pressable style={{ width: "100%", backgroundColor: colors.card, borderRadius: 16, borderWidth: 1, borderColor: colors.border, overflow: "hidden" }} onPress={() => {}}>
+            <View style={{ padding: 20 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 12 }}>
+                <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: colors.primary + "20", alignItems: "center", justifyContent: "center" }}>
+                  <Ionicons name="shield-checkmark" size={20} color={colors.primary} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 16, fontFamily: "Inter_700Bold", color: colors.foreground }}>Confirm your identity</Text>
+                  <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground, marginTop: 2 }}>
+                    Signing in as {verifyTarget?.name}
+                  </Text>
+                </View>
+              </View>
+              <Text style={{ fontSize: 13, fontFamily: "Inter_400Regular", color: colors.mutedForeground, marginBottom: 16, lineHeight: 20 }}>
+                {verifyTarget ? verificationHint(verifyTarget) : ""}
+              </Text>
+              <TextInput
+                style={{ backgroundColor: colors.background, borderWidth: 1.5, borderColor: colors.border, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, fontSize: 18, fontFamily: "Inter_600SemiBold", color: colors.foreground, letterSpacing: 4, marginBottom: 16 }}
+                value={verifyInput}
+                onChangeText={setVerifyInput}
+                placeholder="—"
+                placeholderTextColor={colors.mutedForeground}
+                secureTextEntry
+                keyboardType="default"
+                autoFocus
+                maxLength={20}
+                onSubmitEditing={handleVerifyConfirm}
+                returnKeyType="done"
+              />
+              <View style={{ flexDirection: "row", gap: 10 }}>
+                <Pressable
+                  style={({ pressed }) => ({ flex: 1, paddingVertical: 13, borderRadius: 10, borderWidth: 1, borderColor: colors.border, alignItems: "center", opacity: pressed ? 0.7 : 1 })}
+                  onPress={() => { setVerifyTarget(null); setVerifyInput(""); }}
+                >
+                  <Text style={{ fontSize: 14, fontFamily: "Inter_600SemiBold", color: colors.mutedForeground }}>Cancel</Text>
+                </Pressable>
+                <Pressable
+                  style={({ pressed }) => ({ flex: 2, paddingVertical: 13, borderRadius: 10, backgroundColor: colors.primary, alignItems: "center", opacity: pressed ? 0.8 : 1 })}
+                  onPress={handleVerifyConfirm}
+                >
+                  <Text style={{ fontSize: 14, fontFamily: "Inter_700Bold", color: "#fff" }}>Confirm</Text>
+                </Pressable>
+              </View>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
 
       {/* Settings Modal */}
       <Modal visible={showSettings} transparent animationType="slide" onRequestClose={() => setShowSettings(false)}>
