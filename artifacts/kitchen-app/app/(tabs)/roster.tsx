@@ -728,9 +728,20 @@ export default function RosterScreen() {
           {/* Handle */}
           <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: colors.border, alignSelf: "center", marginBottom: 16 }} />
           <Text style={{ fontSize: 18, fontFamily: "Inter_700Bold", color: colors.foreground, marginBottom: 4 }}>Settings & Data</Text>
-          <Text style={{ fontSize: 13, fontFamily: "Inter_400Regular", color: colors.mutedForeground, marginBottom: 20 }}>
+          <Text style={{ fontSize: 13, fontFamily: "Inter_400Regular", color: colors.mutedForeground, marginBottom: 12 }}>
             Manage staff, app data and reset options
           </Text>
+
+          {/* Watch notification info */}
+          <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 10, padding: 12, borderRadius: 10, backgroundColor: colors.accent + "10", borderWidth: 1, borderColor: colors.accent + "30", marginBottom: 16 }}>
+            <Ionicons name="watch-outline" size={18} color={colors.accent} style={{ marginTop: 1 }} />
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: 13, fontFamily: "Inter_700Bold", color: colors.accent, marginBottom: 2 }}>Apple Watch & Samsung Watch</Text>
+              <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground, lineHeight: 17 }}>
+                When you tap "This is me" and turn on reminders, alerts appear on your watch automatically — 60 min, 30 min, 15 min before service, plus a fire reminder for each course. No phone in hand needed during service.
+              </Text>
+            </View>
+          </View>
 
           {/* Manage staff */}
           <Pressable

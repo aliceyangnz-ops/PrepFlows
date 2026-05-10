@@ -437,6 +437,88 @@ const SAMPLE_PREP: PrepItem[] = [
 
 export const MANAGER_ROLES = ["Head Chef", "Sous Chef", "Pastry Chef", "Function Captain"] as const;
 
+// ── Auto-prep generation ──────────────────────────────────────────────────────
+function courseToTeam(course: string): PrepTeam {
+  const c = course.toLowerCase();
+  if (c.includes("dessert") || c.includes("pâtisserie") || c.includes("patisserie") || c.includes("sweet")) return "Pastry";
+  if (c.includes("amuse") || c.includes("entrée") || c.includes("entree") || c.includes("starter") || c.includes("salad") || c.includes("seafood")) return "Cold Larder";
+  if (c.includes("main") || c.includes("protein") || c.includes("meat") || c.includes("fish") || c.includes("roast")) return "Hot Kitchen";
+  if (c.includes("butch") || c.includes("portion")) return "Butchery";
+  return "Function Team";
+}
+
+function parseMenuLineSimple(line: string): { course: string; dish: string; desc: string; tags: string[] } {
+  const colonIdx = line.indexOf(":");
+  if (colonIdx === -1) return { course: "", dish: line.trim(), desc: "", tags: [] };
+  const course = line.slice(0, colonIdx).trim();
+  const rest = line.slice(colonIdx + 1).trim();
+  const parts = rest.split("|").map((p) => p.trim());
+  const mainPart = parts[0] ?? "";
+  const dashIdx = mainPart.indexOf(" — ");
+  const dish = dashIdx === -1 ? mainPart : mainPart.slice(0, dashIdx).trim();
+  const desc = dashIdx === -1 ? "" : mainPart.slice(dashIdx + 3).trim();
+  const tags = parts.slice(1).filter((t) => !t.toLowerCase().startsWith("alt:"));
+  return { course, dish, desc, tags };
+}
+
+function deadlineForCourse(course: string, fn: KitchenFunction): string {
+  const c = course.toLowerCase();
+  const st = fn.serviceTimes;
+  const subtractMins = (timeStr: string, mins: number): string => {
+    const [h, m] = timeStr.split(":").map(Number);
+    const total = h * 60 + m - mins;
+    return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
+  };
+  if ((c.includes("dessert") || c.includes("sweet")) && st?.dessert) return subtractMins(st.dessert, 15);
+  if ((c.includes("main") || c.includes("protein") || c.includes("meat") || c.includes("fish")) && st?.main) return subtractMins(st.main, 20);
+  if ((c.includes("entrée") || c.includes("entree") || c.includes("starter") || c.includes("salad")) && st?.entree) return subtractMins(st.entree, 15);
+  if (c.includes("amuse") && st?.amuse) return subtractMins(st.amuse, 10);
+  return subtractMins(fn.startTime, 30);
+}
+
+export function generatePrepFromMenu(fn: KitchenFunction): PrepItem[] {
+  if (!fn.menu || fn.menu.length === 0) return [];
+  const items: PrepItem[] = [];
+  fn.menu.forEach((line, idx) => {
+    const { course, dish, desc, tags } = parseMenuLineSimple(line);
+    if (!dish) return;
+    const team = courseToTeam(course || dish);
+    const deadline = deadlineForCourse(course || dish, fn);
+    const allergenNote = tags.length > 0 ? `Tags: ${tags.join(", ")}. ` : "";
+    const descNote = desc ? `${desc}. ` : "";
+    const hasDietaryAlt = tags.some((t) => t.toLowerCase().startsWith("alt:") || line.toLowerCase().includes("alt:"));
+    items.push({
+      id: `gen-${fn.id}-${idx}-${Date.now()}`,
+      functionId: fn.id,
+      category: course || "General",
+      team,
+      dish,
+      quantity: `${fn.guestCount} portions`,
+      deadline,
+      prepDay: "day-of",
+      note: `${descNote}${allergenNote}${hasDietaryAlt ? "Prepare dietary alternates — see function brief." : ""}`.trim(),
+      completed: false,
+    });
+
+    // Meat/protein mains also get a Butchery portioning task
+    if (team === "Hot Kitchen" && (course.toLowerCase().includes("main") || dish.toLowerCase().match(/fillet|beef|lamb|pork|chicken|duck|venison|ocean trout/))) {
+      items.push({
+        id: `gen-${fn.id}-${idx}-butch-${Date.now()}`,
+        functionId: fn.id,
+        category: "Butchery Prep",
+        team: "Butchery",
+        dish: `Portion ${dish}`,
+        quantity: `${fn.guestCount} portions`,
+        deadline: deadlineForCourse("main", fn) > fn.startTime ? fn.startTime : deadlineForCourse("main", fn),
+        prepDay: "day-of",
+        note: `Portion and trim for service. Weight/size per spec. Hold chilled on labelled trays.`,
+        completed: false,
+      });
+    }
+  });
+  return items;
+}
+
 interface KitchenContextType {
   functions: KitchenFunction[];
   prepItems: PrepItem[];
@@ -455,6 +537,7 @@ interface KitchenContextType {
   updateFunction: (id: string, updates: Partial<Omit<KitchenFunction, "id" | "timeline">>) => void;
   addFunction: (fn: KitchenFunction) => void;
   deleteFunction: (id: string) => void;
+  generatePrepItems: (fnId: string) => void;
   markStaffSick: (staffId: string, sick: boolean) => void;
   addStaff: (member: StaffMember) => void;
   updateStaff: (id: string, updates: Partial<StaffMember>) => void;
@@ -487,8 +570,10 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
 
   const staffRef = useRef(staff);
   const currentStaffIdRef = useRef(currentStaffId);
+  const functionsRef = useRef(functions);
   useEffect(() => { staffRef.current = staff; }, [staff]);
   useEffect(() => { currentStaffIdRef.current = currentStaffId; }, [currentStaffId]);
+  useEffect(() => { functionsRef.current = functions; }, [functions]);
 
   function isCallerManager(): boolean {
     if (staffRef.current.length === 0) return true;
@@ -599,6 +684,32 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
       AsyncStorage.setItem(STORAGE_KEY_FUNCTIONS, JSON.stringify(updated));
       return updated;
     });
+    // Auto-generate prep items from menu when adding a new function
+    if (fn.menu && fn.menu.length > 0) {
+      const generated = generatePrepFromMenu(fn);
+      if (generated.length > 0) {
+        setPrepItems((prev) => {
+          const updated = [...prev, ...generated];
+          AsyncStorage.setItem(STORAGE_KEY_PREP, JSON.stringify(updated));
+          return updated;
+        });
+      }
+    }
+  }, []);
+
+  const generatePrepItems = useCallback((fnId: string) => {
+    if (!isCallerManager()) return;
+    const fn = functionsRef.current.find((f) => f.id === fnId);
+    if (!fn) return;
+    const generated = generatePrepFromMenu(fn);
+    if (generated.length === 0) return;
+    setPrepItems((prev) => {
+      // Remove previously auto-generated items for this function (id starts with "gen-{fnId}")
+      const kept = prev.filter((p) => !p.id.startsWith(`gen-${fnId}`));
+      const updated = [...kept, ...generated];
+      AsyncStorage.setItem(STORAGE_KEY_PREP, JSON.stringify(updated));
+      return updated;
+    });
   }, []);
 
   const deleteFunction = useCallback((id: string) => {
@@ -693,7 +804,7 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
         currentStaffId, notificationsEnabled,
         broadcastMessage, dismissedBroadcastId,
         setCurrentStaff, setBroadcast, clearBroadcast, dismissBroadcast,
-        togglePrepItem, toggleTimelineItem, updateFunction, addFunction, deleteFunction, markStaffSick,
+        togglePrepItem, toggleTimelineItem, updateFunction, addFunction, deleteFunction, generatePrepItems, markStaffSick,
         addStaff, updateStaff, removeStaff, resetToSampleData, clearAllData, todayDate,
       }}
     >

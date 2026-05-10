@@ -84,7 +84,7 @@ export default function FunctionDetailScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { functions, staff, prepItems, currentStaffId, toggleTimelineItem, updateFunction } = useKitchen();
+  const { functions, staff, prepItems, currentStaffId, toggleTimelineItem, updateFunction, generatePrepItems } = useKitchen();
 
   const fn = functions.find((f) => f.id === id);
   const currentMember = staff.find((s) => s.id === currentStaffId) ?? null;
@@ -266,6 +266,7 @@ export default function FunctionDetailScreen() {
               amuse:    snap.serviceTimes?.amuse    ?? "",
               supper:   snap.serviceTimes?.supper   ?? "",
               dietaryRequirements: snap.dietaryRequirements ? snap.dietaryRequirements.map((d) => ({ ...d })) : [],
+              menu: snap.menu ? [...snap.menu] : [],
             });
             setEditing(false); setHasUnsaved(false);
           },
@@ -821,7 +822,41 @@ export default function FunctionDetailScreen() {
 
             {/* ── Function Menu ─────────────────────────────────────────── */}
             <View style={s.section}>
-              <Text style={s.sectionTitle}>Function Menu</Text>
+              <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
+                <Text style={[s.sectionTitle, { flex: 1, marginBottom: 0 }]}>Function Menu</Text>
+                {canManage && fn.menu.length > 0 && (
+                  <Pressable
+                    style={({ pressed }) => ({
+                      flexDirection: "row", alignItems: "center", gap: 5,
+                      paddingHorizontal: 10, paddingVertical: 6,
+                      backgroundColor: "#22C55E20", borderRadius: 8,
+                      borderWidth: 1, borderColor: "#22C55E50",
+                      opacity: pressed ? 0.7 : 1,
+                    })}
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                      Alert.alert(
+                        "Generate Prep List",
+                        `This will create prep tasks for ${fn.menu.length} menu item${fn.menu.length > 1 ? "s" : ""} and assign them to the right sections (Hot Kitchen, Cold Larder, Pastry, etc.).\n\nAny previously auto-generated prep for this function will be replaced.`,
+                        [
+                          { text: "Cancel", style: "cancel" },
+                          {
+                            text: "Generate",
+                            onPress: () => {
+                              generatePrepItems(fn.id);
+                              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                              Alert.alert("Done", "Prep tasks generated and added to the Prep tab.");
+                            },
+                          },
+                        ]
+                      );
+                    }}
+                  >
+                    <Feather name="list" size={12} color="#22C55E" />
+                    <Text style={{ fontSize: 11, fontFamily: "Inter_700Bold", color: "#22C55E" }}>Auto Prep</Text>
+                  </Pressable>
+                )}
+              </View>
               {fn.menu.map((line, i) => {
                 const { course, name, desc, tags } = parseMenuLine(line);
                 return (
