@@ -1,0 +1,350 @@
+FlexServe Hub
+
+Kitchen Operating System
+
+“Reduce Chaos During Service”
+
+⸻
+
+Product Vision
+
+FlexServe Hub is not a traditional restaurant management system.
+
+It is a:
+
+Real-Time Kitchen Operating System
+
+Designed specifically for:
+
+* Catering Kitchens
+* Banquet Operations
+* Hotel Event Kitchens
+* Production Kitchens
+* Multi-section Service Teams
+
+Core purpose:
+
+Reduce Chaos During Service
+
+⸻
+
+Core Design Philosophy
+
+One Glance System
+
+Kitchen staff should understand the entire operational status within:
+
+3 seconds
+
+No complex dashboards.
+
+No unnecessary analytics.
+
+No deep navigation.
+
+⸻
+
+Main Dashboard Structure
+
+TODAY
+
+--------------------------------
+TODAY'S FUNCTIONS
+--------------------------------
+12:00 Wedding
+180 pax
+HOT PREP 70%
+18:00 Corporate Dinner
+320 pax
+ENTREE COUNTDOWN 15 MIN
+⚠ Pastry Delay
+2 Staff Missing
+--------------------------------
+[ PREP ]
+[ TIMELINE ]
+[ UPDATE ]
+[ ROSTER ]
+--------------------------------
+
+⸻
+
+Dashboard Principles
+
+Keep Only What Matters
+
+Display:
+
+✅ Functions
+✅ Timeline
+✅ Countdown
+✅ Delays
+✅ Section Progress
+✅ Staff Alerts
+
+Remove:
+
+❌ Charts
+❌ Finance Blocks
+❌ Overloaded Reports
+❌ Long Forms
+❌ Complex Menus
+
+⸻
+
+Core MVP Features
+
+Must Have
+
+✅ Today Dashboard
+
+Real-time overview of all active functions.
+
+⸻
+
+✅ Timeline
+
+Service timeline for all kitchen sections.
+
+Example:
+
+10:00 Canapé Plating
+11:00 Transport
+12:00 Setup
+13:00 Service
+
+⸻
+
+✅ Prep Checklist
+
+Simple section-based prep workflow.
+
+Example:
+
+☐ Lamb Sauce
+☑ Dessert Garnish
+☐ Canapé Tray
+
+Large buttons.
+
+One-tap completion.
+
+Real-time sync.
+
+⸻
+
+✅ Push Notification System
+
+Examples:
+
+Wedding delayed 20 mins
+Pastry section completed desserts
+Entree fire in 15 mins
+
+⸻
+
+✅ Countdown Timer System
+
+Kitchen is time-driven.
+
+Countdown-based workflow is the core operational mechanic.
+
+Example:
+
+--------------------------------
+NEXT EVENT
+ENTREE FIRE
+14 MIN
+⚠ PASTRY DELAY
+CANAPÉ READY
+--------------------------------
+
+⸻
+
+✅ QR Join System
+
+Kitchen onboarding should take less than 30 seconds.
+
+Kitchen entrance QR code:
+
+SCAN TO JOIN TODAY’S KITCHEN
+
+After scanning:
+
+✅ Download app
+✅ Join today’s function
+✅ Auto-assign section
+✅ Receive timeline
+✅ Enable notifications
+
+⸻
+
+✅ Multi-Language System
+
+First Launch Language Selection
+
+Choose Your Language
+
+Supported Languages:
+
+✅ English
+✅ 中文
+✅ Hindi
+✅ Nepali
+✅ Tagalog
+✅ Korean
+✅ Japanese
+
+⸻
+
+Language Philosophy
+
+Not direct translation.
+
+Instead:
+
+Visual Kitchen Language
+
+Use:
+
+✅ Icons
+✅ Color States
+✅ Countdown
+✅ Vibration
+✅ Status Symbols
+
+Instead of long sentences.
+
+Example:
+
+🔥 HOT SECTION
+🍰 PASTRY
+⚠ NOT READY
+
+⸻
+
+Smart Wearable Integration
+
+Kitchen Companion Watch
+
+Supported Priority:
+
+1. Apple Watch
+2. Samsung Watch
+3. Huawei Watch
+4. Vivo Watch
+
+⸻
+
+Wearable Notification Examples
+
+Chef Watch Alerts
+
+Canapé plating in 10 mins
+
+⸻
+
+Countdown Alert
+
+ENTREE FIRE
+15 MIN
+
+⸻
+
+Delay Alert
+
+Wedding delayed 20 mins
+
+⸻
+
+Haptic Feedback Integration
+
+Notifications should include:
+
+✅ Vibration
+✅ Watch Tap
+✅ Push Notification
+✅ Sound Priority Levels
+
+Designed for:
+
+* Loud kitchens
+* Busy service periods
+* Hands-free awareness
+
+⸻
+
+Role-Based Visibility System
+
+Different users only see relevant information.
+
+Role	Visible Information
+Head Chef	Full operation
+Sous Chef	Timeline + updates
+Pastry	Pastry prep only
+Casual Staff	Assigned tasks only
+
+⸻
+
+UI / UX Principles
+
+Kitchen Native Design
+
+Designed for real kitchen environments:
+
+✅ Large buttons
+✅ Dark mode
+✅ High contrast
+✅ Minimal typing
+✅ One-thumb operation
+✅ Wet-hand friendly
+✅ Fast loading
+✅ Low cognitive load
+
+⸻
+
+Product Positioning
+
+Not:
+
+Restaurant Management Software
+
+Instead:
+
+Kitchen Mission Control
+
+or
+
+Real-Time Catering Coordination System
+
+⸻
+
+Long-Term Vision
+
+FlexServe Hub becomes:
+
+The operating layer between:
+
+* Kitchen
+* Timeline
+* Staffing
+* Service
+* Communication
+* Countdown Execution
+
+⸻
+
+Core Competitive Advantage
+
+Most software companies do not understand:
+
+* Banquet chaos
+* Prep timing
+* Service coordination
+* Multi-language kitchen environments
+* Real kitchen workflow pressure
+
+This system is built from:
+
+Actual Kitchen Operations Experience
+
+Not theoretical SaaS design.

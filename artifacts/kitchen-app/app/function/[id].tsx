@@ -373,15 +373,18 @@ export default function FunctionDetailScreen() {
     sectionTitle: { fontSize: 16, fontFamily: "Inter_700Bold", color: colors.foreground, marginBottom: 2 },
     sectionSub: { fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground, marginBottom: 14 },
     div: { height: 1, backgroundColor: colors.border, marginHorizontal: 20, marginTop: 16 },
-    runSheetContainer: { paddingHorizontal: 16, paddingBottom: 12 },
-    runSheetItem: { flexDirection: "row", alignItems: "flex-start", gap: 12, marginBottom: 4 },
+    runSheetContainer: { paddingHorizontal: 12, paddingBottom: 12 },
+    runSheetItem: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 8 },
     runSheetLine: { width: 2, flex: 1, position: "absolute", left: 57, top: 0, bottom: 0 },
     timeCol: { width: 48, alignItems: "flex-end", paddingTop: 10 },
-    timeText: { fontSize: 12, fontFamily: "Inter_700Bold" },
+    timeText: { fontSize: 13, fontFamily: "Inter_700Bold" },
     iconCol: { width: 28, alignItems: "center", paddingTop: 8, zIndex: 1 },
     iconCircle: { width: 28, height: 28, borderRadius: 14, alignItems: "center", justifyContent: "center" },
-    taskCard: { flex: 1, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, borderWidth: 1, marginBottom: 8 },
-    taskCardHeader: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 4 },
+    bigCheck: { width: 44, height: 44, borderRadius: 22, borderWidth: 2.5, alignItems: "center", justifyContent: "center", flexShrink: 0 },
+    taskCard: { flex: 1, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, borderWidth: 1.5, marginBottom: 0 },
+    taskCardHeader: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 6 },
+    catBadge: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 7, paddingVertical: 3, borderRadius: 6 },
+    catBadgeText: { fontSize: 9, fontFamily: "Inter_700Bold", textTransform: "uppercase", letterSpacing: 0.8 },
     categoryLabel: { fontSize: 9, fontFamily: "Inter_700Bold", textTransform: "uppercase", letterSpacing: 0.8 },
     taskText: { fontSize: 13, fontFamily: "Inter_400Regular", lineHeight: 20 },
     taskTextDone: { textDecorationLine: "line-through", opacity: 0.5 },
@@ -745,52 +748,73 @@ export default function FunctionDetailScreen() {
             {/* ── Service Run Sheet ────────────────────────────────────────── */}
             <View style={s.section}>
               <Text style={s.sectionTitle}>Service Run Sheet</Text>
-              <Text style={s.sectionSub}>Tap the box on each task to mark it done</Text>
+              <Text style={s.sectionSub}>{stepsDone}/{fn.timeline.length} done — tap the circle to check off a task</Text>
             </View>
 
             <View style={s.runSheetContainer}>
-              {fn.timeline.map((item, idx) => {
-                const cat = getCategoryStyle(item.category ?? "setup");
-                const isProminentService = cat.prominent;
-                const cardBg = isProminentService ? cat.color + "18" : colors.card;
-                const cardBorder = isProminentService ? cat.color + "50" : colors.border;
+              {(() => {
+                const firstIncompleteIdx = fn.timeline.findIndex((t) => !t.completed);
+                return fn.timeline.map((item, idx) => {
+                  const cat = getCategoryStyle(item.category ?? "setup");
+                  const isProminentService = cat.prominent;
+                  const isNextUp = idx === firstIncompleteIdx;
+                  const cardBg = item.completed
+                    ? colors.card
+                    : isNextUp
+                    ? cat.color + "18"
+                    : isProminentService
+                    ? cat.color + "10"
+                    : colors.card;
+                  const cardBorder = item.completed
+                    ? colors.border
+                    : isNextUp
+                    ? cat.color + "70"
+                    : isProminentService
+                    ? cat.color + "40"
+                    : colors.border;
 
-                return (
-                  <View key={item.id} style={s.runSheetItem}>
-                    {/* Time */}
-                    <View style={s.timeCol}>
-                      <Text style={[s.timeText, { color: cat.color, fontSize: isProminentService ? 13 : 11 }]}>{item.time}</Text>
-                    </View>
-                    {/* Icon */}
-                    <View style={s.iconCol}>
-                      <View style={[s.iconCircle, { backgroundColor: cat.color + "25" }]}>
-                        <Feather name={cat.icon} size={12} color={cat.color} />
+                  return (
+                    <Pressable
+                      key={item.id}
+                      style={({ pressed }) => [s.runSheetItem, { opacity: pressed ? 0.85 : 1 }]}
+                      onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); toggleTimelineItem(fn.id, item.id); }}
+                    >
+                      {/* Big tap-friendly checkbox on the left */}
+                      <View style={[s.bigCheck, { backgroundColor: item.completed ? colors.accent : "transparent", borderColor: item.completed ? colors.accent : isNextUp ? cat.color : colors.border }]}>
+                        {item.completed
+                          ? <Feather name="check" size={20} color="#fff" />
+                          : <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: isNextUp ? cat.color : "transparent" }} />
+                        }
                       </View>
-                    </View>
-                    {/* Task card */}
-                    <View style={[s.taskCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-                      <View style={s.taskCardHeader}>
-                        <Text style={[s.categoryLabel, { color: cat.color }]}>{cat.label}</Text>
-                        {isProminentService && (
-                          <View style={{ paddingHorizontal: 5, paddingVertical: 2, backgroundColor: cat.color + "25", borderRadius: 4 }}>
-                            <Text style={{ fontSize: 9, fontFamily: "Inter_700Bold", color: cat.color }}>KEY EVENT</Text>
+
+                      {/* Task card */}
+                      <View style={[s.taskCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+                        <View style={s.taskCardHeader}>
+                          {/* Time + category badge */}
+                          <View style={[s.catBadge, { backgroundColor: cat.color + "25" }]}>
+                            <Feather name={cat.icon} size={11} color={cat.color} />
+                            <Text style={[s.catBadgeText, { color: cat.color }]}>{cat.label}</Text>
                           </View>
-                        )}
-                        <View style={{ flex: 1 }} />
-                        <Pressable
-                          style={({ pressed }) => [s.checkBtn, { backgroundColor: item.completed ? colors.accent : "transparent", borderColor: item.completed ? colors.accent : colors.border, opacity: pressed ? 0.7 : 1 }]}
-                          onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); toggleTimelineItem(fn.id, item.id); }}
-                        >
-                          {item.completed && <Feather name="check" size={14} color="#fff" />}
-                        </Pressable>
+                          <Text style={[s.timeText, { color: item.completed ? colors.mutedForeground : cat.color }]}>{item.time}</Text>
+                          {isNextUp && !item.completed && (
+                            <View style={{ paddingHorizontal: 6, paddingVertical: 2, backgroundColor: cat.color, borderRadius: 5 }}>
+                              <Text style={{ fontSize: 9, fontFamily: "Inter_700Bold", color: "#fff", letterSpacing: 0.5 }}>NEXT UP</Text>
+                            </View>
+                          )}
+                          {isProminentService && !isNextUp && (
+                            <View style={{ paddingHorizontal: 5, paddingVertical: 2, backgroundColor: cat.color + "25", borderRadius: 5 }}>
+                              <Text style={{ fontSize: 9, fontFamily: "Inter_700Bold", color: cat.color }}>KEY</Text>
+                            </View>
+                          )}
+                        </View>
+                        <Text style={[s.taskText, item.completed && s.taskTextDone, { color: item.completed ? colors.mutedForeground : colors.foreground }]}>
+                          {item.task}
+                        </Text>
                       </View>
-                      <Text style={[s.taskText, item.completed && s.taskTextDone, { color: item.completed ? colors.mutedForeground : colors.foreground }]}>
-                        {item.task}
-                      </Text>
-                    </View>
-                  </View>
-                );
-              })}
+                    </Pressable>
+                  );
+                });
+              })()}
             </View>
 
             <View style={s.div} />

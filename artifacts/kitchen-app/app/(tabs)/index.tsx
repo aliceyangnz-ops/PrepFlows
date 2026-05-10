@@ -1,7 +1,7 @@
 import { Feather, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
@@ -16,7 +16,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { BroadcastMessage, FunctionType, getAccessLevel, useKitchen } from "@/context/KitchenContext";
+import { BroadcastMessage, FunctionType, PrepTeam, getAccessLevel, useKitchen } from "@/context/KitchenContext";
 import { useColors } from "@/hooks/useColors";
 
 function timeToMinutes(t: string) {
@@ -59,6 +59,17 @@ function formatRelativeTime(isoString: string): string {
 
 const AMBER = "#F59E0B";
 
+function getTeamColor(team: PrepTeam): string {
+  switch (team) {
+    case "Hot Kitchen":   return "#F97316";
+    case "Cold Larder":   return "#3B82F6";
+    case "Pastry":        return "#8B5CF6";
+    case "Function Team": return "#22C55E";
+    case "Butchery":      return "#EF4444";
+    default:              return "#6B7A94";
+  }
+}
+
 export default function TodayScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
@@ -67,14 +78,25 @@ export default function TodayScreen() {
     functions, prepItems, staff, todayDate,
     currentStaffId, notificationsEnabled,
     broadcastMessage, dismissedBroadcastId,
-    setBroadcast, clearBroadcast, dismissBroadcast,
+    setBroadcast, clearBroadcast, dismissBroadcast, sickStaffIds,
   } = useKitchen();
+
+  const [ticker, setTicker] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setTicker((t) => t + 1), 30_000);
+    return () => clearInterval(id);
+  }, []);
 
   const now = new Date();
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
   const currentMember = currentStaffId ? staff.find((s) => s.id === currentStaffId) ?? null : null;
   const isManager = currentMember ? getAccessLevel(currentMember) === "manager" : false;
   const myFunctions = currentMember ? functions.filter((f) => currentMember.functionIds.includes(f.id)) : [];
+
+  const sortedFunctions = [...functions].sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
+  const nextFn = sortedFunctions.find((f) => timeToMinutes(f.startTime) > nowMinutes) ?? sortedFunctions[0] ?? null;
+  const nextFnMins = nextFn ? timeToMinutes(nextFn.startTime) - nowMinutes : null;
+  const sickCount = sickStaffIds.length;
 
   const totalPrep = prepItems.length;
   const completedPrep = prepItems.filter((p) => p.completed).length;
@@ -134,19 +156,17 @@ export default function TodayScreen() {
     broadcastActions: { flexDirection: "row", borderTopWidth: 1 },
     broadcastBtn: { flex: 1, paddingVertical: 11, alignItems: "center" },
     broadcastBtnText: { fontSize: 13, fontFamily: "Inter_600SemiBold" },
-    glanceCard: { marginHorizontal: 20, marginBottom: 14, backgroundColor: colors.card, borderRadius: colors.radius, borderWidth: 1, borderColor: colors.border, overflow: "hidden" },
-    glanceHeader: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 14, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.border, backgroundColor: colors.secondary },
-    glanceHeaderText: { fontSize: 12, fontFamily: "Inter_700Bold", color: colors.foreground, flex: 1 },
-    glanceRow: { flexDirection: "row", alignItems: "center", paddingHorizontal: 14, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.border, gap: 10 },
-    glanceTime: { fontSize: 15, fontFamily: "Inter_700Bold", color: colors.primary, width: 46 },
-    glanceInfo: { flex: 1 },
-    glanceName: { fontSize: 14, fontFamily: "Inter_600SemiBold", color: colors.foreground },
-    glanceSub: { fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground, marginTop: 1 },
-    glanceTypePill: { paddingHorizontal: 7, paddingVertical: 3, borderRadius: 6 },
-    glanceTypeText: { fontSize: 10, fontFamily: "Inter_700Bold" },
-    glancePax: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, alignItems: "center" },
-    glancePaxNum: { fontSize: 14, fontFamily: "Inter_700Bold" },
-    glancePaxLabel: { fontSize: 9, fontFamily: "Inter_500Medium", textTransform: "uppercase", letterSpacing: 0.5 },
+    // Next event countdown widget
+    countdownCard: { marginHorizontal: 20, marginBottom: 14, borderRadius: colors.radius, borderWidth: 2, overflow: "hidden" },
+    countdownHeader: { paddingHorizontal: 14, paddingVertical: 8, flexDirection: "row", alignItems: "center", gap: 6, borderBottomWidth: 1 },
+    countdownHeaderText: { fontSize: 10, fontFamily: "Inter_700Bold", letterSpacing: 1.2, textTransform: "uppercase" },
+    countdownBody: { padding: 16 },
+    countdownMinRow: { flexDirection: "row", alignItems: "baseline", gap: 4, marginBottom: 2 },
+    countdownNum: { fontSize: 52, fontFamily: "Inter_700Bold", lineHeight: 56 },
+    countdownUnit: { fontSize: 16, fontFamily: "Inter_600SemiBold" },
+    countdownName: { fontSize: 17, fontFamily: "Inter_700Bold", color: colors.foreground },
+    countdownMeta: { fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground, marginTop: 3 },
+    // My card
     myCard: { marginHorizontal: 20, marginBottom: 14, borderRadius: colors.radius, borderWidth: 1, overflow: "hidden" },
     myCardHeader: { flexDirection: "row", alignItems: "center", paddingHorizontal: 14, paddingVertical: 12, gap: 10 },
     myAvatar: { width: 38, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center" },
@@ -161,21 +181,46 @@ export default function TodayScreen() {
     myEventTime: { fontSize: 13, fontFamily: "Inter_700Bold" },
     myEventName: { flex: 1, fontSize: 13, fontFamily: "Inter_500Medium", color: colors.foreground },
     myEventSub: { fontSize: 11, fontFamily: "Inter_400Regular", color: colors.mutedForeground },
+    // Section labels
     sectionLabel: { fontSize: 11, fontFamily: "Inter_700Bold", color: colors.mutedForeground, letterSpacing: 1.2, textTransform: "uppercase", marginHorizontal: 20, marginBottom: 10 },
-    progressCard: { marginHorizontal: 20, marginBottom: 16, backgroundColor: colors.card, borderRadius: colors.radius, padding: 16, borderWidth: 1, borderColor: colors.border },
-    progressRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 8 },
-    progressLabel: { fontSize: 14, fontFamily: "Inter_600SemiBold", color: colors.foreground },
-    progressCount: { fontSize: 13, fontFamily: "Inter_500Medium", color: colors.mutedForeground },
-    progressBar: { height: 6, backgroundColor: colors.border, borderRadius: 3, overflow: "hidden" },
-    progressFill: { height: 6, backgroundColor: colors.accent, borderRadius: 3 },
-    fnCard: { marginHorizontal: 20, marginBottom: 12, backgroundColor: colors.card, borderRadius: colors.radius, padding: 16, borderWidth: 1, borderColor: colors.border },
-    fnRow: { flexDirection: "row", alignItems: "center", marginBottom: 6 },
-    fnTime: { fontSize: 13, fontFamily: "Inter_600SemiBold", color: colors.primary, width: 52 },
-    fnName: { flex: 1, fontSize: 15, fontFamily: "Inter_600SemiBold", color: colors.foreground },
-    fnTypeLine: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 8 },
-    fnTypePill: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
-    fnTypeText: { fontSize: 11, fontFamily: "Inter_700Bold" },
-    fnMeta: { flexDirection: "row", gap: 8, alignItems: "center", flexWrap: "wrap" },
+    // Unified function cards
+    fnCard: { marginHorizontal: 20, marginBottom: 10, backgroundColor: colors.card, borderRadius: colors.radius, borderWidth: 1.5, borderColor: colors.border, overflow: "hidden" },
+    fnCardTop: { flexDirection: "row", alignItems: "stretch" },
+    fnTimeBadge: { width: 58, backgroundColor: colors.primary + "20", alignItems: "center", justifyContent: "center", paddingVertical: 14, borderRightWidth: 1, borderRightColor: colors.primary + "30" },
+    fnTimeBadgeText: { fontSize: 15, fontFamily: "Inter_700Bold", color: colors.primary },
+    fnTimeBadgeEnd: { fontSize: 10, fontFamily: "Inter_500Medium", color: colors.primary + "90", marginTop: 2 },
+    fnBody: { flex: 1, padding: 12 },
+    fnName: { fontSize: 16, fontFamily: "Inter_700Bold", color: colors.foreground, marginBottom: 2 },
+    fnMetaRow: { flexDirection: "row", alignItems: "center", gap: 6, flexWrap: "wrap", marginBottom: 8 },
+    fnTypePill: { paddingHorizontal: 7, paddingVertical: 3, borderRadius: 6 },
+    fnTypeText: { fontSize: 10, fontFamily: "Inter_700Bold" },
+    fnMetaChip: { flexDirection: "row", alignItems: "center", gap: 3, paddingHorizontal: 6, paddingVertical: 2, backgroundColor: colors.secondary, borderRadius: 5 },
+    fnMetaChipText: { fontSize: 10, fontFamily: "Inter_500Medium", color: colors.mutedForeground },
+    fnPaxBig: { fontSize: 15, fontFamily: "Inter_700Bold", color: colors.foreground },
+    // Section progress rows inside card
+    fnSectionRow: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 4 },
+    fnSectionLabel: { fontSize: 10, fontFamily: "Inter_700Bold", width: 76, textTransform: "uppercase", letterSpacing: 0.4 },
+    fnSectionBar: { flex: 1, height: 6, borderRadius: 3, backgroundColor: colors.border, overflow: "hidden" },
+    fnSectionFill: { height: 6, borderRadius: 3 },
+    fnSectionPct: { fontSize: 10, fontFamily: "Inter_700Bold", width: 30, textAlign: "right" },
+    // Dietary + alert badges
+    fnAlertRow: { flexDirection: "row", gap: 6, paddingHorizontal: 12, paddingBottom: 10, flexWrap: "wrap" },
+    fnAlertBadge: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, borderWidth: 1 },
+    fnAlertText: { fontSize: 11, fontFamily: "Inter_700Bold" },
+    // Glance legacy (keep for layout compat)
+    glanceCard: { marginHorizontal: 20, marginBottom: 14, backgroundColor: colors.card, borderRadius: colors.radius, borderWidth: 1, borderColor: colors.border, overflow: "hidden" },
+    glanceHeader: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 14, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.border, backgroundColor: colors.secondary },
+    glanceHeaderText: { fontSize: 12, fontFamily: "Inter_700Bold", color: colors.foreground, flex: 1 },
+    glanceRow: { flexDirection: "row", alignItems: "center", paddingHorizontal: 14, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.border, gap: 10 },
+    glanceTime: { fontSize: 15, fontFamily: "Inter_700Bold", color: colors.primary, width: 46 },
+    glanceInfo: { flex: 1 },
+    glanceName: { fontSize: 14, fontFamily: "Inter_600SemiBold", color: colors.foreground },
+    glanceSub: { fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground, marginTop: 1 },
+    glanceTypePill: { paddingHorizontal: 7, paddingVertical: 3, borderRadius: 6 },
+    glanceTypeText: { fontSize: 10, fontFamily: "Inter_700Bold" },
+    glancePax: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, alignItems: "center" },
+    glancePaxNum: { fontSize: 14, fontFamily: "Inter_700Bold" },
+    glancePaxLabel: { fontSize: 9, fontFamily: "Inter_500Medium", textTransform: "uppercase", letterSpacing: 0.5 },
     chip: { flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: colors.secondary, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
     chipText: { fontSize: 11, fontFamily: "Inter_500Medium", color: colors.mutedForeground },
     teamRow: { flexDirection: "row", gap: 6, marginTop: 10, flexWrap: "wrap" },
@@ -247,37 +292,51 @@ export default function TodayScreen() {
           </View>
         )}
 
-        {isManager && (
-          <View style={s.glanceCard}>
-            <View style={s.glanceHeader}>
-              <Feather name="list" size={14} color={colors.primary} />
-              <Text style={s.glanceHeaderText}>All Events Today — Quick View</Text>
+        {/* ── NEXT EVENT COUNTDOWN ──────────────────────────────────── */}
+        {nextFn && nextFnMins !== null && (
+          <Pressable
+            style={({ pressed }) => [
+              s.countdownCard,
+              {
+                borderColor: nextFnMins <= 30 ? "#EF4444" : nextFnMins <= 60 ? AMBER : colors.primary,
+                backgroundColor: nextFnMins <= 30 ? "#EF444408" : nextFnMins <= 60 ? AMBER + "08" : colors.primary + "08",
+                opacity: pressed ? 0.9 : 1,
+              },
+            ]}
+            onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push(`/function/${nextFn.id}`); }}
+          >
+            <View style={[
+              s.countdownHeader,
+              { borderBottomColor: nextFnMins <= 30 ? "#EF444430" : nextFnMins <= 60 ? AMBER + "40" : colors.primary + "30",
+                backgroundColor: nextFnMins <= 30 ? "#EF444412" : nextFnMins <= 60 ? AMBER + "12" : colors.primary + "12" }
+            ]}>
+              <Ionicons name="timer-outline" size={14} color={nextFnMins <= 30 ? "#EF4444" : nextFnMins <= 60 ? AMBER : colors.primary} />
+              <Text style={[s.countdownHeaderText, { color: nextFnMins <= 30 ? "#EF4444" : nextFnMins <= 60 ? AMBER : colors.primary }]}>
+                {nextFnMins <= 0 ? "NOW" : "Next Event"}
+              </Text>
+              {sickCount > 0 && (
+                <View style={{ marginLeft: "auto", flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, paddingVertical: 2, backgroundColor: "#EF444420", borderRadius: 6 }}>
+                  <Ionicons name="alert-circle" size={12} color="#EF4444" />
+                  <Text style={{ fontSize: 10, fontFamily: "Inter_700Bold", color: "#EF4444" }}>{sickCount} sick today</Text>
+                </View>
+              )}
             </View>
-            {functions.map((fn, idx) => {
-              const fnPrep = prepItems.filter((p) => p.functionId === fn.id);
-              const prepDone = fnPrep.filter((p) => p.completed).length;
-              const tc = getFunctionTypeColor(fn.functionType);
-              return (
-                <Pressable
-                  key={fn.id}
-                  style={({ pressed }) => [s.glanceRow, { borderBottomWidth: idx === functions.length - 1 ? 0 : 1, opacity: pressed ? 0.75 : 1 }]}
-                  onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push(`/function/${fn.id}`); }}
-                >
-                  <Text style={s.glanceTime}>{fn.startTime}</Text>
-                  <View style={s.glanceInfo}>
-                    <Text style={s.glanceName} numberOfLines={1}>{fn.name}</Text>
-                    <Text style={s.glanceSub}>Room: {fn.room}  ·  Food ready: {prepDone}/{fnPrep.length}</Text>
-                  </View>
-                  <View style={[s.glanceTypePill, { backgroundColor: tc + "22" }]}>
-                    <Text style={[s.glanceTypeText, { color: tc }]}>{fn.functionType}</Text>
-                  </View>
-                  <Feather name="chevron-right" size={15} color={colors.mutedForeground} />
-                </Pressable>
-              );
-            })}
-          </View>
+            <View style={s.countdownBody}>
+              <View style={s.countdownMinRow}>
+                <Text style={[s.countdownNum, { color: nextFnMins <= 30 ? "#EF4444" : nextFnMins <= 60 ? AMBER : colors.primary }]}>
+                  {nextFnMins <= 0 ? "NOW" : nextFnMins >= 60 ? `${Math.floor(nextFnMins / 60)}h ${nextFnMins % 60}m` : nextFnMins}
+                </Text>
+                {nextFnMins > 0 && nextFnMins < 60 && (
+                  <Text style={[s.countdownUnit, { color: nextFnMins <= 30 ? "#EF4444" : AMBER }]}>min</Text>
+                )}
+              </View>
+              <Text style={s.countdownName} numberOfLines={1}>{nextFn.name}</Text>
+              <Text style={s.countdownMeta}>{nextFn.room} · {nextFn.floor} · {nextFn.guestCount} guests · {nextFn.startTime}–{nextFn.endTime}</Text>
+            </View>
+          </Pressable>
         )}
 
+        {/* ── MY SHIFT CARD ─────────────────────────────────────────── */}
         {currentMember && (() => {
           const rc = getRoleColor(currentMember.role, colors);
           return (
@@ -293,7 +352,7 @@ export default function TodayScreen() {
                 <View style={[s.notifPill, { backgroundColor: notificationsEnabled ? colors.accent + "20" : colors.secondary }]}>
                   <Ionicons name={notificationsEnabled ? "notifications" : "notifications-off"} size={12} color={notificationsEnabled ? colors.accent : colors.mutedForeground} />
                   <Text style={[s.notifPillText, { color: notificationsEnabled ? colors.accent : colors.mutedForeground }]}>
-                    {notificationsEnabled ? "Alerts on" : "No alerts"}
+                    {notificationsEnabled ? "On" : "Off"}
                   </Text>
                 </View>
               </View>
@@ -308,10 +367,10 @@ export default function TodayScreen() {
                           <Text style={[s.myEventTime, { color: rc }]}>{fn.startTime}</Text>
                           <View style={{ flex: 1 }}>
                             <Text style={s.myEventName} numberOfLines={1}>{fn.name}</Text>
-                            <Text style={s.myEventSub}>Room: {fn.room} · {fn.guestCount} guests</Text>
+                            <Text style={s.myEventSub}>{fn.room} · {fn.guestCount} guests</Text>
                           </View>
-                          <View style={[s.glanceTypePill, { backgroundColor: tc + "22" }]}>
-                            <Text style={[s.glanceTypeText, { color: tc }]}>{fn.functionType}</Text>
+                          <View style={[s.fnTypePill, { backgroundColor: tc + "22" }]}>
+                            <Text style={[s.fnTypeText, { color: tc }]}>{fn.functionType}</Text>
                           </View>
                           <Feather name="chevron-right" size={14} color={colors.mutedForeground} />
                         </Pressable>
@@ -324,57 +383,145 @@ export default function TodayScreen() {
           );
         })()}
 
-        <Text style={s.sectionLabel}>Food Prep Progress</Text>
-        <View style={s.progressCard}>
-          <View style={s.progressRow}>
-            <Text style={s.progressLabel}>Tasks complete today</Text>
-            <Text style={s.progressCount}>{completedPrep} of {totalPrep} done</Text>
-          </View>
-          <View style={s.progressBar}>
-            <View style={[s.progressFill, { width: `${prepPercent * 100}%` }]} />
-          </View>
-        </View>
+        {/* ── TODAY'S FUNCTIONS — rich cards ───────────────────────── */}
+        <Text style={s.sectionLabel}>Today's Functions</Text>
 
-        <Text style={s.sectionLabel}>All Events</Text>
-        {functions.map((fn) => {
-          const fnStaff = staff.filter((st) => fn.teamIds.includes(st.id));
+        {sortedFunctions.length === 0 && (
+          <View style={{ marginHorizontal: 20, padding: 24, borderRadius: colors.radius, borderWidth: 1, borderColor: colors.border, alignItems: "center", gap: 8 }}>
+            <Feather name="calendar" size={28} color={colors.mutedForeground} />
+            <Text style={{ fontSize: 15, fontFamily: "Inter_600SemiBold", color: colors.foreground }}>No functions today</Text>
+            <Text style={{ fontSize: 13, fontFamily: "Inter_400Regular", color: colors.mutedForeground, textAlign: "center" }}>Add functions from the Functions tab</Text>
+          </View>
+        )}
+
+        {sortedFunctions.map((fn) => {
           const tc = getFunctionTypeColor(fn.functionType);
+          const fnPrep = prepItems.filter((p) => p.functionId === fn.id);
+          const isNextEvent = nextFn?.id === fn.id;
+
+          // Build per-section prep progress
+          const TEAMS: PrepTeam[] = ["Hot Kitchen", "Cold Larder", "Pastry", "Function Team", "Butchery"];
+          const teamProgress = TEAMS.map((team) => {
+            const teamItems = fnPrep.filter((p) => p.team === team);
+            if (teamItems.length === 0) return null;
+            const done = teamItems.filter((p) => p.completed).length;
+            return { team, done, total: teamItems.length, pct: done / teamItems.length };
+          }).filter(Boolean) as { team: PrepTeam; done: number; total: number; pct: number }[];
+
+          const dietaryReqs = fn.dietaryRequirements ?? [];
+          const hasSevere = dietaryReqs.some((d) => d.name.toLowerCase().includes("nut") || d.name.toLowerCase().includes("shellfish"));
+          const totalDietary = dietaryReqs.reduce((sum, d) => sum + d.count, 0);
+
+          // Course service times — show the next upcoming one
+          const courseOrder = ["amuse", "entree", "main", "dessert", "supper"] as const;
+          const nextCourse = fn.serviceTimes ? courseOrder.map((k) => fn.serviceTimes![k] ? { key: k, time: fn.serviceTimes![k]! } : null).filter(Boolean).find((c) => timeToMinutes(c!.time) > nowMinutes) ?? null : null;
+
+          const fnMins = timeToMinutes(fn.startTime) - nowMinutes;
+          const isUrgent = fnMins > 0 && fnMins <= 30;
+          const isActive = fnMins <= 0 && timeToMinutes(fn.endTime) > nowMinutes;
+
           return (
-            <Pressable key={fn.id} style={({ pressed }) => [s.fnCard, pressed && { opacity: 0.8 }]} onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push(`/function/${fn.id}`); }}>
-              <View style={s.fnRow}>
-                <Text style={s.fnTime}>{fn.startTime}</Text>
-                <Text style={s.fnName} numberOfLines={1}>{fn.name}</Text>
-                <Feather name="chevron-right" size={16} color={colors.mutedForeground} />
-              </View>
-              <View style={s.fnTypeLine}>
-                <View style={[s.fnTypePill, { backgroundColor: tc + "22" }]}>
-                  <Text style={[s.fnTypeText, { color: tc }]}>{fn.functionType}</Text>
+            <Pressable
+              key={fn.id}
+              style={({ pressed }) => [
+                s.fnCard,
+                isNextEvent && { borderColor: tc + "70" },
+                isUrgent && { borderColor: "#EF444470" },
+                isActive && { borderColor: colors.accent + "70" },
+                { opacity: pressed ? 0.85 : 1 },
+              ]}
+              onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push(`/function/${fn.id}`); }}
+            >
+              {/* Time badge + body */}
+              <View style={s.fnCardTop}>
+                <View style={[s.fnTimeBadge, {
+                  backgroundColor: isActive ? colors.accent + "20" : isUrgent ? "#EF444420" : tc + "18",
+                  borderRightColor: isActive ? colors.accent + "30" : isUrgent ? "#EF444440" : tc + "30",
+                }]}>
+                  <Text style={[s.fnTimeBadgeText, { color: isActive ? colors.accent : isUrgent ? "#EF4444" : tc }]}>{fn.startTime}</Text>
+                  <Text style={[s.fnTimeBadgeEnd, { color: isActive ? colors.accent + "90" : isUrgent ? "#EF444490" : tc + "90" }]}>{fn.endTime}</Text>
+                  {isActive && (
+                    <View style={{ marginTop: 4, paddingHorizontal: 4, paddingVertical: 1, backgroundColor: colors.accent, borderRadius: 4 }}>
+                      <Text style={{ fontSize: 8, fontFamily: "Inter_700Bold", color: "#fff" }}>LIVE</Text>
+                    </View>
+                  )}
                 </View>
-                {fn.functionType === "A-la-carte" && fn.serviceTimes && (
-                  <>
-                    {fn.serviceTimes.entree && <Text style={{ fontSize: 11, fontFamily: "Inter_400Regular", color: colors.mutedForeground }}>Ent: {fn.serviceTimes.entree}</Text>}
-                    {fn.serviceTimes.main && <Text style={{ fontSize: 11, fontFamily: "Inter_400Regular", color: colors.mutedForeground }}>Main: {fn.serviceTimes.main}</Text>}
-                    {fn.serviceTimes.dessert && <Text style={{ fontSize: 11, fontFamily: "Inter_400Regular", color: colors.mutedForeground }}>Des: {fn.serviceTimes.dessert}</Text>}
-                  </>
-                )}
-              </View>
-              <View style={s.fnMeta}>
-                <View style={s.chip}>
-                  <MaterialCommunityIcons name="door" size={12} color={colors.mutedForeground} />
-                  <Text style={s.chipText}>Room: {fn.room}</Text>
-                </View>
-                <View style={s.chip}>
-                  <Ionicons name="people" size={12} color={colors.mutedForeground} />
-                  <Text style={s.chipText}>{fn.guestCount} guests</Text>
-                </View>
-              </View>
-              <View style={s.teamRow}>
-                {fnStaff.map((member) => (
-                  <View key={member.id} style={[s.avatar, { backgroundColor: getRoleColor(member.role, colors) + "25", borderWidth: currentStaffId === member.id ? 1.5 : 0, borderColor: getRoleColor(member.role, colors) }]}>
-                    <Text style={[s.avatarText, { color: getRoleColor(member.role, colors) }]}>{member.name.split(" ").map((n) => n[0]).join("")}</Text>
+
+                <View style={s.fnBody}>
+                  <Text style={s.fnName} numberOfLines={1}>{fn.name}</Text>
+                  <View style={s.fnMetaRow}>
+                    <View style={[s.fnTypePill, { backgroundColor: tc + "22" }]}>
+                      <Text style={[s.fnTypeText, { color: tc }]}>{fn.functionType}</Text>
+                    </View>
+                    <View style={s.fnMetaChip}>
+                      <MaterialCommunityIcons name="door" size={10} color={colors.mutedForeground} />
+                      <Text style={s.fnMetaChipText}>{fn.room}</Text>
+                    </View>
+                    <View style={s.fnMetaChip}>
+                      <Ionicons name="people" size={10} color={colors.mutedForeground} />
+                      <Text style={s.fnMetaChipText}>{fn.guestCount} pax</Text>
+                    </View>
                   </View>
-                ))}
+
+                  {/* Per-section prep progress bars */}
+                  {teamProgress.map(({ team, done, total, pct }) => {
+                    const tc2 = getTeamColor(team);
+                    return (
+                      <View key={team} style={s.fnSectionRow}>
+                        <Text style={[s.fnSectionLabel, { color: tc2 }]}>{team.replace(" Kitchen", " K.").replace(" Larder", " L.").replace(" Team", " T.")}</Text>
+                        <View style={s.fnSectionBar}>
+                          <View style={[s.fnSectionFill, { width: `${pct * 100}%`, backgroundColor: pct >= 1 ? colors.accent : tc2 }]} />
+                        </View>
+                        <Text style={[s.fnSectionPct, { color: pct >= 1 ? colors.accent : tc2 }]}>{Math.round(pct * 100)}%</Text>
+                      </View>
+                    );
+                  })}
+
+                  {/* Next course fire time */}
+                  {nextCourse && (
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 5, marginTop: 2 }}>
+                      <Feather name="clock" size={10} color={tc} />
+                      <Text style={{ fontSize: 10, fontFamily: "Inter_600SemiBold", color: tc }}>
+                        {nextCourse.key.charAt(0).toUpperCase() + nextCourse.key.slice(1)} fire: {nextCourse.time}
+                      </Text>
+                    </View>
+                  )}
+                </View>
               </View>
+
+              {/* Dietary / alert badges at the bottom */}
+              {(totalDietary > 0 || hasSevere) && (
+                <View style={s.fnAlertRow}>
+                  {hasSevere && (
+                    <View style={[s.fnAlertBadge, { backgroundColor: "#EF444412", borderColor: "#EF444440" }]}>
+                      <Ionicons name="alert-circle" size={12} color="#EF4444" />
+                      <Text style={[s.fnAlertText, { color: "#EF4444" }]}>Severe allergen</Text>
+                    </View>
+                  )}
+                  {dietaryReqs.slice(0, 3).map((d, i) => {
+                    const dc = (() => {
+                      const n = d.name.toLowerCase();
+                      if (n.includes("gluten")) return "#22C55E";
+                      if (n.includes("vegan")) return "#84CC16";
+                      if (n.includes("nut")) return "#F59E0B";
+                      if (n.includes("dairy")) return "#60A5FA";
+                      if (n.includes("shellfish")) return "#F97316";
+                      if (n.includes("halal")) return "#14B8A6";
+                      return "#94A3B8";
+                    })();
+                    return (
+                      <View key={i} style={[s.fnAlertBadge, { backgroundColor: dc + "15", borderColor: dc + "40" }]}>
+                        <Text style={[s.fnAlertText, { color: dc }]}>{d.count}× {d.name}</Text>
+                      </View>
+                    );
+                  })}
+                  {dietaryReqs.length > 3 && (
+                    <View style={[s.fnAlertBadge, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
+                      <Text style={[s.fnAlertText, { color: colors.mutedForeground }]}>+{dietaryReqs.length - 3} more</Text>
+                    </View>
+                  )}
+                </View>
+              )}
             </Pressable>
           );
         })}
