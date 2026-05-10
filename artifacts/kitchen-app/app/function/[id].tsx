@@ -883,36 +883,6 @@ export default function FunctionDetailScreen() {
 
             <View style={s.div} />
 
-            {/* ── Casual Staff QR ────────────────────────────────────────── */}
-            <View style={s.section}>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                <Text style={s.sectionTitle}>Casual Staff Brief</Text>
-                <View style={{ paddingHorizontal: 7, paddingVertical: 3, backgroundColor: colors.accent + "20", borderRadius: 6 }}>
-                  <Text style={{ fontSize: 10, fontFamily: "Inter_700Bold", color: colors.accent }}>QR</Text>
-                </View>
-              </View>
-              <Text style={s.sectionSub}>Show this QR code to casual chefs — they scan to see their team and contacts</Text>
-              <View style={{ alignItems: "center", marginTop: 14, marginBottom: 10 }}>
-                <View style={{ padding: 16, backgroundColor: "#FFFFFF", borderRadius: 16, shadowColor: "#000", shadowOpacity: 0.12, shadowRadius: 8, shadowOffset: { width: 0, height: 2 } }}>
-                  <QRCode
-                    value={
-                      Platform.OS === "web" && typeof window !== "undefined"
-                        ? `${window.location.origin}/brief/${fn.id}`
-                        : `kitchencommand://brief/${fn.id}`
-                    }
-                    size={180}
-                    color="#0D1117"
-                    backgroundColor="#FFFFFF"
-                  />
-                </View>
-                <Text style={{ fontSize: 11, fontFamily: "Inter_500Medium", color: colors.mutedForeground, marginTop: 10, textAlign: "center" }}>
-                  Scan · View team, leader & contact info
-                </Text>
-              </View>
-            </View>
-
-            <View style={s.div} />
-
             {/* ── Staff ───────────────────────────────────────────────────── */}
             <View style={s.section}>
               <Text style={s.sectionTitle}>Staff Working This Event</Text>

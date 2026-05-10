@@ -13,6 +13,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import QRCode from "react-native-qrcode-svg";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { PrepTeam, MANAGER_ROLES, StaffMember, getAccessLevel, useKitchen } from "@/context/KitchenContext";
 import { useColors } from "@/hooks/useColors";
@@ -99,6 +100,7 @@ export default function RosterScreen() {
   const [showSettings, setShowSettings] = useState(false);
   const [verifyTarget, setVerifyTarget] = useState<StaffMember | null>(null);
   const [verifyInput, setVerifyInput] = useState("");
+  const [expandedQrFnId, setExpandedQrFnId] = useState<string | null>(null);
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const minHour = HOURS[0];
@@ -358,6 +360,76 @@ export default function RosterScreen() {
               <Text style={[s.statNum, { color: colors.primary }]}>{functions.length}</Text>
               <Text style={s.statLabel}>Functions</Text>
             </View>
+          </View>
+        )}
+
+        {/* ── Casual Staff QR Briefs ─────────────────────────────────── */}
+        {functions.length > 0 && search.length === 0 && (
+          <View style={{ marginHorizontal: 20, marginBottom: 16 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 10 }}>
+              <Ionicons name="qr-code-outline" size={15} color={colors.primary} />
+              <Text style={{ fontSize: 11, fontFamily: "Inter_700Bold", color: colors.mutedForeground, letterSpacing: 1.1, textTransform: "uppercase" }}>
+                Casual Staff Briefs
+              </Text>
+              <Text style={{ fontSize: 11, fontFamily: "Inter_400Regular", color: colors.mutedForeground }}>— scan to brief a casual</Text>
+            </View>
+            {functions.map((fn) => {
+              const isOpen = expandedQrFnId === fn.id;
+              const qrValue = Platform.OS === "web" && typeof window !== "undefined"
+                ? `${window.location.origin}/brief/${fn.id}`
+                : `kitchencommand://brief/${fn.id}`;
+              return (
+                <Pressable
+                  key={fn.id}
+                  style={({ pressed }) => ({
+                    backgroundColor: colors.card,
+                    borderRadius: 12,
+                    borderWidth: 1.5,
+                    borderColor: isOpen ? colors.primary + "60" : colors.border,
+                    marginBottom: 8,
+                    overflow: "hidden",
+                    opacity: pressed ? 0.85 : 1,
+                  })}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    setExpandedQrFnId(isOpen ? null : fn.id);
+                  }}
+                >
+                  <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 14, paddingVertical: 12, gap: 10 }}>
+                    <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: colors.primary }} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 14, fontFamily: "Inter_700Bold", color: colors.foreground }} numberOfLines={1}>{fn.name}</Text>
+                      <Text style={{ fontSize: 11, fontFamily: "Inter_400Regular", color: colors.mutedForeground, marginTop: 1 }}>
+                        {fn.room} · {fn.startTime}–{fn.endTime} · {fn.guestCount} guests
+                      </Text>
+                    </View>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                      <View style={{ paddingHorizontal: 7, paddingVertical: 3, backgroundColor: colors.accent + "20", borderRadius: 6 }}>
+                        <Text style={{ fontSize: 10, fontFamily: "Inter_700Bold", color: colors.accent }}>QR</Text>
+                      </View>
+                      <Ionicons name={isOpen ? "chevron-up" : "chevron-down"} size={16} color={colors.mutedForeground} />
+                    </View>
+                  </View>
+                  {isOpen && (
+                    <View style={{ borderTopWidth: 1, borderTopColor: colors.border, paddingVertical: 20, alignItems: "center", backgroundColor: colors.background }}>
+                      <View style={{ padding: 16, backgroundColor: "#FFFFFF", borderRadius: 16 }}>
+                        <QRCode value={qrValue} size={200} color="#0D1117" backgroundColor="#FFFFFF" />
+                      </View>
+                      <Text style={{ fontSize: 12, fontFamily: "Inter_500Medium", color: colors.mutedForeground, marginTop: 12, textAlign: "center" }}>
+                        Show this to the casual chef — they scan to see{"\n"}their team, section leader and contact number
+                      </Text>
+                      <Pressable
+                        style={{ marginTop: 12, flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 16, paddingVertical: 8, backgroundColor: colors.accent + "20", borderRadius: 10, borderWidth: 1, borderColor: colors.accent + "40" }}
+                        onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push(`/brief/${fn.id}`); }}
+                      >
+                        <Feather name="external-link" size={13} color={colors.accent} />
+                        <Text style={{ fontSize: 13, fontFamily: "Inter_600SemiBold", color: colors.accent }}>Open brief page</Text>
+                      </Pressable>
+                    </View>
+                  )}
+                </Pressable>
+              );
+            })}
           </View>
         )}
 
@@ -742,6 +814,25 @@ export default function RosterScreen() {
               </Text>
             </View>
           </View>
+
+          {/* Subscription */}
+          <Pressable
+            style={({ pressed }) => ({
+              flexDirection: "row", alignItems: "center", gap: 14,
+              padding: 16, borderRadius: 12, borderWidth: 1, borderColor: colors.primary + "50",
+              backgroundColor: colors.primary + "08", marginBottom: 10, opacity: pressed ? 0.7 : 1,
+            })}
+            onPress={() => { setShowSettings(false); router.push("/subscribe"); }}
+          >
+            <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: colors.primary + "20", alignItems: "center", justifyContent: "center" }}>
+              <Ionicons name="rocket-outline" size={18} color={colors.primary} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: 15, fontFamily: "Inter_600SemiBold", color: colors.primary }}>Plans & Pricing</Text>
+              <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground }}>First month free · $99 or $299/month</Text>
+            </View>
+            <Feather name="chevron-right" size={16} color={colors.mutedForeground} />
+          </Pressable>
 
           {/* Manage staff */}
           <Pressable
