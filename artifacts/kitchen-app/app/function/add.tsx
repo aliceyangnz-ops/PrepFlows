@@ -14,7 +14,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { DietaryRequirement, FunctionType, KitchenFunction, getAccessLevel, useKitchen } from "@/context/KitchenContext";
+import { DietaryRequirement, FunctionType, KitchenFunction, TimelineItem, getAccessLevel, useKitchen } from "@/context/KitchenContext";
 import { useColors } from "@/hooks/useColors";
 
 const FUNCTION_TYPES: FunctionType[] = [
@@ -77,6 +77,69 @@ interface ParseResult {
   serviceEvents: Array<{ time: string; label: string }>;
   dietaryRequirements: Array<{ name: string; count: string; note: string }>;
   confidence: Record<string, boolean>;
+}
+
+function timeToMins(t: string): number {
+  const [h, m] = t.split(":").map(Number);
+  return h * 60 + (m || 0);
+}
+
+function fmtMins(mins: number): string {
+  const h = Math.floor(((mins % 1440) + 1440) % 1440 / 60);
+  const m = ((mins % 60) + 60) % 60;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+
+function generateTimeline(
+  functionType: FunctionType,
+  startTime: string,
+  endTime: string,
+  guestCount: number,
+  serviceEvents: Array<{ time: string; label: string }>,
+  room: string,
+): TimelineItem[] {
+  const startMins = timeToMins(startTime);
+  const endMins   = timeToMins(endTime);
+  const items: TimelineItem[] = [];
+  let idx = 1;
+  const add = (time: string, task: string, category: TimelineItem["category"]) =>
+    items.push({ id: `gen_${idx++}`, time, task, category, completed: false });
+
+  const setupHrs = guestCount > 300 ? 7 : guestCount > 150 ? 5 : guestCount > 50 ? 3 : 2;
+  const kitchenOpen = fmtMins(Math.max(5 * 60, startMins - setupHrs * 60));
+  add(kitchenOpen, `KITCHEN OPEN — Mise en place. All stations set, benches clear, HACCP sheets started. Cold room temp check.`, "setup");
+
+  if (guestCount > 40) {
+    add(fmtMins(timeToMins(kitchenOpen) + 90), `Protein portioning and prep. Dietary alternates labelled and separated on dedicated trays.`, "setup");
+  }
+  if (guestCount > 100) {
+    add(fmtMins(timeToMins(kitchenOpen) + 180), `Sauce reductions on. Pastry items into oven. Cross-contamination check all allergen stations.`, "setup");
+  }
+  if (functionType === "Buffet") {
+    add(fmtMins(startMins - 60), `Chafing dishes set, water pans filled. Dietary labels placed. Carving station board and knife set.`, "venue");
+  }
+  add(fmtMins(startMins - 40), `VENUE CHECK — ${room}: crockery polished, mise en place on pass, lamps on. Table numbers confirmed.`, "venue");
+  add(fmtMins(startMins - 15), `PRE-SERVICE BRIEF — All team. Runner sections confirmed. Allergen plan reviewed. Manager sign-off.`, "brief");
+
+  const sorted = [...serviceEvents].sort((a, b) => a.time.localeCompare(b.time));
+  if (sorted.length > 0) {
+    for (const evt of sorted) {
+      const isBuffet = evt.label.toLowerCase().includes("open") || evt.label.toLowerCase().includes("close");
+      const suffix = isBuffet
+        ? `${evt.label.toUpperCase()} — replenishment plan every 20 min.`
+        : `${evt.label.toUpperCase()} — ${guestCount} covers. Allergen alternates on separate labelled tray.`;
+      add(evt.time, suffix, "service");
+    }
+  } else {
+    add(startTime, `SERVICE START — Guests arrive. All stations ready. ${guestCount} covers.`, "service");
+    const midMins = Math.round((startMins + endMins) / 2);
+    add(fmtMins(midMins), `Mid-service check — replenish stations, clear empties. Allergen alternates confirmed.`, "service");
+  }
+
+  add(fmtMins(endMins - 30), `Last covers cleared. Pass broken down. Leftover food labelled & chilled for HACCP.`, "close");
+  add(fmtMins(endMins), `KITCHEN CLEAR — All surfaces sanitised. HACCP sheets completed & signed by manager. Waste logged.`, "close");
+
+  return items.sort((a, b) => a.time.localeCompare(b.time));
 }
 
 function parseEventText(raw: string): ParseResult {
@@ -244,24 +307,25 @@ const EMPTY_FORM: FormState = {
   dietaryRequirements: [],
 };
 
-const PLACEHOLDER = `Paste your function sheet or email here.
+const PLACEHOLDER = `Paste any function sheet, email, or event brief here — the app will automatically read and fill in the details.
 
-Examples of what this can read:
+It can pick up:
+  • Function name and room / floor
+  • Start and finish times (e.g. "6:30pm to 11:00pm")
+  • Guest numbers (e.g. "180 guests" or "250 pax")
+  • Function type (buffet, cocktail, à la carte, set menu…)
+  • Service milestones (Entrée, Main, Dessert, Buffet open…)
+  • Dietary requirements (GF, vegan, nut allergy, halal…)
 
-  Smith Wedding Reception
-  Room: Ballroom A, Level 1
-  Saturday 10 May 2026
-  6:30pm to 11:00pm
-  180 guests
+Example:
+
+  Smith Wedding Reception — Ballroom A, Level 1
+  Saturday 10 May 2026 · 6:30pm to 11:00pm
+  180 guests  |  Set Menu
   Entrée: 7:00pm  Main: 8:30pm  Dessert: 9:30pm
   Dietary: 8 GF, 3 vegan, 2 nut allergy, 1 halal
 
-  ---
-
-  Corporate Gala Dinner — ABC Company
-  Grand Ballroom, Ground Floor
-  Cocktail function, 250 pax
-  Start: 7pm  Finish: 10:30pm`;
+After reading, a full run sheet timeline is automatically built from the details.`;
 
 export default function AddFunctionScreen() {
   const colors   = useColors();
@@ -390,14 +454,21 @@ export default function AddFunctionScreen() {
         .sort((a, b) => a.time.localeCompare(b.time)),
       menu: [],
       teamIds: [],
-      timeline: [],
+      timeline: generateTimeline(
+        form.functionType,
+        form.startTime,
+        form.endTime || form.startTime,
+        guestNum,
+        form.serviceEvents.filter((e) => e.time.trim() && e.label.trim()),
+        form.room.trim() || "venue",
+      ),
     };
 
     addFunction(newFn);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     Alert.alert(
       "Event added",
-      `${form.name} has been added to today's events. Open it to add the run sheet, menu, and team.`,
+      `${form.name} has been saved with a full run sheet timeline (${newFn.timeline.length} tasks) built automatically. Open it to review, edit the menu, and assign your team.`,
       [{ text: "Done", onPress: () => router.back() }]
     );
   }

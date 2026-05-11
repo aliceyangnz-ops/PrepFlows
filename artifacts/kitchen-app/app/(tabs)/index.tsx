@@ -111,8 +111,12 @@ export default function TodayScreen() {
   const isManager = currentMember ? getAccessLevel(currentMember) === "manager" : false;
   const myFunctions = currentMember ? functions.filter((f) => currentMember.functionIds.includes(f.id)) : [];
 
-  const sortedFunctions = [...functions].sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
-  const nextFn = sortedFunctions.find((f) => timeToMinutes(f.startTime) > nowMinutes) ?? sortedFunctions[0] ?? null;
+  const sortedFunctions = [...functions]
+    .filter((f) => timeToMinutes(f.endTime) > nowMinutes)
+    .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
+  const nextFn = sortedFunctions.find((f) => timeToMinutes(f.startTime) > nowMinutes)
+    ?? sortedFunctions.find((f) => timeToMinutes(f.endTime) > nowMinutes)
+    ?? null;
   const nextFnMins = nextFn ? timeToMinutes(nextFn.startTime) - nowMinutes : null;
   const sickCount = sickStaffIds.length;
 
