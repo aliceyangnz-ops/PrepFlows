@@ -4,7 +4,7 @@ import { useRouter } from "expo-router";
 import React from "react";
 import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { FunctionType, ServiceTimes, getAccessLevel, useKitchen } from "@/context/KitchenContext";
+import { FunctionType, getAccessLevel, useKitchen } from "@/context/KitchenContext";
 import { useColors } from "@/hooks/useColors";
 
 function getFunctionTypeColor(type: FunctionType): string {
@@ -49,13 +49,6 @@ function getDietaryTag(name: string): string {
   return name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 4);
 }
 
-const COURSE_ORDER: { key: keyof ServiceTimes; label: string }[] = [
-  { key: "amuse",   label: "Amuse"   },
-  { key: "entree",  label: "Entrée"  },
-  { key: "main",    label: "Main"    },
-  { key: "dessert", label: "Dessert" },
-  { key: "supper",  label: "Supper"  },
-];
 
 export default function FunctionsScreen() {
   const colors = useColors();
@@ -121,7 +114,13 @@ export default function FunctionsScreen() {
             const tc = getFunctionTypeColor(fn.functionType);
             const dietaryReqs = fn.dietaryRequirements ?? [];
             const totalDietary = dietaryReqs.reduce((n, r) => n + r.count, 0);
-            const activeTimes = COURSE_ORDER.filter((c) => fn.serviceTimes?.[c.key]);
+            const activeTimes: Array<{ label: string; time: string }> = fn.serviceEvents && fn.serviceEvents.length > 0
+              ? fn.serviceEvents
+              : fn.serviceTimes
+                ? (["amuse", "entree", "main", "dessert", "supper"] as const)
+                    .filter((k) => fn.serviceTimes![k])
+                    .map((k) => ({ label: k.charAt(0).toUpperCase() + k.slice(1), time: fn.serviceTimes![k]! }))
+                : [];
             const fnPrep = prepItems.filter((p) => p.functionId === fn.id);
             const prepDone = fnPrep.filter((p) => p.completed).length;
             const prepPct = fnPrep.length > 0 ? prepDone / fnPrep.length : 0;
@@ -216,15 +215,15 @@ export default function FunctionsScreen() {
                     </View>
                   )}
 
-                  {/* Service times */}
+                  {/* Service events */}
                   {activeTimes.length > 0 && (
                     <View style={{ borderTopWidth: 1, borderTopColor: colors.border, paddingHorizontal: 12, paddingVertical: 10 }}>
-                      <Text style={{ fontSize: 10, fontFamily: "Inter_700Bold", color: colors.mutedForeground, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 8 }}>Service times</Text>
+                      <Text style={{ fontSize: 10, fontFamily: "Inter_700Bold", color: colors.mutedForeground, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 8 }}>Service milestones</Text>
                       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-                        {activeTimes.map((c) => (
-                          <View key={c.key} style={{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: 9, backgroundColor: tc + "18", borderWidth: 1, borderColor: tc + "45", alignItems: "center" }}>
+                        {activeTimes.map((c, i) => (
+                          <View key={i} style={{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: 9, backgroundColor: tc + "18", borderWidth: 1, borderColor: tc + "45", alignItems: "center" }}>
                             <Text style={{ fontSize: 9, fontFamily: "Inter_700Bold", color: tc, textTransform: "uppercase", letterSpacing: 0.6 }}>{c.label}</Text>
-                            <Text style={{ fontSize: 16, fontFamily: "Inter_700Bold", color: colors.foreground, marginTop: 2 }}>{fn.serviceTimes![c.key]}</Text>
+                            <Text style={{ fontSize: 16, fontFamily: "Inter_700Bold", color: colors.foreground, marginTop: 2 }}>{c.time}</Text>
                           </View>
                         ))}
                       </View>
@@ -233,7 +232,7 @@ export default function FunctionsScreen() {
 
                   {activeTimes.length === 0 && fn.menu.length === 0 && (
                     <View style={{ paddingHorizontal: 12, paddingVertical: 10, borderTopWidth: 1, borderTopColor: colors.border }}>
-                      <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground, fontStyle: "italic" }}>No service times set — tap Edit to add</Text>
+                      <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground, fontStyle: "italic" }}>No service milestones set — tap Edit to add</Text>
                     </View>
                   )}
                 </View>

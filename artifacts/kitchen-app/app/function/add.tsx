@@ -74,12 +74,9 @@ interface ParseResult {
   startTime: string;
   endTime: string;
   guestCount: string;
-  entree: string;
-  main: string;
-  dessert: string;
-  amuse: string;
+  serviceEvents: Array<{ time: string; label: string }>;
   dietaryRequirements: Array<{ name: string; count: string; note: string }>;
-  confidence: Record<string, boolean>; // which fields were found
+  confidence: Record<string, boolean>;
 }
 
 function parseEventText(raw: string): ParseResult {
@@ -113,16 +110,24 @@ function parseEventText(raw: string): ParseResult {
     if (e) { endTime = normalizeTime(e[1]); confidence.endTime = true; }
   }
 
-  // ── COURSE TIMES ─────────────────────────────────────────────────────────
-  let amuse = "", entree = "", main = "", dessert = "";
-  const amuseM   = text.match(/(?:amuse|amuse[-\s]bouche|canapé arrival|arrival\s+drink[s]?)\s*[:\-–at]*\s*((?:\d{1,2})(?::\d{2})?\s*(?:[ap]m)?)/i);
-  const entreeM  = text.match(/(?:entr[ée]e?s?|starter[s]?|first\s+course)\s*[:\-–at]*\s*((?:\d{1,2})(?::\d{2})?\s*(?:[ap]m)?)/i);
-  const mainM    = text.match(/(?:main[s]?|second\s+course|mains?\s+course)\s*[:\-–at]*\s*((?:\d{1,2})(?::\d{2})?\s*(?:[ap]m)?)/i);
-  const dessertM = text.match(/(?:dessert[s]?|sweet[s]?|pudding|third\s+course)\s*[:\-–at]*\s*((?:\d{1,2})(?::\d{2})?\s*(?:[ap]m)?)/i);
-  if (amuseM)   amuse   = normalizeTime(amuseM[1]);
-  if (entreeM)  entree  = normalizeTime(entreeM[1]);
-  if (mainM)    main    = normalizeTime(mainM[1]);
-  if (dessertM) dessert = normalizeTime(dessertM[1]);
+  // ── COURSE / SERVICE TIMES → serviceEvents ───────────────────────────────
+  const courseMatches: Array<{ time: string; label: string }> = [];
+  const coursePats: Array<{ re: RegExp; label: string }> = [
+    { re: /(?:amuse|amuse[-\s]bouche|canapé arrival|arrival\s+drink[s]?)\s*[:\-–at]*\s*((?:\d{1,2})(?::\d{2})?\s*(?:[ap]m)?)/i, label: "Amuse-bouche" },
+    { re: /(?:entr[ée]e?s?|starter[s]?|first\s+course)\s*[:\-–at]*\s*((?:\d{1,2})(?::\d{2})?\s*(?:[ap]m)?)/i, label: "Entrée Away" },
+    { re: /(?:soup|bisque|consommé)\s*[:\-–at]*\s*((?:\d{1,2})(?::\d{2})?\s*(?:[ap]m)?)/i, label: "Soup Away" },
+    { re: /(?:main[s]?|second\s+course|mains?\s+course)\s*[:\-–at]*\s*((?:\d{1,2})(?::\d{2})?\s*(?:[ap]m)?)/i, label: "Main Away" },
+    { re: /(?:dessert[s]?|sweet[s]?|pudding|third\s+course)\s*[:\-–at]*\s*((?:\d{1,2})(?::\d{2})?\s*(?:[ap]m)?)/i, label: "Dessert Away" },
+    { re: /(?:supper|late\s+snack)\s*[:\-–at]*\s*((?:\d{1,2})(?::\d{2})?\s*(?:[ap]m)?)/i, label: "Supper" },
+    { re: /(?:buffet\s+open[s]?|buffet\s+service)\s*[:\-–at]*\s*((?:\d{1,2})(?::\d{2})?\s*(?:[ap]m)?)/i, label: "Buffet Open" },
+    { re: /(?:buffet\s+clos(?:e[sd]?|ing))\s*[:\-–at]*\s*((?:\d{1,2})(?::\d{2})?\s*(?:[ap]m)?)/i, label: "Buffet Closed" },
+  ];
+  for (const { re, label } of coursePats) {
+    const m = text.match(re);
+    if (m) courseMatches.push({ time: normalizeTime(m[1]), label });
+  }
+  courseMatches.sort((a, b) => a.time.localeCompare(b.time));
+  if (courseMatches.length > 0) confidence.serviceEvents = true;
 
   // ── FUNCTION TYPE ────────────────────────────────────────────────────────
   let functionType: FunctionType = "A-la-carte";
@@ -213,7 +218,7 @@ function parseEventText(raw: string): ParseResult {
   }
   if (dietaryRequirements.length > 0) confidence.dietary = true;
 
-  return { name, room, floor, functionType, startTime, endTime, guestCount, entree, main, dessert, amuse, dietaryRequirements, confidence };
+  return { name, room, floor, functionType, startTime, endTime, guestCount, serviceEvents: courseMatches, dietaryRequirements, confidence };
 }
 
 // ── Component ──────────────────────────────────────────────────────────────
@@ -228,17 +233,14 @@ interface FormState {
   startTime: string;
   endTime: string;
   guestCount: string;
-  entree: string;
-  main: string;
-  dessert: string;
-  amuse: string;
+  serviceEvents: Array<{ time: string; label: string }>;
   dietaryRequirements: Array<{ name: string; count: string; note: string }>;
 }
 
 const EMPTY_FORM: FormState = {
   name: "", room: "", floor: "", functionType: "A-la-carte",
   startTime: "", endTime: "", guestCount: "",
-  entree: "", main: "", dessert: "", amuse: "",
+  serviceEvents: [],
   dietaryRequirements: [],
 };
 
@@ -275,7 +277,6 @@ export default function AddFunctionScreen() {
   const [pasteText, setPasteText] = useState("");
   const [parsed, setParsed]       = useState<ParseResult | null>(null);
   const [form, setForm]           = useState<FormState>(EMPTY_FORM);
-  const [showCourseTimes, setShowCourseTimes] = useState(false);
 
   if (!isManager) {
     const noAccessStyles = StyleSheet.create({
@@ -319,10 +320,7 @@ export default function AddFunctionScreen() {
       startTime:    result.startTime,
       endTime:      result.endTime,
       guestCount:   result.guestCount,
-      entree:       result.entree,
-      main:         result.main,
-      dessert:      result.dessert,
-      amuse:        result.amuse,
+      serviceEvents: result.serviceEvents,
       dietaryRequirements: result.dietaryRequirements,
     });
     setTimeout(() => scrollRef.current?.scrollTo({ y: 340, animated: true }), 150);
@@ -367,12 +365,7 @@ export default function AddFunctionScreen() {
       dietaryRequirements: form.dietaryRequirements
         .filter((d) => d.name.trim() && parseInt(d.count, 10) > 0)
         .map((d) => ({ name: d.name.trim(), count: parseInt(d.count, 10), note: d.note })),
-      serviceTimes: {
-        amuse:   form.amuse   || undefined,
-        entree:  form.entree  || undefined,
-        main:    form.main    || undefined,
-        dessert: form.dessert || undefined,
-      },
+      serviceEvents: form.serviceEvents.filter((e) => e.time.trim() && e.label.trim()),
       menu: [],
       teamIds: [],
       timeline: [],
@@ -519,36 +512,44 @@ export default function AddFunctionScreen() {
           </View>
         </View>
 
-        {/* Course fire times — collapsible */}
-        <Pressable style={s.courseToggle} onPress={() => setShowCourseTimes(!showCourseTimes)}>
-          <Feather name={showCourseTimes ? "chevron-down" : "chevron-right"} size={16} color={colors.info} />
-          <Text style={s.courseToggleText}>Course fire times (optional)</Text>
-          <Text style={{ fontSize: 11, fontFamily: "Inter_400Regular", color: colors.mutedForeground }}>Entrée, Main, Dessert times</Text>
-        </Pressable>
-        {showCourseTimes && (
-          <View style={s.card}>
-            {([
-              { key: "amuse",   label: "Amuse-bouche", placeholder: "19:00" },
-              { key: "entree",  label: "Entrée",        placeholder: "19:30" },
-              { key: "main",    label: "Main",          placeholder: "20:30" },
-              { key: "dessert", label: "Dessert",       placeholder: "21:45" },
-            ] as const).map(({ key, label, placeholder }, idx, arr) => {
-              const val = form[key as keyof FormState] as string;
-              return (
-                <View key={key} style={[s.fieldRow, idx === arr.length - 1 && { borderBottomWidth: 0 }]}>
-                  <Text style={s.fieldLabel}>{label}</Text>
-                  <TextInput
-                    style={[s.fieldInput, val && s.fieldInputFilled]}
-                    value={val}
-                    onChangeText={(v) => updateForm(key as keyof FormState, v)}
-                    placeholder={placeholder}
-                    placeholderTextColor={colors.mutedForeground}
-                  />
-                </View>
-              );
-            })}
-          </View>
-        )}
+        {/* Service milestones */}
+        <Text style={s.sectionLabel}>Service Milestones <Text style={{ fontWeight: "400", textTransform: "none", letterSpacing: 0, fontSize: 11 }}>(optional)</Text></Text>
+        <View style={s.card}>
+          {form.serviceEvents.map((evt, idx) => (
+            <View key={idx} style={[s.fieldRow, { gap: 8 }]}>
+              <TextInput
+                style={[s.fieldInput, { width: 68, flexGrow: 0, flexShrink: 0 }, evt.time && s.fieldInputFilled]}
+                value={evt.time}
+                onChangeText={(v) => {
+                  const updated = form.serviceEvents.map((e, i) => i === idx ? { ...e, time: v } : e);
+                  setForm((f) => ({ ...f, serviceEvents: updated }));
+                }}
+                placeholder="HH:MM"
+                placeholderTextColor={colors.mutedForeground}
+              />
+              <TextInput
+                style={[s.fieldInput, { flex: 1 }, evt.label && s.fieldInputFilled]}
+                value={evt.label}
+                onChangeText={(v) => {
+                  const updated = form.serviceEvents.map((e, i) => i === idx ? { ...e, label: v } : e);
+                  setForm((f) => ({ ...f, serviceEvents: updated }));
+                }}
+                placeholder="e.g. Buffet Open"
+                placeholderTextColor={colors.mutedForeground}
+              />
+              <Pressable onPress={() => setForm((f) => ({ ...f, serviceEvents: f.serviceEvents.filter((_, i) => i !== idx) }))}>
+                <Feather name="x" size={16} color={colors.mutedForeground} />
+              </Pressable>
+            </View>
+          ))}
+          <Pressable
+            style={s.addDietaryBtn}
+            onPress={() => setForm((f) => ({ ...f, serviceEvents: [...f.serviceEvents, { time: "", label: "" }] }))}
+          >
+            <Feather name="plus-circle" size={16} color={colors.info} />
+            <Text style={[s.addDietaryText, { color: colors.info }]}>Add milestone</Text>
+          </Pressable>
+        </View>
 
         {/* Dietary requirements */}
         <Text style={s.sectionLabel}>Dietary Requirements</Text>

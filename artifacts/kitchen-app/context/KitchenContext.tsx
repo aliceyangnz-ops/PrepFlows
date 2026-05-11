@@ -33,6 +33,11 @@ export interface ServiceTimes {
   supper?: string;
 }
 
+export interface ServiceEvent {
+  time: string;
+  label: string;
+}
+
 export interface KitchenFunction {
   id: string;
   name: string;
@@ -46,6 +51,7 @@ export interface KitchenFunction {
   menu: string[];
   dietaryRequirements: DietaryRequirement[];
   serviceTimes?: ServiceTimes;
+  serviceEvents?: ServiceEvent[];
   teamIds: string[];
   timeline: TimelineItem[];
 }
@@ -136,6 +142,11 @@ const SAMPLE_FUNCTIONS: KitchenFunction[] = [
       main: "12:35",
       dessert: "13:30",
     },
+    serviceEvents: [
+      { time: "12:00", label: "Entrée Away" },
+      { time: "12:35", label: "Main Away" },
+      { time: "13:30", label: "Dessert Away" },
+    ],
     menu: [
       "Entrée: Tiger Prawn Cocktail — 5 poached tiger prawns, Marie Rose, iceberg lettuce, lemon | GF | Alt: smoked salmon (shellfish allergy)",
       "Main: Roasted MSA Eye Fillet 220g — béarnaise sauce, truffle potato gratin, charred broccolini | GF | Alt: portobello mushroom stack (V, GF, DF)",
@@ -176,6 +187,11 @@ const SAMPLE_FUNCTIONS: KitchenFunction[] = [
       main: "13:25",
       dessert: "14:05",
     },
+    serviceEvents: [
+      { time: "13:00", label: "Antipasto Set" },
+      { time: "13:25", label: "Main Away" },
+      { time: "14:05", label: "Dessert Away" },
+    ],
     menu: [
       "Starter: Antipasto Sharing Platter — cured meats, giardiniera, grissini, EVOO, olives, marinated artichoke | GF on request (no grissini) | V: remove cured meats | Halal: halal meats only",
       "Main: Chicken Supreme 200g — airline breast, jus lié, pomme purée, seasonal greens | GF | Alt: wild mushroom risotto (V, GF)",
@@ -218,6 +234,13 @@ const SAMPLE_FUNCTIONS: KitchenFunction[] = [
       main: "20:30",
       dessert: "21:45",
     },
+    serviceEvents: [
+      { time: "19:00", label: "Amuse-bouche Away" },
+      { time: "19:30", label: "Entrée Away" },
+      { time: "20:00", label: "Soup Course Away" },
+      { time: "20:30", label: "Main Away" },
+      { time: "21:45", label: "Dessert Away" },
+    ],
     menu: [
       "Amuse-bouche: Wagyu Beef Tartare — shallot, capers, Dijon, quail yolk, crostini | Alt: roasted beet tartare (V, GF)",
       "Entrée: Seared U10 Scallop — cauliflower purée, crispy pancetta, micro watercress | Alt: mushroom bruschetta (V, shellfish allergy)",

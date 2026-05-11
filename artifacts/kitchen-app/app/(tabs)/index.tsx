@@ -431,8 +431,14 @@ export default function TodayScreen() {
             const dietaryReqs = fn.dietaryRequirements ?? [];
             const hasSevere = dietaryReqs.some((d) => d.name.toLowerCase().includes("nut") || d.name.toLowerCase().includes("shellfish"));
             const totalDietary = dietaryReqs.reduce((sum, d) => sum + d.count, 0);
-            const courseOrder = ["amuse", "entree", "main", "dessert", "supper"] as const;
-            const nextCourse = fn.serviceTimes ? courseOrder.map((k) => fn.serviceTimes![k] ? { key: k, time: fn.serviceTimes![k]! } : null).filter(Boolean).find((c) => timeToMinutes(c!.time) > nowMinutes) ?? null : null;
+            const nextCourse = fn.serviceEvents && fn.serviceEvents.length > 0
+              ? fn.serviceEvents.find((e) => timeToMinutes(e.time) > nowMinutes) ?? null
+              : fn.serviceTimes
+                ? (["amuse", "entree", "main", "dessert", "supper"] as const)
+                    .map((k) => fn.serviceTimes![k] ? { time: fn.serviceTimes![k]!, label: k.charAt(0).toUpperCase() + k.slice(1) } : null)
+                    .filter(Boolean)
+                    .find((c) => timeToMinutes(c!.time) > nowMinutes) ?? null
+                : null;
             const fnMins = timeToMinutes(fn.startTime) - nowMinutes;
             const isUrgent = fnMins > 0 && fnMins <= 30;
             const isActive = fnMins <= 0 && timeToMinutes(fn.endTime) > nowMinutes;
@@ -470,7 +476,7 @@ export default function TodayScreen() {
                     {nextCourse && (
                       <View style={{ flexDirection: "row", alignItems: "center", gap: 5, marginTop: 2 }}>
                         <Feather name="clock" size={10} color={frameColor} />
-                        <Text style={{ fontSize: 10, fontFamily: "Inter_600SemiBold", color: frameColor }}>{nextCourse.key.charAt(0).toUpperCase() + nextCourse.key.slice(1)} fire: {nextCourse.time}</Text>
+                        <Text style={{ fontSize: 10, fontFamily: "Inter_600SemiBold", color: frameColor }}>{nextCourse.label}: {nextCourse.time}</Text>
                       </View>
                     )}
                   </View>

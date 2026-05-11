@@ -2,7 +2,7 @@ import { Feather, Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { PrepTeam, StaffMember, useKitchen } from "@/context/KitchenContext";
+import { PrepTeam, useKitchen } from "@/context/KitchenContext";
 import { useColors } from "@/hooks/useColors";
 
 const TEAM_COLORS: Record<PrepTeam, string> = {
@@ -13,13 +13,6 @@ const TEAM_COLORS: Record<PrepTeam, string> = {
   "Butchery":      "#EF4444",
 };
 
-const COURSE_ORDER: Array<{ key: string; label: string; emoji: string }> = [
-  { key: "amuse",   label: "Amuse-bouche", emoji: "🥄" },
-  { key: "entree",  label: "Entrée",       emoji: "🍽" },
-  { key: "main",    label: "Main",         emoji: "🍖" },
-  { key: "dessert", label: "Dessert",      emoji: "🍮" },
-  { key: "supper",  label: "Supper",       emoji: "🥗" },
-];
 
 export default function BriefScreen() {
   const insets = useSafeAreaInsets();
@@ -129,9 +122,13 @@ export default function BriefScreen() {
   /* include a catch-all "Unassigned" group for staff with no section */
   const unassigned = fnStaff.filter((m) => !m.section);
 
-  const activeTimes = COURSE_ORDER.filter(
-    (c) => fn.serviceTimes?.[c.key as keyof typeof fn.serviceTimes]
-  );
+  const activeTimes: Array<{ label: string; time: string }> = fn.serviceEvents && fn.serviceEvents.length > 0
+    ? fn.serviceEvents
+    : fn.serviceTimes
+      ? (["amuse", "entree", "main", "dessert", "supper"] as const)
+          .filter((k) => fn.serviceTimes![k])
+          .map((k) => ({ label: k.charAt(0).toUpperCase() + k.slice(1), time: fn.serviceTimes![k]! }))
+      : [];
 
   const totalDietary = fn.dietaryRequirements?.reduce((n, r) => n + r.count, 0) ?? 0;
 
@@ -279,20 +276,17 @@ export default function BriefScreen() {
           </View>
         )}
 
-        {/* ── SERVICE TIMES ────────────────────────────────────────── */}
+        {/* ── SERVICE MILESTONES ───────────────────────────────────── */}
         {activeTimes.length > 0 && (
           <>
-            <Text style={s.sectionLabel}>Service Times</Text>
-            <View style={s.timesCard}>
-              {activeTimes.map((c) => {
-                const t = fn.serviceTimes![c.key as keyof typeof fn.serviceTimes];
-                return (
-                  <View key={c.key} style={s.timeRow}>
-                    <Text style={s.timeLabel}>{c.label}</Text>
-                    <Text style={s.timeValue}>{t}</Text>
-                  </View>
-                );
-              })}
+            <Text style={s.sectionLabel}>Service Milestones</Text>
+            <View style={s.runCard}>
+              {activeTimes.map((c, i) => (
+                <View key={i} style={[s.runRow, i === activeTimes.length - 1 && { borderBottomWidth: 0 }]}>
+                  <Text style={s.runTime}>{c.time}</Text>
+                  <Text style={s.runLabel}>{c.label}</Text>
+                </View>
+              ))}
             </View>
           </>
         )}

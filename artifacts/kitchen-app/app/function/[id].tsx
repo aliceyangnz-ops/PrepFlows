@@ -69,11 +69,7 @@ interface DraftFunction {
   startTime: string;
   endTime: string;
   guestCount: string;
-  entree: string;
-  main: string;
-  dessert: string;
-  amuse: string;
-  supper: string;
+  serviceEvents: Array<{ time: string; label: string }>;
   dietaryRequirements: DietaryRequirement[];
   menu: string[];
 }
@@ -108,11 +104,13 @@ export default function FunctionDetailScreen() {
         startTime: fn.startTime,
         endTime: fn.endTime,
         guestCount: String(fn.guestCount),
-        entree:   fn.serviceTimes?.entree   ?? "",
-        main:     fn.serviceTimes?.main     ?? "",
-        dessert:  fn.serviceTimes?.dessert  ?? "",
-        amuse:    fn.serviceTimes?.amuse    ?? "",
-        supper:   fn.serviceTimes?.supper   ?? "",
+        serviceEvents: fn.serviceEvents
+          ? fn.serviceEvents.map((e) => ({ ...e }))
+          : fn.serviceTimes
+            ? (["amuse", "entree", "main", "dessert", "supper"] as const)
+                .filter((k) => fn.serviceTimes![k])
+                .map((k) => ({ time: fn.serviceTimes![k]!, label: k.charAt(0).toUpperCase() + k.slice(1) }))
+            : [],
         dietaryRequirements: fn.dietaryRequirements ? fn.dietaryRequirements.map(d => ({ ...d })) : [],
         menu: fn.menu ? [...fn.menu] : [],
       });
@@ -144,8 +142,7 @@ export default function FunctionDetailScreen() {
   const timeChanged =
     fn.startTime !== draft.startTime ||
     fn.endTime   !== draft.endTime   ||
-    (fn.serviceTimes?.entree ?? "") !== draft.entree ||
-    (fn.serviceTimes?.main   ?? "") !== draft.main;
+    JSON.stringify(fn.serviceEvents ?? []) !== JSON.stringify(draft.serviceEvents);
 
   function updateDraft(field: keyof DraftFunction, value: string) {
     setDraft((d) => d ? { ...d, [field]: value } : d);
@@ -235,13 +232,7 @@ export default function FunctionDetailScreen() {
       guestCount:       guestNum,
       menu: draft.menu.filter((m) => m.trim()),
       dietaryRequirements: draft.dietaryRequirements.filter((d) => d.count > 0 && d.name.trim()),
-      serviceTimes: {
-        amuse:   draft.amuse   || undefined,
-        entree:  draft.entree  || undefined,
-        main:    draft.main    || undefined,
-        dessert: draft.dessert || undefined,
-        supper:  draft.supper  || undefined,
-      },
+      serviceEvents: draft.serviceEvents.filter((e) => e.time.trim() && e.label.trim()),
     });
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     setEditing(false);
@@ -260,11 +251,13 @@ export default function FunctionDetailScreen() {
             setDraft({
               name: snap.name, room: snap.room, floor: snap.floor, functionType: snap.functionType,
               startTime: snap.startTime, endTime: snap.endTime, guestCount: String(snap.guestCount),
-              entree:   snap.serviceTimes?.entree   ?? "",
-              main:     snap.serviceTimes?.main     ?? "",
-              dessert:  snap.serviceTimes?.dessert  ?? "",
-              amuse:    snap.serviceTimes?.amuse    ?? "",
-              supper:   snap.serviceTimes?.supper   ?? "",
+              serviceEvents: snap.serviceEvents
+                ? snap.serviceEvents.map((e) => ({ ...e }))
+                : snap.serviceTimes
+                  ? (["amuse", "entree", "main", "dessert", "supper"] as const)
+                      .filter((k) => snap.serviceTimes![k])
+                      .map((k) => ({ time: snap.serviceTimes![k]!, label: k.charAt(0).toUpperCase() + k.slice(1) }))
+                  : [],
               dietaryRequirements: snap.dietaryRequirements ? snap.dietaryRequirements.map((d) => ({ ...d })) : [],
               menu: snap.menu ? [...snap.menu] : [],
             });
@@ -303,16 +296,13 @@ export default function FunctionDetailScreen() {
     return { course, name, desc, tags };
   }
 
-  const courseOrder: Array<{ key: keyof NonNullable<typeof fn.serviceTimes>; label: string; draftKey: keyof DraftFunction }> = [
-    { key: "amuse",   label: "Amuse-bouche", draftKey: "amuse"   },
-    { key: "entree",  label: "Entrée",        draftKey: "entree"  },
-    { key: "main",    label: "Main",          draftKey: "main"    },
-    { key: "dessert", label: "Dessert",       draftKey: "dessert" },
-    { key: "supper",  label: "Supper",        draftKey: "supper"  },
-  ];
-  const activeCourses = fn.serviceTimes
-    ? courseOrder.filter((c) => fn.serviceTimes![c.key])
-    : [];
+  const activeCourses: Array<{ label: string; time: string }> = fn.serviceEvents && fn.serviceEvents.length > 0
+    ? fn.serviceEvents
+    : fn.serviceTimes
+      ? (["amuse", "entree", "main", "dessert", "supper"] as const)
+          .filter((k) => fn.serviceTimes![k])
+          .map((k) => ({ label: k.charAt(0).toUpperCase() + k.slice(1), time: fn.serviceTimes![k]! }))
+      : [];
 
   const s = StyleSheet.create({
     root: { flex: 1, backgroundColor: colors.background },
@@ -622,19 +612,47 @@ export default function FunctionDetailScreen() {
               </View>
             )}
 
-            {/* Course fire times */}
+            {/* Service events editor */}
             <View style={[s.editCard, { borderColor: tc + "60", marginTop: 10 }]}>
               <View style={[s.editCardHeader, { backgroundColor: tc + "15", borderBottomColor: tc + "30" }]}>
                 <Feather name="clock" size={14} color={tc} />
-                <Text style={[s.editCardTitle, { color: tc }]}>Course / Service Times</Text>
-                <Text style={{ fontSize: 11, fontFamily: "Inter_400Regular", color: colors.mutedForeground }}>HH:MM — leave blank to hide</Text>
+                <Text style={[s.editCardTitle, { color: tc }]}>Service Milestones</Text>
+                <Text style={{ fontSize: 11, fontFamily: "Inter_400Regular", color: colors.mutedForeground }}>Free-form — add any milestone</Text>
               </View>
-              {courseOrder.map((c) => (
-                <View key={c.key} style={s.courseEditRow}>
-                  <Text style={[s.courseEditLabel, { color: tc }]}>{c.label}</Text>
-                  <TextInput style={[s.courseEditInput, { color: tc }]} value={draft[c.draftKey] as string} onChangeText={(v) => updateDraft(c.draftKey, v)} placeholder="--:--" placeholderTextColor={colors.mutedForeground} />
+              {draft.serviceEvents.map((evt, idx) => (
+                <View key={idx} style={[s.courseEditRow, { paddingVertical: 8, gap: 8 }]}>
+                  <TextInput
+                    style={[s.courseEditInput, { color: tc, width: 64, flexGrow: 0 }]}
+                    value={evt.time}
+                    onChangeText={(v) => {
+                      setDraft((d) => { if (!d) return d; const ev = [...d.serviceEvents]; ev[idx] = { ...ev[idx], time: v }; return { ...d, serviceEvents: ev }; });
+                      setHasUnsaved(true);
+                    }}
+                    placeholder="HH:MM"
+                    placeholderTextColor={colors.mutedForeground}
+                  />
+                  <TextInput
+                    style={[s.courseEditInput, { color: colors.foreground, flex: 1 }]}
+                    value={evt.label}
+                    onChangeText={(v) => {
+                      setDraft((d) => { if (!d) return d; const ev = [...d.serviceEvents]; ev[idx] = { ...ev[idx], label: v }; return { ...d, serviceEvents: ev }; });
+                      setHasUnsaved(true);
+                    }}
+                    placeholder="e.g. Entrée Away"
+                    placeholderTextColor={colors.mutedForeground}
+                  />
+                  <Pressable onPress={() => { setDraft((d) => { if (!d) return d; return { ...d, serviceEvents: d.serviceEvents.filter((_, i) => i !== idx) }; }); setHasUnsaved(true); }}>
+                    <Feather name="x" size={16} color={colors.mutedForeground} />
+                  </Pressable>
                 </View>
               ))}
+              <Pressable
+                style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 14, paddingVertical: 12 }}
+                onPress={() => { setDraft((d) => { if (!d) return d; return { ...d, serviceEvents: [...d.serviceEvents, { time: "", label: "" }] }; }); setHasUnsaved(true); }}
+              >
+                <Feather name="plus-circle" size={16} color={tc} />
+                <Text style={{ fontSize: 13, fontFamily: "Inter_600SemiBold", color: tc }}>Add milestone</Text>
+              </Pressable>
             </View>
 
             {/* Dietary requirements edit */}
@@ -674,18 +692,18 @@ export default function FunctionDetailScreen() {
         {/* ── VIEW MODE ──────────────────────────────────────────────────────── */}
         {!editing && (
           <>
-            {/* Course fire times */}
+            {/* Service milestones */}
             {activeCourses.length > 0 && (
               <View style={[s.courseCard, { backgroundColor: tc + "12", borderColor: tc + "40" }]}>
                 <View style={[s.courseCardHeader, { borderBottomColor: tc + "30" }]}>
                   <Feather name="clock" size={14} color={tc} />
-                  <Text style={[s.courseCardTitle, { color: tc }]}>Course / Service Times — {fn.functionType}</Text>
+                  <Text style={[s.courseCardTitle, { color: tc }]}>Service Milestones — {fn.functionType}</Text>
                 </View>
                 <View style={s.courseRow}>
                   {activeCourses.map((c, idx) => (
-                    <View key={c.key} style={[s.courseBox, { borderRightColor: tc + "25" }, idx === activeCourses.length - 1 && { borderRightWidth: 0 }]}>
-                      <Text style={[s.courseLabel, { color: tc + "AA" }]}>{c.label}</Text>
-                      <Text style={[s.courseTime, { color: tc }]}>{fn.serviceTimes![c.key]}</Text>
+                    <View key={idx} style={[s.courseBox, { borderRightColor: tc + "25" }, idx === activeCourses.length - 1 && { borderRightWidth: 0 }]}>
+                      <Text style={[s.courseLabel, { color: tc + "AA" }]} numberOfLines={2}>{c.label}</Text>
+                      <Text style={[s.courseTime, { color: tc }]}>{c.time}</Text>
                     </View>
                   ))}
                 </View>
