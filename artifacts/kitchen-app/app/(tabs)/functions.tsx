@@ -54,11 +54,38 @@ export default function FunctionsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { functions, staff, prepItems, currentStaffId } = useKitchen();
+  const { functions, staff, prepItems, currentStaffId, hiddenFunctionIds, hideFunction, showFunction } = useKitchen();
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const currentMember = currentStaffId ? staff.find((s) => s.id === currentStaffId) ?? null : null;
-  const isManager = currentMember ? getAccessLevel(currentMember) === "manager" : false;
-  const myFunctions = currentMember ? functions.filter((f) => currentMember.functionIds.includes(f.id)) : [];
+  const accessLevel = currentMember ? getAccessLevel(currentMember) : null;
+  const isManager = accessLevel === "manager";
+  const isTeamLeader = accessLevel === "team_leader";
+
+  // Managers see all; team leaders see all (but can hide); staff/casual see only their functions
+  const visibleFunctions = React.useMemo(() => {
+    if (!currentMember || isManager) return functions;
+    if (isTeamLeader) return functions.filter((f) => !hiddenFunctionIds.includes(f.id));
+    // Staff/casual: assigned functions only
+    return functions.filter((f) =>
+      currentMember.functionIds.includes(f.id) || f.teamIds.includes(currentMember.id)
+    );
+  }, [functions, currentMember, isManager, isTeamLeader, hiddenFunctionIds]);
+
+  // Functions the team leader CAN hide (not directly assigned to them)
+  const hidableIds = React.useMemo(() => {
+    if (!currentMember || !isTeamLeader) return new Set<string>();
+    return new Set(
+      functions
+        .filter((f) => !currentMember.functionIds.includes(f.id) && !f.teamIds.includes(currentMember.id))
+        .map((f) => f.id)
+    );
+  }, [functions, currentMember, isTeamLeader]);
+
+  // Hidden functions that a team leader can reveal again
+  const hiddenForLeader = React.useMemo(() => {
+    if (!isTeamLeader) return [];
+    return functions.filter((f) => hiddenFunctionIds.includes(f.id));
+  }, [functions, isTeamLeader, hiddenFunctionIds]);
 
   const s = StyleSheet.create({
     root:       { flex: 1, backgroundColor: colors.background },
@@ -83,7 +110,7 @@ export default function FunctionsScreen() {
         <View style={s.header}>
           <View style={{ flex: 1 }}>
             <Text style={s.title}>Events</Text>
-            <Text style={s.subtitle}>{functions.length} events today</Text>
+            <Text style={s.subtitle}>{visibleFunctions.length} function{visibleFunctions.length !== 1 ? "s" : ""} showing</Text>
           </View>
           {isManager && (
             <Pressable
@@ -96,12 +123,12 @@ export default function FunctionsScreen() {
           )}
         </View>
 
-        {functions.length === 0 && (
+        {visibleFunctions.length === 0 && (
           <View style={{ marginHorizontal: 20, padding: 32, borderRadius: colors.radius, borderWidth: 1, borderColor: colors.border, alignItems: "center", gap: 10 }}>
             <Feather name="calendar" size={32} color={colors.mutedForeground} />
-            <Text style={{ fontSize: 16, fontFamily: "Inter_700Bold", color: colors.foreground }}>No events today</Text>
+            <Text style={{ fontSize: 16, fontFamily: "Inter_700Bold", color: colors.foreground }}>No functions showing</Text>
             <Text style={{ fontSize: 13, fontFamily: "Inter_400Regular", color: colors.mutedForeground, textAlign: "center" }}>
-              {isManager ? 'Tap "Add Event" to create your first function.' : "Check with your manager for today's schedule."}
+              {isManager ? 'Tap "Add Event" to create your first function.' : isTeamLeader && hiddenForLeader.length > 0 ? "All functions are hidden. Tap the eye button below to show them." : "Check with your manager for today's schedule."}
             </Text>
           </View>
         )}
@@ -110,7 +137,7 @@ export default function FunctionsScreen() {
           /* ══════════════════════════════════════════════════
              MANAGER VIEW — full two-part structured cards
              ══════════════════════════════════════════════════ */
-          functions.map((fn) => {
+          visibleFunctions.map((fn) => {
             const tc = getFunctionTypeColor(fn.functionType);
             const dietaryReqs = fn.dietaryRequirements ?? [];
             const totalDietary = dietaryReqs.reduce((n, r) => n + r.count, 0);
@@ -304,24 +331,36 @@ export default function FunctionsScreen() {
           /* ══════════════════════════════════════════════════
              STAFF / TEAM LEADER — compact "where to go" cards
              ══════════════════════════════════════════════════ */
-          (myFunctions.length > 0 ? myFunctions : functions).map((fn) => {
+          <>
+          {visibleFunctions.map((fn) => {
             const tc = getFunctionTypeColor(fn.functionType);
             const mySection = currentMember?.section;
             const fnTeamStaff = staff.filter((st) => fn.teamIds.includes(st.id) && st.section === mySection);
             const myLeader = fnTeamStaff.find((st) => !!st.teamLeadFor) ?? null;
             const dietaryReqs = fn.dietaryRequirements ?? [];
             const hasDietary = dietaryReqs.length > 0;
+            const canHide = isTeamLeader && hidableIds.has(fn.id);
             return (
-              <Pressable key={fn.id} style={({ pressed }) => [s.card, { opacity: pressed ? 0.9 : 1 }]}
-                onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push(`/function/${fn.id}`); }}>
+              <View key={fn.id} style={s.card}>
                 {/* Time + name */}
-                <View style={[s.cardTop, { borderBottomWidth: 0, paddingBottom: 0 }]}>
+                <Pressable onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push(`/function/${fn.id}`); }}
+                  style={({ pressed }) => [s.cardTop, { borderBottomWidth: 0, paddingBottom: 0, opacity: pressed ? 0.85 : 1 }]}>
                   <View style={s.cardTopRow}>
                     <View style={s.timePill}><Text style={s.timePillText}>{fn.startTime}</Text></View>
                     <Text style={s.cardName} numberOfLines={1}>{fn.name}</Text>
-                    <Feather name="chevron-right" size={16} color={colors.mutedForeground} />
+                    {canHide ? (
+                      <Pressable
+                        hitSlop={10}
+                        onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); hideFunction(fn.id); }}
+                        style={{ padding: 4 }}
+                      >
+                        <Feather name="eye-off" size={16} color={colors.mutedForeground} />
+                      </Pressable>
+                    ) : (
+                      <Feather name="chevron-right" size={16} color={colors.mutedForeground} />
+                    )}
                   </View>
-                </View>
+                </Pressable>
                 {/* WHERE TO GO hero */}
                 <View style={{ paddingHorizontal: 16, paddingTop: 14, paddingBottom: 14, borderBottomWidth: 1, borderBottomColor: colors.border }}>
                   <Text style={{ fontSize: 10, fontFamily: "Inter_700Bold", color: colors.primary, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 6 }}>Where to go</Text>
@@ -350,9 +389,37 @@ export default function FunctionsScreen() {
                     </View>
                   )}
                 </View>
-              </Pressable>
+              </View>
             );
-          })
+          })}
+
+          {/* ── Hidden functions — team leader can restore ── */}
+          {isTeamLeader && hiddenForLeader.length > 0 && (
+            <View style={{ marginHorizontal: 20, marginBottom: 16 }}>
+              <Text style={{ fontSize: 11, fontFamily: "Inter_700Bold", color: colors.mutedForeground, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 10 }}>
+                Hidden from your view ({hiddenForLeader.length})
+              </Text>
+              {hiddenForLeader.map((fn) => (
+                <Pressable
+                  key={fn.id}
+                  style={({ pressed }) => [{
+                    flexDirection: "row", alignItems: "center", gap: 10, opacity: pressed ? 0.7 : 1,
+                    backgroundColor: colors.card, borderRadius: colors.radius, borderWidth: 1, borderColor: colors.border,
+                    paddingHorizontal: 14, paddingVertical: 12, marginBottom: 8,
+                  }]}
+                  onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); showFunction(fn.id); }}
+                >
+                  <Feather name="eye" size={15} color={colors.primary} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 14, fontFamily: "Inter_600SemiBold", color: colors.mutedForeground }}>{fn.name}</Text>
+                    <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground }}>{fn.startTime}–{fn.endTime} · {fn.room}</Text>
+                  </View>
+                  <Text style={{ fontSize: 11, fontFamily: "Inter_500Medium", color: colors.primary }}>Show</Text>
+                </Pressable>
+              ))}
+            </View>
+          )}
+          </>
         )}
 
         <View style={s.bottomPad} />

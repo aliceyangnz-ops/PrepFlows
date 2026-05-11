@@ -1,5 +1,19 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Notifications from "expo-notifications";
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { Platform } from "react-native";
+
+if (Platform.OS !== "web") {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: true,
+      shouldSetBadge: false,
+      shouldShowBanner: true,
+      shouldShowList: true,
+    }),
+  });
+}
 
 export interface TimelineItem {
   id: string;
@@ -80,7 +94,7 @@ export interface StaffMember {
   id: string;
   staffNumber: string;
   name: string;
-  role: "Head Chef" | "Sous Chef" | "Pastry Chef" | "Function Captain" | "Casual";
+  role: "Head Chef" | "Sous Chef" | "Pastry Chef" | "Function Captain" | "Casual" | "Executive Chef" | "Executive Sous Chef" | "Kitchen Manager";
   phone?: string;
   pin?: string;
   shiftStart: string;
@@ -93,8 +107,10 @@ export interface StaffMember {
 
 export function getAccessLevel(member: StaffMember): AccessLevel {
   if (member.accessLevel) return member.accessLevel;
-  if (member.role === "Head Chef" || member.role === "Sous Chef") return "manager";
-  if (member.role === "Pastry Chef" || member.role === "Function Captain") return "team_leader";
+  const managerRoles: StaffMember["role"][] = ["Head Chef", "Executive Chef", "Executive Sous Chef", "Kitchen Manager"];
+  const leaderRoles: StaffMember["role"][] = ["Sous Chef", "Pastry Chef", "Function Captain"];
+  if (managerRoles.includes(member.role)) return "manager";
+  if (leaderRoles.includes(member.role)) return "team_leader";
   return "staff";
 }
 
@@ -578,10 +594,12 @@ function deadlineForCourse(course: string, fn: KitchenFunction): string {
     const total = h * 60 + m - mins;
     return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
   };
-  if ((c.includes("dessert") || c.includes("sweet")) && st?.dessert) return subtractMins(st.dessert, 15);
-  if ((c.includes("main") || c.includes("protein") || c.includes("meat") || c.includes("fish")) && st?.main) return subtractMins(st.main, 20);
-  if ((c.includes("entrée") || c.includes("entree") || c.includes("starter") || c.includes("salad")) && st?.entree) return subtractMins(st.entree, 15);
-  if (c.includes("amuse") && st?.amuse) return subtractMins(st.amuse, 10);
+  // Use 30 min before the relevant service time for all courses
+  if ((c.includes("dessert") || c.includes("sweet") || c.includes("pâtisserie")) && st?.dessert) return subtractMins(st.dessert, 30);
+  if ((c.includes("main") || c.includes("protein") || c.includes("meat") || c.includes("fish") || c.includes("roast")) && st?.main) return subtractMins(st.main, 30);
+  if ((c.includes("entrée") || c.includes("entree") || c.includes("starter") || c.includes("salad") || c.includes("seafood")) && st?.entree) return subtractMins(st.entree, 30);
+  if ((c.includes("amuse") || c.includes("canapé") || c.includes("canape")) && st?.amuse) return subtractMins(st.amuse, 30);
+  if (c.includes("soup") && (st?.entree ?? st?.main)) return subtractMins(st?.entree ?? st!.main!, 30);
   return subtractMins(fn.startTime, 30);
 }
 
@@ -593,9 +611,18 @@ export function generatePrepFromMenu(fn: KitchenFunction): PrepItem[] {
     if (!dish) return;
     const team = courseToTeam(course || dish);
     const deadline = deadlineForCourse(course || dish, fn);
-    const allergenNote = tags.length > 0 ? `Tags: ${tags.join(", ")}. ` : "";
-    const descNote = desc ? `${desc}. ` : "";
-    const hasDietaryAlt = tags.some((t) => t.toLowerCase().startsWith("alt:") || line.toLowerCase().includes("alt:"));
+    // Build rich note: description · dietary tags · alt meals · service deadline
+    const noteParts: string[] = [];
+    if (desc) noteParts.push(desc);
+    if (tags.length > 0) noteParts.push(`Dietary: ${tags.join(", ")}`);
+    const altMatch = line.match(/Alt:\s*([^|]+)/i);
+    if (altMatch) noteParts.push(`Alt: ${altMatch[1].trim()} — prepare alternates, label separately`);
+    const storageHint = dish.toLowerCase().match(/beef|lamb|pork|duck|venison|chicken|loin|fillet|prawn|scallop|oyster|ocean trout/) ? "meat fridge" :
+                        dish.toLowerCase().match(/cream|mousse|panna cotta|tart|gateau|cake|brûlée/) ? "pastry cool room" :
+                        dish.toLowerCase().match(/salad|dressed|vegetable|garnish/) ? "cold larder cool room" : null;
+    if (storageHint) noteParts.push(`Storage: ${storageHint}`);
+    noteParts.push(`Ready by ${deadline} — 30 min before service`);
+
     items.push({
       id: `gen-${fn.id}-${idx}-${Date.now()}`,
       functionId: fn.id,
@@ -605,22 +632,25 @@ export function generatePrepFromMenu(fn: KitchenFunction): PrepItem[] {
       quantity: `${fn.guestCount} portions`,
       deadline,
       prepDay: "day-of",
-      note: `${descNote}${allergenNote}${hasDietaryAlt ? "Prepare dietary alternates — see function brief." : ""}`.trim(),
+      note: noteParts.join(" · "),
       completed: false,
     });
 
     // Meat/protein mains also get a Butchery portioning task
-    if (team === "Hot Kitchen" && (course.toLowerCase().includes("main") || dish.toLowerCase().match(/fillet|beef|lamb|pork|chicken|duck|venison|ocean trout/))) {
+    if (team === "Hot Kitchen" && (course.toLowerCase().includes("main") || dish.toLowerCase().match(/fillet|beef|lamb|pork|chicken|duck|venison|ocean trout|loin/))) {
+      const butchDeadline = deadlineForCourse("main", fn);
+      const portionGrams = fn.guestCount >= 80 ? 220 : 260;
+      const totalKg = Math.ceil((fn.guestCount * portionGrams) / 1000);
       items.push({
         id: `gen-${fn.id}-${idx}-butch-${Date.now()}`,
         functionId: fn.id,
         category: "Butchery Prep",
         team: "Butchery",
         dish: `Portion ${dish}`,
-        quantity: `${fn.guestCount} portions`,
-        deadline: deadlineForCourse("main", fn) > fn.startTime ? fn.startTime : deadlineForCourse("main", fn),
+        quantity: `${fn.guestCount} portions · approx ${totalKg}kg`,
+        deadline: butchDeadline,
         prepDay: "day-of",
-        note: `Portion and trim for service. Weight/size per spec. Hold chilled on labelled trays.`,
+        note: `Trim, portion & label. Store chilled on labelled trays in meat fridge. Ready by ${butchDeadline} — 30 min before service`,
         completed: false,
       });
     }
@@ -654,6 +684,9 @@ interface KitchenContextType {
   resetToSampleData: () => void;
   clearAllData: () => void;
   todayDate: string;
+  hiddenFunctionIds: string[];
+  hideFunction: (id: string) => void;
+  showFunction: (id: string) => void;
 }
 
 const KitchenContext = createContext<KitchenContextType | null>(null);
@@ -666,6 +699,7 @@ const STORAGE_KEY_NOTIFS = "@kitchen_notifs_enabled";
 const STORAGE_KEY_BROADCAST = "@kitchen_broadcast";
 const STORAGE_KEY_DISMISSED = "@kitchen_dismissed_broadcast";
 const STORAGE_KEY_STAFF = "@kitchen_staff_v1";
+const STORAGE_KEY_HIDDEN = "@kitchen_hidden_fns_v1";
 
 export function KitchenProvider({ children }: { children: React.ReactNode }) {
   const [functions, setFunctions] = useState<KitchenFunction[]>(SAMPLE_FUNCTIONS);
@@ -676,6 +710,7 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [broadcastMessage, setBroadcastState] = useState<BroadcastMessage | null>(null);
   const [dismissedBroadcastId, setDismissedBroadcastId] = useState<string | null>(null);
+  const [hiddenFunctionIds, setHiddenFunctionIds] = useState<string[]>([]);
 
   const staffRef = useRef(staff);
   const currentStaffIdRef = useRef(currentStaffId);
@@ -698,7 +733,7 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     (async () => {
       try {
-        const [storedFunctions, storedPrep, storedCurrentStaff, storedNotifs, storedBroadcast, storedDismissed, storedSick, storedStaffList] =
+        const [storedFunctions, storedPrep, storedCurrentStaff, storedNotifs, storedBroadcast, storedDismissed, storedSick, storedStaffList, storedHidden] =
           await Promise.all([
             AsyncStorage.getItem(STORAGE_KEY_FUNCTIONS),
             AsyncStorage.getItem(STORAGE_KEY_PREP),
@@ -708,6 +743,7 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
             AsyncStorage.getItem(STORAGE_KEY_DISMISSED),
             AsyncStorage.getItem(STORAGE_KEY_SICK),
             AsyncStorage.getItem(STORAGE_KEY_STAFF),
+            AsyncStorage.getItem(STORAGE_KEY_HIDDEN),
           ]);
         if (storedFunctions) setFunctions(JSON.parse(storedFunctions));
         if (storedPrep) setPrepItems(JSON.parse(storedPrep));
@@ -717,6 +753,7 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
         if (storedDismissed) setDismissedBroadcastId(storedDismissed);
         if (storedSick) setSickStaffIds(JSON.parse(storedSick));
         if (storedStaffList) setStaff(JSON.parse(storedStaffList));
+        if (storedHidden) setHiddenFunctionIds(JSON.parse(storedHidden));
       } catch {
         // use defaults
       }
@@ -901,6 +938,7 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
     setFunctions([]);
     setPrepItems([]);
     setSickStaffIds([]);
+    setHiddenFunctionIds([]);
     setCurrentStaffIdState(null);
     Promise.all([
       AsyncStorage.setItem(STORAGE_KEY_STAFF, JSON.stringify([])),
@@ -908,8 +946,102 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
       AsyncStorage.setItem(STORAGE_KEY_PREP, JSON.stringify([])),
       AsyncStorage.setItem(STORAGE_KEY_SICK, JSON.stringify([])),
       AsyncStorage.setItem(STORAGE_KEY_CURRENT_STAFF, ""),
+      AsyncStorage.removeItem(STORAGE_KEY_HIDDEN),
     ]);
   }, []);
+
+  // ── Hide / Show function (team leaders can hide functions not assigned to them) ──
+  const hideFunction = useCallback((id: string) => {
+    setHiddenFunctionIds((prev) => {
+      if (prev.includes(id)) return prev;
+      const updated = [...prev, id];
+      AsyncStorage.setItem(STORAGE_KEY_HIDDEN, JSON.stringify(updated));
+      return updated;
+    });
+  }, []);
+
+  const showFunction = useCallback((id: string) => {
+    setHiddenFunctionIds((prev) => {
+      const updated = prev.filter((x) => x !== id);
+      AsyncStorage.setItem(STORAGE_KEY_HIDDEN, JSON.stringify(updated));
+      return updated;
+    });
+  }, []);
+
+  // ── Auto-remove functions 30 min after their end time (today only) ───────────
+  useEffect(() => {
+    function checkAndRemove() {
+      const now = new Date();
+      const todayISO = now.toISOString().slice(0, 10);
+      const nowMins = now.getHours() * 60 + now.getMinutes();
+      setFunctions((prev) => {
+        const toKeep = prev.filter((fn) => {
+          const fnDate = fn.date ?? todayISO;
+          if (fnDate !== todayISO) return true; // never auto-remove future/other-day functions
+          const [h, m] = (fn.endTime ?? "00:00").split(":").map(Number);
+          return nowMins <= h * 60 + m + 30;
+        });
+        if (toKeep.length === prev.length) return prev;
+        const removedIds = prev.filter((f) => !toKeep.find((k) => k.id === f.id)).map((f) => f.id);
+        AsyncStorage.setItem(STORAGE_KEY_FUNCTIONS, JSON.stringify(toKeep));
+        // Cancel their scheduled notifications
+        if (Platform.OS !== "web") {
+          removedIds.forEach((id) => Notifications.cancelScheduledNotificationAsync(`fn-30min-${id}`).catch(() => {}));
+        }
+        // Clean up orphan prep items
+        setPrepItems((prevPrep) => {
+          const updated = prevPrep.filter((p) => !removedIds.includes(p.functionId));
+          if (updated.length !== prevPrep.length) AsyncStorage.setItem(STORAGE_KEY_PREP, JSON.stringify(updated));
+          return updated;
+        });
+        return toKeep;
+      });
+    }
+    checkAndRemove();
+    const interval = setInterval(checkAndRemove, 60_000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // ── Schedule local notifications 30 min before each function ─────────────────
+  useEffect(() => {
+    if (Platform.OS === "web") return;
+    (async () => {
+      // Cancel all existing function notifications then reschedule
+      try {
+        const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+        await Promise.all(
+          scheduled
+            .filter((n) => n.identifier.startsWith("fn-30min-"))
+            .map((n) => Notifications.cancelScheduledNotificationAsync(n.identifier))
+        );
+      } catch { /* ignore */ }
+
+      if (!notificationsEnabled) return;
+
+      const { status } = await Notifications.requestPermissionsAsync();
+      if (status !== "granted") return;
+
+      const todayISO = new Date().toISOString().slice(0, 10);
+      for (const fn of functions) {
+        const fnDate = fn.date ?? todayISO;
+        const [h, m] = fn.startTime.split(":").map(Number);
+        const triggerDate = new Date(`${fnDate}T00:00:00`);
+        triggerDate.setHours(h, m - 30, 0, 0);
+        if (triggerDate <= new Date()) continue;
+        try {
+          await Notifications.scheduleNotificationAsync({
+            identifier: `fn-30min-${fn.id}`,
+            content: {
+              title: "Function starts in 30 minutes",
+              body: `${fn.name} · ${fn.room} · ${fn.guestCount} guests · starts ${fn.startTime}`,
+              sound: true,
+            },
+            trigger: { date: triggerDate } as Notifications.NotificationTriggerInput,
+          });
+        } catch { /* ignore per-notification errors */ }
+      }
+    })();
+  }, [notificationsEnabled, functions]);
 
   return (
     <KitchenContext.Provider
@@ -920,6 +1052,7 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
         setCurrentStaff, setBroadcast, clearBroadcast, dismissBroadcast,
         togglePrepItem, toggleTimelineItem, updateFunction, addFunction, deleteFunction, generatePrepItems, markStaffSick,
         addStaff, updateStaff, removeStaff, resetToSampleData, clearAllData, todayDate,
+        hiddenFunctionIds, hideFunction, showFunction,
       }}
     >
       {children}

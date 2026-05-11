@@ -19,12 +19,15 @@ import { useColors } from "@/hooks/useColors";
 
 type StaffRole = StaffMember["role"];
 
-const ROLES: StaffRole[] = ["Head Chef", "Sous Chef", "Pastry Chef", "Function Captain", "Casual"];
+const ROLES: StaffRole[] = [
+  "Kitchen Manager", "Executive Chef", "Executive Sous Chef",
+  "Head Chef", "Sous Chef", "Pastry Chef", "Function Captain", "Casual",
+];
 const TEAMS: PrepTeam[] = ["Hot Kitchen", "Cold Larder", "Pastry", "Function Team", "Butchery"];
 const ACCESS_OVERRIDES: Array<{ value: AccessLevel; label: string; desc: string }> = [
-  { value: "manager",     label: "Manager",      desc: "Full edit — menu, times, dietary" },
-  { value: "team_leader", label: "Team Leader",   desc: "Edit times + dietary only" },
-  { value: "staff",       label: "Staff",         desc: "Read only" },
+  { value: "manager",     label: "Manager / Head Office", desc: "Full edit — functions, menu, roster, access" },
+  { value: "team_leader", label: "Team Leader",            desc: "Read all, hide own functions, check prep" },
+  { value: "staff",       label: "Staff / Casual",         desc: "Read only — assigned functions only" },
 ];
 
 const TEAM_COLORS: Record<PrepTeam, string> = {
@@ -36,11 +39,14 @@ const TEAM_COLORS: Record<PrepTeam, string> = {
 };
 
 const ROLE_COLORS: Record<StaffRole, string> = {
-  "Head Chef":        "#F97316",
-  "Sous Chef":        "#3B82F6",
-  "Pastry Chef":      "#8B5CF6",
-  "Function Captain": "#22C55E",
-  "Casual":           "#F59E0B",
+  "Kitchen Manager":       "#F97316",
+  "Executive Chef":        "#EF4444",
+  "Executive Sous Chef":   "#EC4899",
+  "Head Chef":             "#F97316",
+  "Sous Chef":             "#3B82F6",
+  "Pastry Chef":           "#8B5CF6",
+  "Function Captain":      "#22C55E",
+  "Casual":                "#F59E0B",
 };
 
 export default function StaffEditScreen() {
