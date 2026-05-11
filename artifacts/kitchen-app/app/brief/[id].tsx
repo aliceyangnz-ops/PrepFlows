@@ -290,7 +290,7 @@ export default function BriefScreen() {
               {timeline.map((item, idx) => (
                 <View key={item.id} style={[s.runRow, idx === timeline.length - 1 && { borderBottomWidth: 0 }]}>
                   <Text style={s.runTime}>{item.time}</Text>
-                  <Text style={s.runLabel}>{item.label}</Text>
+                  <Text style={s.runLabel}>{item.task}</Text>
                   {item.completed && (
                     <View style={[s.runDone, { backgroundColor: "#22C55E20" }]}>
                       <Ionicons name="checkmark" size={13} color="#22C55E" />
@@ -303,28 +303,16 @@ export default function BriefScreen() {
         )}
 
         {/* ── MENU ─────────────────────────────────────────────────── */}
-        {activeCourses.length > 0 && (
+        {fn.menu && fn.menu.length > 0 && (
           <>
             <Text style={s.sectionLabel}>Menu Being Served</Text>
             <View style={s.menuCard}>
-              {activeCourses.map((c, idx) => {
-                const time = fn.serviceTimes?.[c.key as keyof typeof fn.serviceTimes];
-                const dish = fn.menu?.[c.key as keyof typeof fn.menu];
-                return (
-                  <View key={c.key} style={[s.menuRow, idx === activeCourses.length - 1 && { borderBottomWidth: 0 }]}>
-                    <Text style={s.menuEmoji}>{c.emoji}</Text>
-                    <View style={{ flex: 1 }}>
-                      <Text style={s.menuCourse}>{c.label}</Text>
-                      {dish ? (
-                        <Text style={s.menuDish}>{dish}</Text>
-                      ) : (
-                        <Text style={[s.menuDish, { color: "#94A3B8" }]}>Details to be confirmed</Text>
-                      )}
-                    </View>
-                    {time ? <Text style={s.menuTime}>{time}</Text> : null}
-                  </View>
-                );
-              })}
+              {fn.menu.map((dish, idx) => (
+                <View key={idx} style={[s.menuRow, idx === fn.menu.length - 1 && { borderBottomWidth: 0 }]}>
+                  <Text style={s.menuEmoji}>{["🍽","🍖","🍮","🥄","🥗"][idx] ?? "🍽"}</Text>
+                  <Text style={[s.menuDish, { flex: 1 }]}>{dish}</Text>
+                </View>
+              ))}
             </View>
           </>
         )}

@@ -363,73 +363,67 @@ export default function RosterScreen() {
           </View>
         )}
 
-        {/* ── Casual Staff QR Briefs ─────────────────────────────────── */}
+        {/* ── Daily Staff Brief QR — ONE code for ALL staff ─────────── */}
         {functions.length > 0 && search.length === 0 && (
-          <View style={{ marginHorizontal: 20, marginBottom: 16 }}>
+          <View style={{ marginHorizontal: 20, marginBottom: 20 }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 10 }}>
               <Ionicons name="qr-code-outline" size={15} color={colors.primary} />
               <Text style={{ fontSize: 11, fontFamily: "Inter_700Bold", color: colors.mutedForeground, letterSpacing: 1.1, textTransform: "uppercase" }}>
-                Casual Staff Briefs
+                Daily Staff Brief
               </Text>
-              <Text style={{ fontSize: 11, fontFamily: "Inter_400Regular", color: colors.mutedForeground }}>— scan to brief a casual</Text>
+              <Text style={{ fontSize: 11, fontFamily: "Inter_400Regular", color: colors.mutedForeground }}>— one scan for everyone</Text>
             </View>
-            {functions.map((fn) => {
-              const isOpen = expandedQrFnId === fn.id;
-              const qrValue = Platform.OS === "web" && typeof window !== "undefined"
-                ? `${window.location.origin}/brief/${fn.id}`
-                : `kitchencommand://brief/${fn.id}`;
-              return (
-                <Pressable
-                  key={fn.id}
-                  style={({ pressed }) => ({
-                    backgroundColor: colors.card,
-                    borderRadius: 12,
-                    borderWidth: 1.5,
-                    borderColor: isOpen ? colors.primary + "60" : colors.border,
-                    marginBottom: 8,
-                    overflow: "hidden",
-                    opacity: pressed ? 0.85 : 1,
-                  })}
-                  onPress={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    setExpandedQrFnId(isOpen ? null : fn.id);
-                  }}
-                >
-                  <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 14, paddingVertical: 12, gap: 10 }}>
-                    <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: colors.primary }} />
-                    <View style={{ flex: 1 }}>
-                      <Text style={{ fontSize: 14, fontFamily: "Inter_700Bold", color: colors.foreground }} numberOfLines={1}>{fn.name}</Text>
-                      <Text style={{ fontSize: 11, fontFamily: "Inter_400Regular", color: colors.mutedForeground, marginTop: 1 }}>
-                        {fn.room} · {fn.startTime}–{fn.endTime} · {fn.guestCount} guests
-                      </Text>
+
+            <View style={{ backgroundColor: colors.card, borderRadius: 16, borderWidth: 1.5, borderColor: colors.primary + "50", overflow: "hidden" }}>
+              {/* Info strip */}
+              <View style={{ paddingHorizontal: 16, paddingTop: 14, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: colors.border }}>
+                <Text style={{ fontSize: 15, fontFamily: "Inter_700Bold", color: colors.foreground, marginBottom: 3 }}>
+                  Today's Full Runsheet
+                </Text>
+                <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground, lineHeight: 18 }}>
+                  Show this QR to any casual staff — full time or front of house. They scan once and see their team, room, the full day's schedule and their name in the roster.
+                </Text>
+                <View style={{ flexDirection: "row", gap: 8, marginTop: 10 }}>
+                  {functions.slice(0, 3).map((fn) => (
+                    <View key={fn.id} style={{ paddingHorizontal: 8, paddingVertical: 4, backgroundColor: colors.primary + "15", borderRadius: 6, borderWidth: 1, borderColor: colors.primary + "30" }}>
+                      <Text style={{ fontSize: 10, fontFamily: "Inter_600SemiBold", color: colors.primary }}>{fn.room}</Text>
                     </View>
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                      <View style={{ paddingHorizontal: 7, paddingVertical: 3, backgroundColor: colors.accent + "20", borderRadius: 6 }}>
-                        <Text style={{ fontSize: 10, fontFamily: "Inter_700Bold", color: colors.accent }}>QR</Text>
-                      </View>
-                      <Ionicons name={isOpen ? "chevron-up" : "chevron-down"} size={16} color={colors.mutedForeground} />
-                    </View>
-                  </View>
-                  {isOpen && (
-                    <View style={{ borderTopWidth: 1, borderTopColor: colors.border, paddingVertical: 20, alignItems: "center", backgroundColor: colors.background }}>
-                      <View style={{ padding: 16, backgroundColor: "#FFFFFF", borderRadius: 16 }}>
-                        <QRCode value={qrValue} size={200} color="#0D1117" backgroundColor="#FFFFFF" />
-                      </View>
-                      <Text style={{ fontSize: 12, fontFamily: "Inter_500Medium", color: colors.mutedForeground, marginTop: 12, textAlign: "center" }}>
-                        Show this to the casual chef — they scan to see{"\n"}their team, section leader and contact number
-                      </Text>
-                      <Pressable
-                        style={{ marginTop: 12, flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 16, paddingVertical: 8, backgroundColor: colors.accent + "20", borderRadius: 10, borderWidth: 1, borderColor: colors.accent + "40" }}
-                        onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push(`/brief/${fn.id}`); }}
-                      >
-                        <Feather name="external-link" size={13} color={colors.accent} />
-                        <Text style={{ fontSize: 13, fontFamily: "Inter_600SemiBold", color: colors.accent }}>Open brief page</Text>
-                      </Pressable>
-                    </View>
-                  )}
-                </Pressable>
-              );
-            })}
+                  ))}
+                </View>
+              </View>
+
+              {/* QR code — always visible */}
+              <View style={{ alignItems: "center", paddingVertical: 24, backgroundColor: colors.background }}>
+                <View style={{ padding: 18, backgroundColor: "#FFFFFF", borderRadius: 18 }}>
+                  <QRCode
+                    value={
+                      Platform.OS === "web" && typeof window !== "undefined"
+                        ? `${window.location.origin}/brief/today`
+                        : "kitchencommand://brief/today"
+                    }
+                    size={210}
+                    color="#0D1117"
+                    backgroundColor="#FFFFFF"
+                  />
+                </View>
+                <Text style={{ fontSize: 11, fontFamily: "Inter_500Medium", color: colors.mutedForeground, marginTop: 12, textAlign: "center" }}>
+                  Scan with any phone camera
+                </Text>
+              </View>
+
+              {/* Open button */}
+              <Pressable
+                style={({ pressed }) => ({
+                  flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8,
+                  paddingVertical: 14, borderTopWidth: 1, borderTopColor: colors.border,
+                  backgroundColor: pressed ? colors.primary + "15" : "transparent",
+                })}
+                onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push("/brief/today"); }}
+              >
+                <Feather name="external-link" size={15} color={colors.primary} />
+                <Text style={{ fontSize: 14, fontFamily: "Inter_700Bold", color: colors.primary }}>Open daily brief</Text>
+              </Pressable>
+            </View>
           </View>
         )}
 
@@ -814,6 +808,27 @@ export default function RosterScreen() {
               </Text>
             </View>
           </View>
+
+          {/* Management Dashboard */}
+          {isManager && (
+            <Pressable
+              style={({ pressed }) => ({
+                flexDirection: "row", alignItems: "center", gap: 14,
+                padding: 16, borderRadius: 12, borderWidth: 1, borderColor: "#8B5CF650",
+                backgroundColor: "#8B5CF608", marginBottom: 10, opacity: pressed ? 0.7 : 1,
+              })}
+              onPress={() => { setShowSettings(false); router.push("/manage"); }}
+            >
+              <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: "#8B5CF620", alignItems: "center", justifyContent: "center" }}>
+                <Feather name="settings" size={18} color="#8B5CF6" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 15, fontFamily: "Inter_600SemiBold", color: "#8B5CF6" }}>Management Dashboard</Text>
+                <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground }}>Functions · Roster · Access control</Text>
+              </View>
+              <Feather name="chevron-right" size={16} color={colors.mutedForeground} />
+            </Pressable>
+          )}
 
           {/* Subscription */}
           <Pressable
