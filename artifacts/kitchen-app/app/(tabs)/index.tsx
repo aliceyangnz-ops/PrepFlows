@@ -523,6 +523,7 @@ export default function TodayScreen() {
                       </View>
                       <View style={s.fnMetaChip}><MaterialCommunityIcons name="door" size={10} color={colors.mutedForeground} /><Text style={s.fnMetaChipText}>{fn.room}</Text></View>
                       <View style={s.fnMetaChip}><Ionicons name="layers-outline" size={10} color={colors.mutedForeground} /><Text style={s.fnMetaChipText}>{fn.floor}</Text></View>
+                      <View style={s.fnMetaChip}><Ionicons name="people" size={10} color={colors.mutedForeground} /><Text style={s.fnMetaChipText}>{fn.guestCount} pax</Text></View>
                       {isMyFn && <View style={{ paddingHorizontal: 6, paddingVertical: 2, backgroundColor: frameColor + "22", borderRadius: 5 }}><Text style={{ fontSize: 10, fontFamily: "Inter_700Bold", color: frameColor }}>Your function</Text></View>}
                     </View>
                     {hasSevere && <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 2 }}><Ionicons name="alert-circle" size={11} color="#EF4444" /><Text style={{ fontSize: 10, fontFamily: "Inter_600SemiBold", color: "#EF4444" }}>Severe allergen</Text></View>}
