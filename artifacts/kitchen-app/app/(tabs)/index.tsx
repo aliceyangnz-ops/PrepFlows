@@ -383,7 +383,7 @@ export default function TodayScreen() {
           );
         })()}
 
-        {/* ── TODAY'S FUNCTIONS — rich cards ───────────────────────── */}
+        {/* ── TODAY'S FUNCTIONS ────────────────────────────────────── */}
         <Text style={s.sectionLabel}>Today's Functions</Text>
 
         {sortedFunctions.length === 0 && (
@@ -394,137 +394,108 @@ export default function TodayScreen() {
           </View>
         )}
 
-        {sortedFunctions.map((fn) => {
-          const tc = getFunctionTypeColor(fn.functionType);
-          const fnPrep = prepItems.filter((p) => p.functionId === fn.id);
-          const isNextEvent = nextFn?.id === fn.id;
-
-          // Build per-section prep progress
-          const TEAMS: PrepTeam[] = ["Hot Kitchen", "Cold Larder", "Pastry", "Function Team", "Butchery"];
-          const teamProgress = TEAMS.map((team) => {
-            const teamItems = fnPrep.filter((p) => p.team === team);
-            if (teamItems.length === 0) return null;
-            const done = teamItems.filter((p) => p.completed).length;
-            return { team, done, total: teamItems.length, pct: done / teamItems.length };
-          }).filter(Boolean) as { team: PrepTeam; done: number; total: number; pct: number }[];
-
-          const dietaryReqs = fn.dietaryRequirements ?? [];
-          const hasSevere = dietaryReqs.some((d) => d.name.toLowerCase().includes("nut") || d.name.toLowerCase().includes("shellfish"));
-          const totalDietary = dietaryReqs.reduce((sum, d) => sum + d.count, 0);
-
-          // Course service times — show the next upcoming one
-          const courseOrder = ["amuse", "entree", "main", "dessert", "supper"] as const;
-          const nextCourse = fn.serviceTimes ? courseOrder.map((k) => fn.serviceTimes![k] ? { key: k, time: fn.serviceTimes![k]! } : null).filter(Boolean).find((c) => timeToMinutes(c!.time) > nowMinutes) ?? null : null;
-
-          const fnMins = timeToMinutes(fn.startTime) - nowMinutes;
-          const isUrgent = fnMins > 0 && fnMins <= 30;
-          const isActive = fnMins <= 0 && timeToMinutes(fn.endTime) > nowMinutes;
-
-          return (
-            <Pressable
-              key={fn.id}
-              style={({ pressed }) => [
-                s.fnCard,
-                isNextEvent && { borderColor: tc + "70" },
-                isUrgent && { borderColor: "#EF444470" },
-                isActive && { borderColor: colors.accent + "70" },
-                { opacity: pressed ? 0.85 : 1 },
-              ]}
-              onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push(`/function/${fn.id}`); }}
-            >
-              {/* Time badge + body */}
-              <View style={s.fnCardTop}>
-                <View style={[s.fnTimeBadge, {
-                  backgroundColor: isActive ? colors.accent + "20" : isUrgent ? "#EF444420" : tc + "18",
-                  borderRightColor: isActive ? colors.accent + "30" : isUrgent ? "#EF444440" : tc + "30",
-                }]}>
-                  <Text style={[s.fnTimeBadgeText, { color: isActive ? colors.accent : isUrgent ? "#EF4444" : tc }]}>{fn.startTime}</Text>
-                  <Text style={[s.fnTimeBadgeEnd, { color: isActive ? colors.accent + "90" : isUrgent ? "#EF444490" : tc + "90" }]}>{fn.endTime}</Text>
-                  {isActive && (
-                    <View style={{ marginTop: 4, paddingHorizontal: 4, paddingVertical: 1, backgroundColor: colors.accent, borderRadius: 4 }}>
-                      <Text style={{ fontSize: 8, fontFamily: "Inter_700Bold", color: "#fff" }}>LIVE</Text>
-                    </View>
-                  )}
-                </View>
-
-                <View style={s.fnBody}>
-                  <Text style={s.fnName} numberOfLines={1}>{fn.name}</Text>
-                  <View style={s.fnMetaRow}>
-                    <View style={[s.fnTypePill, { backgroundColor: tc + "22" }]}>
-                      <Text style={[s.fnTypeText, { color: tc }]}>{fn.functionType}</Text>
-                    </View>
-                    <View style={s.fnMetaChip}>
-                      <MaterialCommunityIcons name="door" size={10} color={colors.mutedForeground} />
-                      <Text style={s.fnMetaChipText}>{fn.room}</Text>
-                    </View>
-                    <View style={s.fnMetaChip}>
-                      <Ionicons name="people" size={10} color={colors.mutedForeground} />
-                      <Text style={s.fnMetaChipText}>{fn.guestCount} pax</Text>
-                    </View>
+        {isManager ? (
+          /* ── MANAGER: full cards with prep + dietary ─────────── */
+          sortedFunctions.map((fn) => {
+            const tc = getFunctionTypeColor(fn.functionType);
+            const fnPrep = prepItems.filter((p) => p.functionId === fn.id);
+            const isNextEvent = nextFn?.id === fn.id;
+            const TEAMS: PrepTeam[] = ["Hot Kitchen", "Cold Larder", "Pastry", "Function Team", "Butchery"];
+            const teamProgress = TEAMS.map((team) => {
+              const teamItems = fnPrep.filter((p) => p.team === team);
+              if (teamItems.length === 0) return null;
+              const done = teamItems.filter((p) => p.completed).length;
+              return { team, done, total: teamItems.length, pct: done / teamItems.length };
+            }).filter(Boolean) as { team: PrepTeam; done: number; total: number; pct: number }[];
+            const dietaryReqs = fn.dietaryRequirements ?? [];
+            const hasSevere = dietaryReqs.some((d) => d.name.toLowerCase().includes("nut") || d.name.toLowerCase().includes("shellfish"));
+            const totalDietary = dietaryReqs.reduce((sum, d) => sum + d.count, 0);
+            const courseOrder = ["amuse", "entree", "main", "dessert", "supper"] as const;
+            const nextCourse = fn.serviceTimes ? courseOrder.map((k) => fn.serviceTimes![k] ? { key: k, time: fn.serviceTimes![k]! } : null).filter(Boolean).find((c) => timeToMinutes(c!.time) > nowMinutes) ?? null : null;
+            const fnMins = timeToMinutes(fn.startTime) - nowMinutes;
+            const isUrgent = fnMins > 0 && fnMins <= 30;
+            const isActive = fnMins <= 0 && timeToMinutes(fn.endTime) > nowMinutes;
+            return (
+              <Pressable key={fn.id} style={({ pressed }) => [s.fnCard, isNextEvent && { borderColor: tc + "70" }, isUrgent && { borderColor: "#EF444470" }, isActive && { borderColor: colors.accent + "70" }, { opacity: pressed ? 0.85 : 1 }]}
+                onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push(`/function/${fn.id}`); }}>
+                <View style={s.fnCardTop}>
+                  <View style={[s.fnTimeBadge, { backgroundColor: isActive ? colors.accent + "20" : isUrgent ? "#EF444420" : tc + "18", borderRightColor: isActive ? colors.accent + "30" : isUrgent ? "#EF444440" : tc + "30" }]}>
+                    <Text style={[s.fnTimeBadgeText, { color: isActive ? colors.accent : isUrgent ? "#EF4444" : tc }]}>{fn.startTime}</Text>
+                    <Text style={[s.fnTimeBadgeEnd, { color: isActive ? colors.accent + "90" : isUrgent ? "#EF444490" : tc + "90" }]}>{fn.endTime}</Text>
+                    {isActive && <View style={{ marginTop: 4, paddingHorizontal: 4, paddingVertical: 1, backgroundColor: colors.accent, borderRadius: 4 }}><Text style={{ fontSize: 8, fontFamily: "Inter_700Bold", color: "#fff" }}>LIVE</Text></View>}
                   </View>
-
-                  {/* Per-section prep progress bars */}
-                  {teamProgress.map(({ team, done, total, pct }) => {
-                    const tc2 = getTeamColor(team);
-                    return (
-                      <View key={team} style={s.fnSectionRow}>
-                        <Text style={[s.fnSectionLabel, { color: tc2 }]}>{team.replace(" Kitchen", " K.").replace(" Larder", " L.").replace(" Team", " T.")}</Text>
-                        <View style={s.fnSectionBar}>
-                          <View style={[s.fnSectionFill, { width: `${pct * 100}%`, backgroundColor: pct >= 1 ? colors.accent : tc2 }]} />
+                  <View style={s.fnBody}>
+                    <Text style={s.fnName} numberOfLines={1}>{fn.name}</Text>
+                    <View style={s.fnMetaRow}>
+                      <View style={[s.fnTypePill, { backgroundColor: tc + "22" }]}><Text style={[s.fnTypeText, { color: tc }]}>{fn.functionType}</Text></View>
+                      <View style={s.fnMetaChip}><MaterialCommunityIcons name="door" size={10} color={colors.mutedForeground} /><Text style={s.fnMetaChipText}>{fn.room}</Text></View>
+                      <View style={s.fnMetaChip}><Ionicons name="people" size={10} color={colors.mutedForeground} /><Text style={s.fnMetaChipText}>{fn.guestCount} pax</Text></View>
+                    </View>
+                    {teamProgress.map(({ team, done, total, pct }) => {
+                      const tc2 = getTeamColor(team);
+                      return (
+                        <View key={team} style={s.fnSectionRow}>
+                          <Text style={[s.fnSectionLabel, { color: tc2 }]}>{team.replace(" Kitchen", " K.").replace(" Larder", " L.").replace(" Team", " T.")}</Text>
+                          <View style={s.fnSectionBar}><View style={[s.fnSectionFill, { width: `${pct * 100}%`, backgroundColor: pct >= 1 ? colors.accent : tc2 }]} /></View>
+                          <Text style={[s.fnSectionPct, { color: pct >= 1 ? colors.accent : tc2 }]}>{Math.round(pct * 100)}%</Text>
                         </View>
-                        <Text style={[s.fnSectionPct, { color: pct >= 1 ? colors.accent : tc2 }]}>{Math.round(pct * 100)}%</Text>
+                      );
+                    })}
+                    {nextCourse && (
+                      <View style={{ flexDirection: "row", alignItems: "center", gap: 5, marginTop: 2 }}>
+                        <Feather name="clock" size={10} color={tc} />
+                        <Text style={{ fontSize: 10, fontFamily: "Inter_600SemiBold", color: tc }}>{nextCourse.key.charAt(0).toUpperCase() + nextCourse.key.slice(1)} fire: {nextCourse.time}</Text>
                       </View>
-                    );
-                  })}
-
-                  {/* Next course fire time */}
-                  {nextCourse && (
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: 5, marginTop: 2 }}>
-                      <Feather name="clock" size={10} color={tc} />
-                      <Text style={{ fontSize: 10, fontFamily: "Inter_600SemiBold", color: tc }}>
-                        {nextCourse.key.charAt(0).toUpperCase() + nextCourse.key.slice(1)} fire: {nextCourse.time}
-                      </Text>
-                    </View>
-                  )}
+                    )}
+                  </View>
                 </View>
-              </View>
-
-              {/* Dietary / alert badges at the bottom */}
-              {(totalDietary > 0 || hasSevere) && (
-                <View style={s.fnAlertRow}>
-                  {hasSevere && (
-                    <View style={[s.fnAlertBadge, { backgroundColor: "#EF444412", borderColor: "#EF444440" }]}>
-                      <Ionicons name="alert-circle" size={12} color="#EF4444" />
-                      <Text style={[s.fnAlertText, { color: "#EF4444" }]}>Severe allergen</Text>
+                {(totalDietary > 0 || hasSevere) && (
+                  <View style={s.fnAlertRow}>
+                    {hasSevere && <View style={[s.fnAlertBadge, { backgroundColor: "#EF444412", borderColor: "#EF444440" }]}><Ionicons name="alert-circle" size={12} color="#EF4444" /><Text style={[s.fnAlertText, { color: "#EF4444" }]}>Severe allergen</Text></View>}
+                    {dietaryReqs.slice(0, 3).map((d, i) => {
+                      const dc = (() => { const n = d.name.toLowerCase(); if (n.includes("gluten")) return "#22C55E"; if (n.includes("vegan")) return "#84CC16"; if (n.includes("nut")) return "#F59E0B"; if (n.includes("dairy")) return "#60A5FA"; if (n.includes("shellfish")) return "#F97316"; if (n.includes("halal")) return "#14B8A6"; return "#94A3B8"; })();
+                      return <View key={i} style={[s.fnAlertBadge, { backgroundColor: dc + "15", borderColor: dc + "40" }]}><Text style={[s.fnAlertText, { color: dc }]}>{d.count}× {d.name}</Text></View>;
+                    })}
+                    {dietaryReqs.length > 3 && <View style={[s.fnAlertBadge, { backgroundColor: colors.secondary, borderColor: colors.border }]}><Text style={[s.fnAlertText, { color: colors.mutedForeground }]}>+{dietaryReqs.length - 3} more</Text></View>}
+                  </View>
+                )}
+              </Pressable>
+            );
+          })
+        ) : (
+          /* ── STAFF/TEAM LEADER: compact rows ─────────────────── */
+          sortedFunctions.map((fn) => {
+            const tc = getFunctionTypeColor(fn.functionType);
+            const isMyFn = myFunctions.some((f) => f.id === fn.id);
+            const fnMins = timeToMinutes(fn.startTime) - nowMinutes;
+            const isActive = fnMins <= 0 && timeToMinutes(fn.endTime) > nowMinutes;
+            const dietaryReqs = fn.dietaryRequirements ?? [];
+            const hasSevere = dietaryReqs.some((d) => d.name.toLowerCase().includes("nut") || d.name.toLowerCase().includes("shellfish"));
+            return (
+              <Pressable key={fn.id}
+                style={({ pressed }) => [s.fnCard, isMyFn && { borderColor: tc + "80", borderWidth: 2 }, { opacity: pressed ? 0.85 : 1 }]}
+                onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push(`/function/${fn.id}`); }}>
+                <View style={s.fnCardTop}>
+                  <View style={[s.fnTimeBadge, { backgroundColor: isActive ? colors.accent + "20" : tc + "18", borderRightColor: isActive ? colors.accent + "30" : tc + "30" }]}>
+                    <Text style={[s.fnTimeBadgeText, { color: isActive ? colors.accent : tc }]}>{fn.startTime}</Text>
+                    <Text style={[s.fnTimeBadgeEnd, { color: isActive ? colors.accent + "90" : tc + "90" }]}>{fn.endTime}</Text>
+                    {isActive && <View style={{ marginTop: 4, paddingHorizontal: 4, paddingVertical: 1, backgroundColor: colors.accent, borderRadius: 4 }}><Text style={{ fontSize: 8, fontFamily: "Inter_700Bold", color: "#fff" }}>LIVE</Text></View>}
+                  </View>
+                  <View style={s.fnBody}>
+                    <Text style={s.fnName} numberOfLines={1}>{fn.name}</Text>
+                    <View style={s.fnMetaRow}>
+                      <View style={s.fnMetaChip}><MaterialCommunityIcons name="door" size={10} color={colors.mutedForeground} /><Text style={s.fnMetaChipText}>{fn.room}</Text></View>
+                      <View style={s.fnMetaChip}><Ionicons name="layers-outline" size={10} color={colors.mutedForeground} /><Text style={s.fnMetaChipText}>{fn.floor}</Text></View>
+                      {isMyFn && <View style={{ paddingHorizontal: 6, paddingVertical: 2, backgroundColor: tc + "22", borderRadius: 5 }}><Text style={{ fontSize: 10, fontFamily: "Inter_700Bold", color: tc }}>Your function</Text></View>}
                     </View>
-                  )}
-                  {dietaryReqs.slice(0, 3).map((d, i) => {
-                    const dc = (() => {
-                      const n = d.name.toLowerCase();
-                      if (n.includes("gluten")) return "#22C55E";
-                      if (n.includes("vegan")) return "#84CC16";
-                      if (n.includes("nut")) return "#F59E0B";
-                      if (n.includes("dairy")) return "#60A5FA";
-                      if (n.includes("shellfish")) return "#F97316";
-                      if (n.includes("halal")) return "#14B8A6";
-                      return "#94A3B8";
-                    })();
-                    return (
-                      <View key={i} style={[s.fnAlertBadge, { backgroundColor: dc + "15", borderColor: dc + "40" }]}>
-                        <Text style={[s.fnAlertText, { color: dc }]}>{d.count}× {d.name}</Text>
-                      </View>
-                    );
-                  })}
-                  {dietaryReqs.length > 3 && (
-                    <View style={[s.fnAlertBadge, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
-                      <Text style={[s.fnAlertText, { color: colors.mutedForeground }]}>+{dietaryReqs.length - 3} more</Text>
-                    </View>
-                  )}
+                    {hasSevere && <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 2 }}><Ionicons name="alert-circle" size={11} color="#EF4444" /><Text style={{ fontSize: 10, fontFamily: "Inter_600SemiBold", color: "#EF4444" }}>Severe allergen</Text></View>}
+                  </View>
+                  <Feather name="chevron-right" size={14} color={colors.mutedForeground} />
                 </View>
-              )}
-            </Pressable>
-          );
-        })}
+              </Pressable>
+            );
+          })
+        )}
         <View style={s.bottomPad} />
       </ScrollView>
 

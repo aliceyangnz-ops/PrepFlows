@@ -663,8 +663,8 @@ export default function RosterScreen() {
                 </View>
               </View>
 
-              {/* Shift timeline */}
-              {!isSick && (
+              {/* Shift timeline — managers only */}
+              {isManager && !isSick && (
                 <View style={s.timelineContainer}>
                   <View style={s.timelineHeader}>
                     {HOURS.filter((_, i) => i % 2 === 0).map((h) => (
@@ -677,7 +677,7 @@ export default function RosterScreen() {
                 </View>
               )}
 
-              {/* Functions */}
+              {/* Functions — name only for non-managers */}
               {!isSick && memberFunctions.length > 0 && (
                 <View style={s.functionsSection}>
                   {memberFunctions.map((fn) => {
@@ -686,10 +686,12 @@ export default function RosterScreen() {
                       <View key={fn.id} style={[s.funcBadge, { backgroundColor: rc + "10", borderColor: rc + "30" }]}>
                         <View style={s.funcBadgeLeft}>
                           <Text style={s.funcBadgeName} numberOfLines={1}>{fn.name}</Text>
-                          <Text style={s.funcBadgeSub}>{fn.room} · {fn.floor} · {fn.guestCount} guests · {fn.startTime}</Text>
+                          {isManager && (
+                            <Text style={s.funcBadgeSub}>{fn.room} · {fn.floor} · {fn.guestCount} guests · {fn.startTime}</Text>
+                          )}
                         </View>
                         <View style={[s.funcTypePill, { backgroundColor: ftc + "20" }]}>
-                          <Text style={[s.funcTypePillText, { color: ftc }]}>{fn.functionType}</Text>
+                          <Text style={[s.funcTypePillText, { color: ftc }]}>{fn.startTime}</Text>
                         </View>
                       </View>
                     );

@@ -29,6 +29,7 @@ export default function FunctionsScreen() {
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const currentMember = currentStaffId ? staff.find((s) => s.id === currentStaffId) ?? null : null;
   const isManager = currentMember ? getAccessLevel(currentMember) === "manager" : false;
+  const myFunctions = currentMember ? functions.filter((f) => currentMember.functionIds.includes(f.id)) : [];
 
 
   function getRoleColor(role: string) {
@@ -104,140 +105,120 @@ export default function FunctionsScreen() {
           )}
         </View>
 
-        {functions.map((fn) => {
-          const fnStaff = staff.filter((st) => fn.teamIds.includes(st.id));
-          const fnPrep = prepItems.filter((p) => p.functionId === fn.id);
-          const prepDone = fnPrep.filter((p) => p.completed).length;
-          const stepsDone = fn.timeline.filter((t) => t.completed).length;
-          const prepPct = fnPrep.length > 0 ? prepDone / fnPrep.length : 0;
-          const tc = getFunctionTypeColor(fn.functionType);
-          const isAlaCarte = fn.functionType === "A-la-carte" || fn.functionType === "Canapés + A-la-carte";
-
-          return (
-            <View key={fn.id} style={s.card}>
-              <View style={s.cardTop}>
-                <View style={s.cardTopRow}>
-                  <View style={s.timePill}><Text style={s.timePillText}>{fn.startTime}</Text></View>
-                  <Text style={s.cardName} numberOfLines={1}>{fn.name}</Text>
-                  <Feather name="chevron-right" size={16} color={colors.mutedForeground} />
-                </View>
-
-                <View style={s.typeRow}>
-                  <View style={[s.typePill, { backgroundColor: tc + "20", borderColor: tc + "50" }]}>
-                    <Text style={[s.typeText, { color: tc }]}>{fn.functionType}</Text>
+        {isManager ? (
+          /* ── MANAGER: full detail cards ──────────────────────── */
+          functions.map((fn) => {
+            const fnStaff = staff.filter((st) => fn.teamIds.includes(st.id));
+            const fnPrep = prepItems.filter((p) => p.functionId === fn.id);
+            const prepDone = fnPrep.filter((p) => p.completed).length;
+            const stepsDone = fn.timeline.filter((t) => t.completed).length;
+            const prepPct = fnPrep.length > 0 ? prepDone / fnPrep.length : 0;
+            const tc = getFunctionTypeColor(fn.functionType);
+            const isAlaCarte = fn.functionType === "A-la-carte" || fn.functionType === "Canapés + A-la-carte";
+            return (
+              <View key={fn.id} style={s.card}>
+                <View style={s.cardTop}>
+                  <View style={s.cardTopRow}>
+                    <View style={s.timePill}><Text style={s.timePillText}>{fn.startTime}</Text></View>
+                    <Text style={s.cardName} numberOfLines={1}>{fn.name}</Text>
+                    <Feather name="chevron-right" size={16} color={colors.mutedForeground} />
                   </View>
-                  {isAlaCarte && fn.serviceTimes && (
-                    <>
-                      {fn.serviceTimes.amuse && (
-                        <View style={s.courseTime}>
-                          <Text style={s.courseTimeLabel}>Amuse</Text>
-                          <Text style={s.courseTimeValue}>{fn.serviceTimes.amuse}</Text>
-                        </View>
-                      )}
-                      {fn.serviceTimes.entree && (
-                        <View style={s.courseTime}>
-                          <Text style={s.courseTimeLabel}>Ent.</Text>
-                          <Text style={s.courseTimeValue}>{fn.serviceTimes.entree}</Text>
-                        </View>
-                      )}
-                      {fn.serviceTimes.main && (
-                        <View style={s.courseTime}>
-                          <Text style={s.courseTimeLabel}>Main</Text>
-                          <Text style={s.courseTimeValue}>{fn.serviceTimes.main}</Text>
-                        </View>
-                      )}
-                      {fn.serviceTimes.dessert && (
-                        <View style={s.courseTime}>
-                          <Text style={s.courseTimeLabel}>Des.</Text>
-                          <Text style={s.courseTimeValue}>{fn.serviceTimes.dessert}</Text>
-                        </View>
-                      )}
-                    </>
-                  )}
-                </View>
-              </View>
-
-              <View style={s.keyInfoRow}>
-                <View style={s.keyInfoBox}>
-                  <Text style={[s.keyInfoNum, { color: colors.foreground }]}>{fn.guestCount}</Text>
-                  <Text style={s.keyInfoLabel}>Guests</Text>
-                </View>
-                <View style={s.keyInfoBox}>
-                  <Text style={[s.keyInfoNum, { color: colors.info }]}>{fn.startTime}–{fn.endTime}</Text>
-                  <Text style={s.keyInfoLabel}>Service time</Text>
-                </View>
-                <View style={[s.keyInfoBox, { borderRightWidth: 0 }]}>
-                  <Text style={[s.keyInfoNum, { color: prepPct === 1 ? colors.accent : colors.warning }]}>{prepDone}/{fnPrep.length}</Text>
-                  <Text style={s.keyInfoLabel}>Food ready</Text>
-                  <View style={s.progressBarWrap}>
-                    <View style={[s.progressBarFill, { width: `${prepPct * 100}%`, backgroundColor: prepPct === 1 ? colors.accent : colors.warning }]} />
+                  <View style={s.typeRow}>
+                    <View style={[s.typePill, { backgroundColor: tc + "20", borderColor: tc + "50" }]}><Text style={[s.typeText, { color: tc }]}>{fn.functionType}</Text></View>
+                    {isAlaCarte && fn.serviceTimes && (<>
+                      {fn.serviceTimes.amuse && <View style={s.courseTime}><Text style={s.courseTimeLabel}>Amuse</Text><Text style={s.courseTimeValue}>{fn.serviceTimes.amuse}</Text></View>}
+                      {fn.serviceTimes.entree && <View style={s.courseTime}><Text style={s.courseTimeLabel}>Ent.</Text><Text style={s.courseTimeValue}>{fn.serviceTimes.entree}</Text></View>}
+                      {fn.serviceTimes.main && <View style={s.courseTime}><Text style={s.courseTimeLabel}>Main</Text><Text style={s.courseTimeValue}>{fn.serviceTimes.main}</Text></View>}
+                      {fn.serviceTimes.dessert && <View style={s.courseTime}><Text style={s.courseTimeLabel}>Des.</Text><Text style={s.courseTimeValue}>{fn.serviceTimes.dessert}</Text></View>}
+                    </>)}
                   </View>
                 </View>
-              </View>
-
-              <View style={s.body}>
-                <View>
-                  <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 6 }}>
-                    <MaterialCommunityIcons name="door" size={13} color={colors.mutedForeground} />
-                    <Text style={[s.sectionHead, { marginBottom: 0 }]}>Room</Text>
+                <View style={s.keyInfoRow}>
+                  <View style={s.keyInfoBox}><Text style={[s.keyInfoNum, { color: colors.foreground }]}>{fn.guestCount}</Text><Text style={s.keyInfoLabel}>Guests</Text></View>
+                  <View style={s.keyInfoBox}><Text style={[s.keyInfoNum, { color: colors.info }]}>{fn.startTime}–{fn.endTime}</Text><Text style={s.keyInfoLabel}>Service time</Text></View>
+                  <View style={[s.keyInfoBox, { borderRightWidth: 0 }]}>
+                    <Text style={[s.keyInfoNum, { color: prepPct === 1 ? colors.accent : colors.warning }]}>{prepDone}/{fnPrep.length}</Text>
+                    <Text style={s.keyInfoLabel}>Food ready</Text>
+                    <View style={s.progressBarWrap}><View style={[s.progressBarFill, { width: `${prepPct * 100}%`, backgroundColor: prepPct === 1 ? colors.accent : colors.warning }]} /></View>
                   </View>
-                  <Text style={s.roomValue}>{fn.room}</Text>
                 </View>
-
-                <View>
-                  <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 6 }}>
-                    <Feather name="coffee" size={13} color={colors.mutedForeground} />
-                    <Text style={[s.sectionHead, { marginBottom: 0 }]}>What's being served</Text>
+                <View style={s.body}>
+                  <View>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 6 }}><MaterialCommunityIcons name="door" size={13} color={colors.mutedForeground} /><Text style={[s.sectionHead, { marginBottom: 0 }]}>Room</Text></View>
+                    <Text style={s.roomValue}>{fn.room}</Text>
                   </View>
-                  {fn.menu.slice(0, 3).map((item, i) => (
-                    <View key={i} style={s.menuRow}>
-                      <View style={[s.menuDot, { backgroundColor: colors.primary }]} />
-                      <Text style={s.menuText}>{item}</Text>
+                  <View>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 6 }}><Feather name="coffee" size={13} color={colors.mutedForeground} /><Text style={[s.sectionHead, { marginBottom: 0 }]}>What's being served</Text></View>
+                    {fn.menu.slice(0, 3).map((item, i) => <View key={i} style={s.menuRow}><View style={[s.menuDot, { backgroundColor: colors.primary }]} /><Text style={s.menuText}>{item}</Text></View>)}
+                    {fn.menu.length > 3 && <Text style={{ fontSize: 12, fontFamily: "Inter_500Medium", color: colors.primary, marginTop: 2 }}>+ {fn.menu.length - 3} more — see full details</Text>}
+                  </View>
+                  <View>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 8 }}><Ionicons name="people" size={13} color={colors.mutedForeground} /><Text style={[s.sectionHead, { marginBottom: 0 }]}>Who's working this event</Text></View>
+                    <View style={s.teamWrap}>
+                      {fnStaff.map((member) => { const rc = getRoleColor(member.role); return (<View key={member.id} style={[s.teamBadge, { backgroundColor: rc + "18", borderColor: rc + "40" }]}><View style={[s.teamDot, { backgroundColor: rc }]} /><View><Text style={[s.teamName, { color: rc }]}>{member.name}</Text><Text style={[s.teamRole, { color: colors.mutedForeground }]}>{member.role}</Text></View></View>); })}
                     </View>
-                  ))}
-                  {fn.menu.length > 3 && (
-                    <Text style={{ fontSize: 12, fontFamily: "Inter_500Medium", color: colors.primary, marginTop: 2 }}>
-                      + {fn.menu.length - 3} more courses — see full details
-                    </Text>
+                  </View>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}><Feather name="check-circle" size={13} color={colors.mutedForeground} /><Text style={{ fontSize: 12, fontFamily: "Inter_500Medium", color: colors.mutedForeground }}>Work plan: {stepsDone} of {fn.timeline.length} tasks done</Text></View>
+                </View>
+                <Pressable style={({ pressed }) => [s.viewBtn, pressed && { opacity: 0.8 }]} onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push(`/function/${fn.id}`); }}>
+                  <Text style={s.viewBtnText}>Open full details</Text>
+                  <Feather name="arrow-right" size={15} color="#fff" />
+                </Pressable>
+              </View>
+            );
+          })
+        ) : (
+          /* ── STAFF / TEAM LEADER: compact "where to go" cards ── */
+          (myFunctions.length > 0 ? myFunctions : functions).map((fn) => {
+            const tc = getFunctionTypeColor(fn.functionType);
+            const mySection = currentMember?.section;
+            const fnTeamStaff = staff.filter((st) => fn.teamIds.includes(st.id) && st.section === mySection);
+            const myLeader = fnTeamStaff.find((st) => !!st.teamLeadFor) ?? null;
+            const dietaryReqs = fn.dietaryRequirements ?? [];
+            const hasDietary = dietaryReqs.length > 0;
+            return (
+              <Pressable key={fn.id} style={({ pressed }) => [s.card, { overflow: "hidden", opacity: pressed ? 0.9 : 1 }]}
+                onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push(`/function/${fn.id}`); }}>
+                {/* Time + name header */}
+                <View style={[s.cardTop, { borderBottomWidth: 0, paddingBottom: 0 }]}>
+                  <View style={s.cardTopRow}>
+                    <View style={s.timePill}><Text style={s.timePillText}>{fn.startTime}</Text></View>
+                    <Text style={s.cardName} numberOfLines={1}>{fn.name}</Text>
+                    <Feather name="chevron-right" size={16} color={colors.mutedForeground} />
+                  </View>
+                </View>
+                {/* WHERE TO GO hero */}
+                <View style={{ paddingHorizontal: 16, paddingTop: 14, paddingBottom: 14, borderBottomWidth: 1, borderBottomColor: colors.border }}>
+                  <Text style={{ fontSize: 10, fontFamily: "Inter_700Bold", color: colors.primary, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 6 }}>Where to go</Text>
+                  <Text style={{ fontSize: 30, fontFamily: "Inter_700Bold", color: colors.foreground, lineHeight: 36 }}>{fn.room}</Text>
+                  <Text style={{ fontSize: 13, fontFamily: "Inter_400Regular", color: colors.mutedForeground, marginTop: 4 }}>{fn.floor} · {fn.startTime}–{fn.endTime} · {fn.guestCount} guests</Text>
+                </View>
+                {/* My team + leader */}
+                <View style={{ paddingHorizontal: 16, paddingVertical: 14, flexDirection: "row", alignItems: "center", gap: 12 }}>
+                  <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: tc + "25", alignItems: "center", justifyContent: "center" }}>
+                    <Text style={{ fontSize: 16, fontFamily: "Inter_700Bold", color: tc }}>{(mySection ?? fn.name).charAt(0)}</Text>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 15, fontFamily: "Inter_700Bold", color: colors.foreground }}>{mySection ?? "No team assigned"}</Text>
+                    {myLeader ? (
+                      <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground, marginTop: 2 }}>
+                        Leader: {myLeader.name}{myLeader.phone ? ` · ${myLeader.phone}` : ""}
+                      </Text>
+                    ) : (
+                      <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground, marginTop: 2 }}>Speak to your manager for team assignment</Text>
+                    )}
+                  </View>
+                  {hasDietary && (
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, paddingVertical: 4, backgroundColor: "#F59E0B15", borderRadius: 8, borderWidth: 1, borderColor: "#F59E0B40" }}>
+                      <Ionicons name="warning" size={12} color="#F59E0B" />
+                      <Text style={{ fontSize: 10, fontFamily: "Inter_700Bold", color: "#F59E0B" }}>{dietaryReqs.length} dietary</Text>
+                    </View>
                   )}
                 </View>
-
-                <View>
-                  <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 8 }}>
-                    <Ionicons name="people" size={13} color={colors.mutedForeground} />
-                    <Text style={[s.sectionHead, { marginBottom: 0 }]}>Who's working this event</Text>
-                  </View>
-                  <View style={s.teamWrap}>
-                    {fnStaff.map((member) => {
-                      const rc = getRoleColor(member.role);
-                      return (
-                        <View key={member.id} style={[s.teamBadge, { backgroundColor: rc + "18", borderColor: rc + "40" }]}>
-                          <View style={[s.teamDot, { backgroundColor: rc }]} />
-                          <View>
-                            <Text style={[s.teamName, { color: rc }]}>{member.name}</Text>
-                            <Text style={[s.teamRole, { color: colors.mutedForeground }]}>{member.role}</Text>
-                          </View>
-                        </View>
-                      );
-                    })}
-                  </View>
-                </View>
-
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                  <Feather name="check-circle" size={13} color={colors.mutedForeground} />
-                  <Text style={{ fontSize: 12, fontFamily: "Inter_500Medium", color: colors.mutedForeground }}>
-                    Work plan: {stepsDone} of {fn.timeline.length} tasks done
-                  </Text>
-                </View>
-              </View>
-
-              <Pressable style={({ pressed }) => [s.viewBtn, pressed && { opacity: 0.8 }]} onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push(`/function/${fn.id}`); }}>
-                <Text style={s.viewBtnText}>Open full details</Text>
-                <Feather name="arrow-right" size={15} color="#fff" />
               </Pressable>
-            </View>
-          );
-        })}
+            );
+          })
+        )}
         <View style={s.bottomPad} />
       </ScrollView>
     </View>
