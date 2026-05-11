@@ -232,7 +232,9 @@ export default function FunctionDetailScreen() {
       guestCount:       guestNum,
       menu: draft.menu.filter((m) => m.trim()),
       dietaryRequirements: draft.dietaryRequirements.filter((d) => d.count > 0 && d.name.trim()),
-      serviceEvents: draft.serviceEvents.filter((e) => e.time.trim() && e.label.trim()),
+      serviceEvents: draft.serviceEvents
+        .filter((e) => e.time.trim() && e.label.trim())
+        .sort((a, b) => a.time.localeCompare(b.time)),
     });
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     setEditing(false);

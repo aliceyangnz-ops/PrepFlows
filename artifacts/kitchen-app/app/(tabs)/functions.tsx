@@ -215,18 +215,18 @@ export default function FunctionsScreen() {
                     </View>
                   )}
 
-                  {/* Service events */}
+                  {/* Service milestones — timeline rows: time left, label right */}
                   {activeTimes.length > 0 && (
-                    <View style={{ borderTopWidth: 1, borderTopColor: colors.border, paddingHorizontal: 12, paddingVertical: 10 }}>
+                    <View style={{ borderTopWidth: 1, borderTopColor: colors.border, paddingHorizontal: 12, paddingTop: 10, paddingBottom: 6 }}>
                       <Text style={{ fontSize: 10, fontFamily: "Inter_700Bold", color: colors.mutedForeground, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 8 }}>Service milestones</Text>
-                      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-                        {activeTimes.map((c, i) => (
-                          <View key={i} style={{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: 9, backgroundColor: tc + "18", borderWidth: 1, borderColor: tc + "45", alignItems: "center" }}>
-                            <Text style={{ fontSize: 9, fontFamily: "Inter_700Bold", color: tc, textTransform: "uppercase", letterSpacing: 0.6 }}>{c.label}</Text>
-                            <Text style={{ fontSize: 16, fontFamily: "Inter_700Bold", color: colors.foreground, marginTop: 2 }}>{c.time}</Text>
+                      {activeTimes.map((c, i) => (
+                        <View key={i} style={{ flexDirection: "row", alignItems: "center", marginBottom: 6 }}>
+                          <View style={{ width: 52, paddingVertical: 4, paddingHorizontal: 6, borderRadius: 6, backgroundColor: tc + "20", borderWidth: 1, borderColor: tc + "50", alignItems: "center", marginRight: 10 }}>
+                            <Text style={{ fontSize: 13, fontFamily: "Inter_700Bold", color: tc }}>{c.time}</Text>
                           </View>
-                        ))}
-                      </View>
+                          <Text style={{ fontSize: 13, fontFamily: "Inter_500Medium", color: colors.foreground, flex: 1 }}>{c.label}</Text>
+                        </View>
+                      ))}
                     </View>
                   )}
 

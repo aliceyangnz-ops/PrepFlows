@@ -304,6 +304,26 @@ export default function AddFunctionScreen() {
     setForm((f) => ({ ...f, [field]: value }));
   }
 
+  const TYPE_MILESTONE_TEMPLATES: Record<FunctionType, Array<{ time: string; label: string }>> = {
+    "A-la-carte":           [{ time: "", label: "Entrée Away" }, { time: "", label: "Main Away" }, { time: "", label: "Dessert Away" }],
+    "Set Menu":             [{ time: "", label: "Entrée Away" }, { time: "", label: "Main Away" }, { time: "", label: "Dessert Away" }],
+    "Buffet":               [{ time: "", label: "Buffet Open" }, { time: "", label: "Buffet Closed" }],
+    "Cocktail":             [{ time: "", label: "Canapés Service" }, { time: "", label: "Cocktail Hour Ends" }],
+    "Canapés":              [{ time: "", label: "Canapés Service" }],
+    "Canapés + A-la-carte": [{ time: "", label: "Canapés Service" }, { time: "", label: "Entrée Away" }, { time: "", label: "Main Away" }],
+    "School Ball":          [{ time: "", label: "Entrée Away" }, { time: "", label: "Main Away" }, { time: "", label: "Dessert Away" }, { time: "", label: "Supper" }],
+    "High Tea":             [{ time: "", label: "High Tea Served" }, { time: "", label: "Sandwiches Away" }, { time: "", label: "Scones Away" }, { time: "", label: "Sweets Away" }],
+  };
+
+  function handleFunctionTypeChange(type: FunctionType) {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setForm((f) => ({
+      ...f,
+      functionType: type,
+      serviceEvents: f.serviceEvents.length === 0 ? TYPE_MILESTONE_TEMPLATES[type] : f.serviceEvents,
+    }));
+  }
+
   function handleParse() {
     if (!pasteText.trim()) {
       Alert.alert("Nothing to read", "Please paste some text first.");
@@ -365,7 +385,9 @@ export default function AddFunctionScreen() {
       dietaryRequirements: form.dietaryRequirements
         .filter((d) => d.name.trim() && parseInt(d.count, 10) > 0)
         .map((d) => ({ name: d.name.trim(), count: parseInt(d.count, 10), note: d.note })),
-      serviceEvents: form.serviceEvents.filter((e) => e.time.trim() && e.label.trim()),
+      serviceEvents: form.serviceEvents
+        .filter((e) => e.time.trim() && e.label.trim())
+        .sort((a, b) => a.time.localeCompare(b.time)),
       menu: [],
       teamIds: [],
       timeline: [],
@@ -502,7 +524,7 @@ export default function AddFunctionScreen() {
                 <Pressable
                   key={type}
                   style={[s.typeChip, { backgroundColor: selected ? ftc + "25" : "transparent", borderColor: selected ? ftc : colors.border }]}
-                  onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); updateForm("functionType", type); }}
+                  onPress={() => handleFunctionTypeChange(type)}
                 >
                   {selected && <Feather name="check" size={12} color={ftc} />}
                   <Text style={[s.typeChipText, { color: selected ? ftc : colors.mutedForeground }]}>{type}</Text>
