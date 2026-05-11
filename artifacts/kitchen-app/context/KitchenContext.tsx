@@ -44,6 +44,7 @@ export interface KitchenFunction {
   room: string;
   floor: string;
   functionType: FunctionType;
+  date?: string;
   startTime: string;
   endTime: string;
   guestCount: number;
@@ -126,6 +127,7 @@ const SAMPLE_FUNCTIONS: KitchenFunction[] = [
     name: "Harrison Wedding Luncheon",
     room: "Ballroom A",
     floor: "Level 1",
+    date: isoDateOffset(0),
     functionType: "A-la-carte",
     startTime: "12:00",
     endTime: "15:00",
@@ -173,6 +175,7 @@ const SAMPLE_FUNCTIONS: KitchenFunction[] = [
     name: "Corporate Boardroom Lunch",
     room: "Suite 3",
     floor: "Level 2",
+    date: isoDateOffset(0),
     functionType: "A-la-carte",
     startTime: "13:00",
     endTime: "14:30",
@@ -216,6 +219,7 @@ const SAMPLE_FUNCTIONS: KitchenFunction[] = [
     name: "Gala Dinner",
     room: "Grand Ballroom",
     floor: "Ground Floor",
+    date: isoDateOffset(1),
     functionType: "A-la-carte",
     startTime: "19:00",
     endTime: "23:00",
@@ -273,6 +277,7 @@ const SAMPLE_FUNCTIONS: KitchenFunction[] = [
     name: "Melbourne Cup Buffet Luncheon",
     room: "The Courtyard",
     floor: "Ground Floor",
+    date: isoDateOffset(1),
     functionType: "Buffet",
     startTime: "11:30",
     endTime: "15:00",
@@ -308,6 +313,7 @@ const SAMPLE_FUNCTIONS: KitchenFunction[] = [
     name: "Grand Autumn Cocktail Reception",
     room: "Rooftop Terrace",
     floor: "Level 5",
+    date: isoDateOffset(2),
     functionType: "Cocktail",
     startTime: "18:00",
     endTime: "21:00",
@@ -534,6 +540,12 @@ const SAMPLE_PREP: PrepItem[] = [
 
 export const MANAGER_ROLES = ["Head Chef", "Sous Chef", "Pastry Chef", "Function Captain"] as const;
 
+function isoDateOffset(offsetDays: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() + offsetDays);
+  return d.toISOString().slice(0, 10);
+}
+
 // ── Auto-prep generation ──────────────────────────────────────────────────────
 function courseToTeam(course: string): PrepTeam {
   const c = course.toLowerCase();
@@ -738,6 +750,11 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const togglePrepItem = useCallback((id: string) => {
+    const cid = currentStaffIdRef.current;
+    if (!cid) return;
+    const member = staffRef.current.find((m) => m.id === cid) ?? null;
+    const level = member ? getAccessLevel(member) : null;
+    if (level !== "manager" && level !== "team_leader") return;
     setPrepItems((prev) => {
       const updated = prev.map((item) =>
         item.id === id ? { ...item, completed: !item.completed } : item
