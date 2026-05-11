@@ -334,9 +334,11 @@ export default function FunctionsScreen() {
                     <Text style={{ fontSize: 16, fontFamily: "Inter_700Bold", color: tc }}>{(mySection ?? fn.name).charAt(0)}</Text>
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 15, fontFamily: "Inter_700Bold", color: colors.foreground }}>{mySection ?? "No team assigned"}</Text>
+                    <Text style={{ fontSize: 15, fontFamily: "Inter_700Bold", color: colors.foreground }}>{mySection ?? (fn.chefInCharge ? fn.chefInCharge : "Team not yet assigned")}</Text>
                     {myLeader ? (
                       <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground, marginTop: 2 }}>Leader: {myLeader.name}{myLeader.phone ? ` · ${myLeader.phone}` : ""}</Text>
+                    ) : fn.chefInCharge ? (
+                      <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground, marginTop: 2 }}>Chef in Charge: {fn.chefInCharge}</Text>
                     ) : (
                       <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground, marginTop: 2 }}>Speak to your manager for team assignment</Text>
                     )}

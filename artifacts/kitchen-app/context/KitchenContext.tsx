@@ -54,6 +54,7 @@ export interface KitchenFunction {
   serviceEvents?: ServiceEvent[];
   teamIds: string[];
   timeline: TimelineItem[];
+  chefInCharge?: string;
 }
 
 export type PrepTeam = "Cold Larder" | "Pastry" | "Hot Kitchen" | "Function Team" | "Butchery";

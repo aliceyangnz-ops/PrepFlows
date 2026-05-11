@@ -69,6 +69,7 @@ interface DraftFunction {
   startTime: string;
   endTime: string;
   guestCount: string;
+  chefInCharge: string;
   serviceEvents: Array<{ time: string; label: string }>;
   dietaryRequirements: DietaryRequirement[];
   menu: string[];
@@ -93,6 +94,8 @@ export default function FunctionDetailScreen() {
   const [draft, setDraft] = useState<DraftFunction | null>(null);
   const [hasUnsaved, setHasUnsaved] = useState(false);
   const [expandedDietary, setExpandedDietary] = useState<string | null>(null);
+  const [pasteMode, setPasteMode] = useState(false);
+  const [pasteText, setPasteText] = useState("");
 
   useEffect(() => {
     if (fn) {
@@ -104,6 +107,7 @@ export default function FunctionDetailScreen() {
         startTime: fn.startTime,
         endTime: fn.endTime,
         guestCount: String(fn.guestCount),
+        chefInCharge: fn.chefInCharge ?? "",
         serviceEvents: fn.serviceEvents
           ? fn.serviceEvents.map((e) => ({ ...e }))
           : fn.serviceTimes
@@ -230,6 +234,7 @@ export default function FunctionDetailScreen() {
       startTime:        draft.startTime.trim() || fn.startTime,
       endTime:          draft.endTime.trim()   || fn.endTime,
       guestCount:       guestNum,
+      chefInCharge:     draft.chefInCharge.trim() || undefined,
       menu: draft.menu.filter((m) => m.trim()),
       dietaryRequirements: draft.dietaryRequirements.filter((d) => d.count > 0 && d.name.trim()),
       serviceEvents: draft.serviceEvents
@@ -253,6 +258,7 @@ export default function FunctionDetailScreen() {
             setDraft({
               name: snap.name, room: snap.room, floor: snap.floor, functionType: snap.functionType,
               startTime: snap.startTime, endTime: snap.endTime, guestCount: String(snap.guestCount),
+              chefInCharge: snap.chefInCharge ?? "",
               serviceEvents: snap.serviceEvents
                 ? snap.serviceEvents.map((e) => ({ ...e }))
                 : snap.serviceTimes
@@ -558,6 +564,10 @@ export default function FunctionDetailScreen() {
                 <Text style={s.fieldLabel}>Finish time</Text>
                 <TextInput style={s.fieldInput} value={draft.endTime} onChangeText={(v) => updateDraft("endTime", v)} placeholder="HH:MM" placeholderTextColor={colors.mutedForeground} />
               </View>
+              <View style={s.fieldRow}>
+                <Text style={s.fieldLabel}>Chef in Charge</Text>
+                <TextInput style={s.fieldInput} value={draft.chefInCharge} onChangeText={(v) => updateDraft("chefInCharge", v)} placeholder="e.g. Marco Russo" placeholderTextColor={colors.mutedForeground} />
+              </View>
               <View style={s.typeSelectRow}>
                 <Text style={s.typeSelectLabel}>Function Type</Text>
                 <View style={s.typeChipRow}>
@@ -614,47 +624,92 @@ export default function FunctionDetailScreen() {
               </View>
             )}
 
-            {/* Service events editor */}
+            {/* Service Timetable editor */}
             <View style={[s.editCard, { borderColor: tc + "60", marginTop: 10 }]}>
               <View style={[s.editCardHeader, { backgroundColor: tc + "15", borderBottomColor: tc + "30" }]}>
                 <Feather name="clock" size={14} color={tc} />
-                <Text style={[s.editCardTitle, { color: tc }]}>Service Milestones</Text>
-                <Text style={{ fontSize: 11, fontFamily: "Inter_400Regular", color: colors.mutedForeground }}>Free-form — add any milestone</Text>
+                <Text style={[s.editCardTitle, { color: tc }]}>Service Timetable</Text>
+                <Pressable
+                  style={{ paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, backgroundColor: tc + "25" }}
+                  onPress={() => {
+                    if (!pasteMode) {
+                      setPasteText(draft.serviceEvents.map((e) => `${e.time} ${e.label}`).join("\n"));
+                    } else {
+                      const parsed = pasteText
+                        .split("\n")
+                        .map((line) => line.trim())
+                        .filter(Boolean)
+                        .map((line) => {
+                          const m = line.match(/^(\d{1,2}:\d{2})\s+(.+)$/);
+                          return m ? { time: m[1].length === 4 ? "0" + m[1] : m[1], label: m[2].trim() } : null;
+                        })
+                        .filter(Boolean) as Array<{ time: string; label: string }>;
+                      setDraft((d) => d ? { ...d, serviceEvents: parsed } : d);
+                      setHasUnsaved(true);
+                    }
+                    setPasteMode((v) => !v);
+                  }}
+                >
+                  <Text style={{ fontSize: 11, fontFamily: "Inter_700Bold", color: tc }}>{pasteMode ? "Done" : "Paste mode"}</Text>
+                </Pressable>
               </View>
-              {draft.serviceEvents.map((evt, idx) => (
-                <View key={idx} style={[s.courseEditRow, { paddingVertical: 8, gap: 8 }]}>
+              {pasteMode ? (
+                <View style={{ padding: 14 }}>
+                  <Text style={{ fontSize: 11, fontFamily: "Inter_400Regular", color: colors.mutedForeground, marginBottom: 8, lineHeight: 16 }}>
+                    Each line: <Text style={{ fontFamily: "Inter_600SemiBold" }}>HH:MM Description</Text>{"\n"}
+                    e.g.  19:00 Salad Bar Open{"\n"}
+                    {"      "}19:30 Hot Food{"\n"}
+                    {"      "}21:30 Buffet Closed
+                  </Text>
                   <TextInput
-                    style={[s.courseEditInput, { color: tc, width: 64, flexGrow: 0 }]}
-                    value={evt.time}
-                    onChangeText={(v) => {
-                      setDraft((d) => { if (!d) return d; const ev = [...d.serviceEvents]; ev[idx] = { ...ev[idx], time: v }; return { ...d, serviceEvents: ev }; });
-                      setHasUnsaved(true);
-                    }}
-                    placeholder="HH:MM"
+                    style={{ fontSize: 14, fontFamily: "Inter_500Medium", color: colors.foreground, borderWidth: 1, borderColor: tc + "60", borderRadius: 8, padding: 12, minHeight: 120, textAlignVertical: "top", backgroundColor: colors.secondary }}
+                    value={pasteText}
+                    onChangeText={(v) => { setPasteText(v); setHasUnsaved(true); }}
+                    placeholder={"19:00 Guests Arrive\n19:30 Entrée Away\n20:30 Main Away\n22:00 Dessert Away\n23:00 Function Finishes"}
                     placeholderTextColor={colors.mutedForeground}
+                    multiline
+                    autoCorrect={false}
+                    autoCapitalize="none"
                   />
-                  <TextInput
-                    style={[s.courseEditInput, { color: colors.foreground, flex: 1 }]}
-                    value={evt.label}
-                    onChangeText={(v) => {
-                      setDraft((d) => { if (!d) return d; const ev = [...d.serviceEvents]; ev[idx] = { ...ev[idx], label: v }; return { ...d, serviceEvents: ev }; });
-                      setHasUnsaved(true);
-                    }}
-                    placeholder="e.g. Entrée Away"
-                    placeholderTextColor={colors.mutedForeground}
-                  />
-                  <Pressable onPress={() => { setDraft((d) => { if (!d) return d; return { ...d, serviceEvents: d.serviceEvents.filter((_, i) => i !== idx) }; }); setHasUnsaved(true); }}>
-                    <Feather name="x" size={16} color={colors.mutedForeground} />
-                  </Pressable>
                 </View>
-              ))}
-              <Pressable
-                style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 14, paddingVertical: 12 }}
-                onPress={() => { setDraft((d) => { if (!d) return d; return { ...d, serviceEvents: [...d.serviceEvents, { time: "", label: "" }] }; }); setHasUnsaved(true); }}
-              >
-                <Feather name="plus-circle" size={16} color={tc} />
-                <Text style={{ fontSize: 13, fontFamily: "Inter_600SemiBold", color: tc }}>Add milestone</Text>
-              </Pressable>
+              ) : (
+                <>
+                  {draft.serviceEvents.map((evt, idx) => (
+                    <View key={idx} style={[s.courseEditRow, { paddingVertical: 8, gap: 8 }]}>
+                      <TextInput
+                        style={[s.courseEditInput, { color: tc, width: 64, flexGrow: 0 }]}
+                        value={evt.time}
+                        onChangeText={(v) => {
+                          setDraft((d) => { if (!d) return d; const ev = [...d.serviceEvents]; ev[idx] = { ...ev[idx], time: v }; return { ...d, serviceEvents: ev }; });
+                          setHasUnsaved(true);
+                        }}
+                        placeholder="HH:MM"
+                        placeholderTextColor={colors.mutedForeground}
+                      />
+                      <TextInput
+                        style={[s.courseEditInput, { color: colors.foreground, flex: 1 }]}
+                        value={evt.label}
+                        onChangeText={(v) => {
+                          setDraft((d) => { if (!d) return d; const ev = [...d.serviceEvents]; ev[idx] = { ...ev[idx], label: v }; return { ...d, serviceEvents: ev }; });
+                          setHasUnsaved(true);
+                        }}
+                        placeholder="e.g. Entrée Away"
+                        placeholderTextColor={colors.mutedForeground}
+                      />
+                      <Pressable onPress={() => { setDraft((d) => { if (!d) return d; return { ...d, serviceEvents: d.serviceEvents.filter((_, i) => i !== idx) }; }); setHasUnsaved(true); }}>
+                        <Feather name="x" size={16} color={colors.mutedForeground} />
+                      </Pressable>
+                    </View>
+                  ))}
+                  <Pressable
+                    style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 14, paddingVertical: 12 }}
+                    onPress={() => { setDraft((d) => { if (!d) return d; return { ...d, serviceEvents: [...d.serviceEvents, { time: "", label: "" }] }; }); setHasUnsaved(true); }}
+                  >
+                    <Feather name="plus-circle" size={16} color={tc} />
+                    <Text style={{ fontSize: 13, fontFamily: "Inter_600SemiBold", color: tc }}>Add row</Text>
+                  </Pressable>
+                </>
+              )}
             </View>
 
             {/* Dietary requirements edit */}
@@ -694,69 +749,165 @@ export default function FunctionDetailScreen() {
         {/* ── VIEW MODE ──────────────────────────────────────────────────────── */}
         {!editing && (
           <>
-            {/* Service milestones */}
-            {activeCourses.length > 0 && (
-              <View style={[s.courseCard, { backgroundColor: tc + "12", borderColor: tc + "40" }]}>
-                <View style={[s.courseCardHeader, { borderBottomColor: tc + "30" }]}>
-                  <Feather name="clock" size={14} color={tc} />
-                  <Text style={[s.courseCardTitle, { color: tc }]}>Service Milestones — {fn.functionType}</Text>
-                </View>
-                <View style={s.courseRow}>
-                  {activeCourses.map((c, idx) => (
-                    <View key={idx} style={[s.courseBox, { borderRightColor: tc + "25" }, idx === activeCourses.length - 1 && { borderRightWidth: 0 }]}>
-                      <Text style={[s.courseLabel, { color: tc + "AA" }]} numberOfLines={2}>{c.label}</Text>
-                      <Text style={[s.courseTime, { color: tc }]}>{c.time}</Text>
-                    </View>
-                  ))}
-                </View>
+            {/* Chef in Charge banner */}
+            {fn.chefInCharge ? (
+              <View style={{ marginHorizontal: 20, marginTop: 12, flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 14, paddingVertical: 12, borderRadius: colors.radius, backgroundColor: colors.primary + "15", borderWidth: 1, borderColor: colors.primary + "40" }}>
+                <Feather name="user" size={14} color={colors.primary} />
+                <Text style={{ fontSize: 11, fontFamily: "Inter_700Bold", color: colors.primary, textTransform: "uppercase", letterSpacing: 0.9 }}>Chef in Charge</Text>
+                <Text style={{ fontSize: 16, fontFamily: "Inter_700Bold", color: colors.foreground, flex: 1 }}>{fn.chefInCharge}</Text>
               </View>
-            )}
+            ) : canManage ? (
+              <View style={{ marginHorizontal: 20, marginTop: 12, flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 14, paddingVertical: 10, borderRadius: colors.radius, borderWidth: 1, borderColor: colors.border, borderStyle: "dashed" }}>
+                <Feather name="user" size={13} color={colors.mutedForeground} />
+                <Text style={{ fontSize: 13, fontFamily: "Inter_400Regular", color: colors.mutedForeground, flex: 1 }}>No chef in charge set — tap Edit to assign one.</Text>
+              </View>
+            ) : null}
 
-            {/* ── Dietary Requirements ─────────────────────────────────────── */}
-            {dietaryReqs.length > 0 && (
-              <View style={[s.dietaryCard, { borderColor: hasSevereAllergen ? "#F59E0B80" : colors.border }]}>
-                <View style={[s.dietaryHeader, { borderBottomColor: hasSevereAllergen ? "#F59E0B30" : colors.border, backgroundColor: hasSevereAllergen ? "#F59E0B10" : colors.card }]}>
-                  <Ionicons name="warning" size={16} color={hasSevereAllergen ? "#F59E0B" : colors.mutedForeground} />
-                  <Text style={[s.dietaryTitle, { color: hasSevereAllergen ? "#F59E0B" : colors.foreground }]}>Dietary Requirements</Text>
-                  <View style={[s.dietaryTotalBadge, { backgroundColor: hasSevereAllergen ? "#F59E0B" : colors.info }]}>
-                    <Text style={s.dietaryTotalText}>{totalDietary} guests</Text>
-                  </View>
+            {/* ── Service Timetable ──────────────────────────────────── */}
+            <View style={{ marginHorizontal: 20, marginTop: 14, borderRadius: colors.radius, borderWidth: 1.5, borderColor: tc + "55", overflow: "hidden" }}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 14, paddingVertical: 10, backgroundColor: tc + "15", borderBottomWidth: 1, borderBottomColor: tc + "30" }}>
+                <Feather name="clock" size={14} color={tc} />
+                <Text style={{ fontSize: 13, fontFamily: "Inter_700Bold", color: tc }}>Service Timetable — {fn.functionType}</Text>
+              </View>
+              {/* Arrive row */}
+              <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 14, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.border }}>
+                <Text style={{ fontSize: 22, fontFamily: "Inter_700Bold", color: colors.info, width: 68 }}>{fn.startTime}</Text>
+                <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: colors.info, marginRight: 12 }} />
+                <Text style={{ fontSize: 15, fontFamily: "Inter_600SemiBold", color: colors.foreground }}>Guests Arrive</Text>
+              </View>
+              {/* Service events */}
+              {activeCourses.map((c, idx) => (
+                <View key={idx} style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 14, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.border }}>
+                  <Text style={{ fontSize: 22, fontFamily: "Inter_700Bold", color: tc, width: 68 }}>{c.time}</Text>
+                  <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: tc, marginRight: 12 }} />
+                  <Text style={{ fontSize: 15, fontFamily: "Inter_600SemiBold", color: colors.foreground }}>{c.label}</Text>
                 </View>
+              ))}
+              {activeCourses.length === 0 && (
+                <View style={{ paddingHorizontal: 14, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.border }}>
+                  <Text style={{ fontSize: 13, fontFamily: "Inter_400Regular", color: colors.mutedForeground }}>{canManage ? "No milestones added yet — tap Edit to set the timetable." : "Check with your manager for the service timetable."}</Text>
+                </View>
+              )}
+              {/* Finish row */}
+              <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 14, paddingVertical: 12 }}>
+                <Text style={{ fontSize: 22, fontFamily: "Inter_700Bold", color: colors.mutedForeground, width: 68 }}>{fn.endTime}</Text>
+                <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: colors.mutedForeground, marginRight: 12 }} />
+                <Text style={{ fontSize: 15, fontFamily: "Inter_600SemiBold", color: colors.mutedForeground }}>Function Finishes</Text>
+              </View>
+            </View>
 
-                {hasSevereAllergen && (
-                  <View style={[s.severeWarning, { backgroundColor: "#EF444410", borderBottomColor: "#EF444430" }]}>
-                    <Ionicons name="alert-circle" size={14} color="#EF4444" />
-                    <Text style={[s.severeText, { color: "#EF4444" }]}>Severe allergen on this function — check notes before service. Epinephrine on site.</Text>
-                  </View>
+            {/* ── Card 1: Function Menu + Dietary Tags ──────────────── */}
+            <View style={{ marginHorizontal: 20, marginTop: 14, borderRadius: colors.radius, borderWidth: 1.5, borderColor: "#22C55E55", overflow: "hidden" }}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 14, paddingVertical: 10, backgroundColor: "#22C55E15", borderBottomWidth: 1, borderBottomColor: "#22C55E30" }}>
+                <Feather name="book-open" size={14} color="#22C55E" />
+                <Text style={{ flex: 1, fontSize: 13, fontFamily: "Inter_700Bold", color: "#22C55E" }}>Function Menu</Text>
+                {canManage && fn.menu.length > 0 && (
+                  <Pressable
+                    style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, paddingVertical: 4, backgroundColor: "#22C55E20", borderRadius: 6, opacity: pressed ? 0.7 : 1 })}
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                      Alert.alert("Generate Prep List", `Auto-create prep tasks for ${fn.menu.length} menu items?\n\nAny previous auto-generated prep for this function will be replaced.`, [
+                        { text: "Cancel", style: "cancel" },
+                        { text: "Generate", onPress: () => { generatePrepItems(fn.id); Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); Alert.alert("Done", "Prep tasks added to the Prep tab."); } },
+                      ]);
+                    }}
+                  >
+                    <Feather name="list" size={11} color="#22C55E" />
+                    <Text style={{ fontSize: 11, fontFamily: "Inter_700Bold", color: "#22C55E" }}>Auto Prep</Text>
+                  </Pressable>
                 )}
-
-                <View style={s.dietaryList}>
+              </View>
+              {/* Dietary tags row */}
+              {dietaryReqs.length > 0 && (
+                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, paddingHorizontal: 14, paddingTop: 10, paddingBottom: fn.menu.length > 0 ? 6 : 12 }}>
                   {dietaryReqs.map((req, idx) => {
                     const dc = getDietaryColor(req.name);
-                    const isExpanded = expandedDietary === req.name + idx;
                     const isSevere = req.name.toLowerCase().includes("nut") || req.name.toLowerCase().includes("shellfish");
                     return (
-                      <View key={idx} style={[s.dietaryRow, { backgroundColor: dc + "12", borderColor: dc + "40" }]}>
-                        <View style={s.dietaryBadgeRow}>
-                          <View style={[s.dietaryCount, { backgroundColor: dc + "25" }]}>
-                            <Text style={[s.dietaryCountText, { color: dc }]}>{req.count}</Text>
+                      <View key={idx} style={{ flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, paddingVertical: 5, borderRadius: 8, backgroundColor: dc + "20", borderWidth: 1, borderColor: dc + "50" }}>
+                        {isSevere && <Ionicons name="warning" size={10} color={dc} />}
+                        <Text style={{ fontSize: 12, fontFamily: "Inter_700Bold", color: dc }}>{req.name.toUpperCase()}</Text>
+                      </View>
+                    );
+                  })}
+                </View>
+              )}
+              {/* Menu items */}
+              {fn.menu.length === 0 ? (
+                <View style={{ paddingHorizontal: 14, paddingVertical: 16 }}>
+                  <Text style={{ fontSize: 13, fontFamily: "Inter_400Regular", color: colors.mutedForeground }}>{canManage ? "No menu added yet — tap Edit to add dishes." : "Menu not yet set. Check with your manager."}</Text>
+                </View>
+              ) : (
+                <View style={{ paddingHorizontal: 14, paddingBottom: 4 }}>
+                  {fn.menu.map((line, i) => {
+                    const { course, name, desc, tags } = parseMenuLine(line);
+                    return (
+                      <View key={i} style={{ paddingVertical: 12, borderBottomWidth: i < fn.menu.length - 1 ? 1 : 0, borderBottomColor: colors.border }}>
+                        {course ? <Text style={{ fontSize: 10, fontFamily: "Inter_700Bold", color: tc, textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 4 }}>{course}</Text> : null}
+                        <Text style={{ fontSize: 15, fontFamily: "Inter_700Bold", color: colors.foreground, marginBottom: desc ? 3 : 0 }}>{name}</Text>
+                        {desc ? <Text style={{ fontSize: 13, fontFamily: "Inter_400Regular", color: colors.mutedForeground, lineHeight: 19, marginBottom: tags.length > 0 ? 7 : 0 }}>{desc}</Text> : null}
+                        {tags.length > 0 && (
+                          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 5 }}>
+                            {tags.map((tag, ti) => {
+                              const tagColor = getDietaryColor(tag);
+                              return (
+                                <View key={ti} style={{ paddingHorizontal: 7, paddingVertical: 3, borderRadius: 6, backgroundColor: tagColor + "20" }}>
+                                  <Text style={{ fontSize: 11, fontFamily: "Inter_600SemiBold", color: tagColor }}>{tag}</Text>
+                                </View>
+                              );
+                            })}
                           </View>
-                          <Text style={[s.dietaryName, { color: colors.foreground }]}>
-                            {req.name}
-                            {isSevere ? " ⚠" : ""}
-                          </Text>
-                          {req.note ? (
-                            <Pressable
-                              style={[s.dietaryNoteToggle, { backgroundColor: dc + "25" }]}
-                              onPress={() => setExpandedDietary(isExpanded ? null : req.name + idx)}
-                            >
-                              <Text style={[s.dietaryNoteToggleText, { color: dc }]}>{isExpanded ? "Hide" : "Notes"}</Text>
-                            </Pressable>
-                          ) : null}
+                        )}
+                      </View>
+                    );
+                  })}
+                </View>
+              )}
+            </View>
+
+            {/* ── Card 2: Dietary Requests ───────────────────────────── */}
+            {dietaryReqs.length > 0 && (
+              <View style={{ marginHorizontal: 20, marginTop: 14, borderRadius: colors.radius, borderWidth: 1.5, borderColor: hasSevereAllergen ? "#EF444480" : "#F59E0B60", overflow: "hidden" }}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 14, paddingVertical: 10, backgroundColor: hasSevereAllergen ? "#EF444415" : "#F59E0B15", borderBottomWidth: 1, borderBottomColor: hasSevereAllergen ? "#EF444430" : "#F59E0B30" }}>
+                  <Ionicons name="warning" size={14} color={hasSevereAllergen ? "#EF4444" : "#F59E0B"} />
+                  <Text style={{ flex: 1, fontSize: 13, fontFamily: "Inter_700Bold", color: hasSevereAllergen ? "#EF4444" : "#F59E0B" }}>
+                    Dietary Requests{hasSevereAllergen ? " — SEVERE ALLERGEN" : ""}
+                  </Text>
+                  <View style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10, backgroundColor: hasSevereAllergen ? "#EF4444" : "#F59E0B" }}>
+                    <Text style={{ fontSize: 12, fontFamily: "Inter_700Bold", color: "#fff" }}>{totalDietary} guests</Text>
+                  </View>
+                </View>
+                {hasSevereAllergen && (
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 14, paddingVertical: 9, backgroundColor: "#EF444410", borderBottomWidth: 1, borderBottomColor: "#EF444430" }}>
+                    <Ionicons name="alert-circle" size={14} color="#EF4444" />
+                    <Text style={{ flex: 1, fontSize: 12, fontFamily: "Inter_600SemiBold", color: "#EF4444" }}>Severe allergen present — dedicated prep area required. Epinephrine on site.</Text>
+                  </View>
+                )}
+                <View style={{ padding: 10, gap: 8 }}>
+                  {dietaryReqs.map((req, idx) => {
+                    const dc = getDietaryColor(req.name);
+                    const isSevere = req.name.toLowerCase().includes("nut") || req.name.toLowerCase().includes("shellfish");
+                    const isExpanded = expandedDietary === req.name + idx;
+                    return (
+                      <View key={idx} style={{ borderRadius: 10, overflow: "hidden", borderWidth: 1, backgroundColor: dc + "12", borderColor: dc + "40" }}>
+                        <View style={{ flexDirection: "row", alignItems: "center", padding: 10, gap: 10 }}>
+                          <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: dc + "25", alignItems: "center", justifyContent: "center" }}>
+                            <Text style={{ fontSize: 18, fontFamily: "Inter_700Bold", color: dc }}>{req.count}</Text>
+                          </View>
+                          <View style={{ flex: 1 }}>
+                            <Text style={{ fontSize: 14, fontFamily: "Inter_700Bold", color: colors.foreground }}>{req.name}{isSevere ? " ⚠" : ""}</Text>
+                            {req.note ? (
+                              <Pressable onPress={() => setExpandedDietary(isExpanded ? null : req.name + idx)}>
+                                <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: dc, marginTop: 2 }}>{isExpanded ? "▲ Hide details" : "▼ View special instructions"}</Text>
+                              </Pressable>
+                            ) : (
+                              <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground, marginTop: 2 }}>Chef's choice — standard {req.name} menu</Text>
+                            )}
+                          </View>
                         </View>
                         {isExpanded && req.note ? (
-                          <View style={s.dietaryNote}>
-                            <Text style={[s.dietaryNoteText, { color: colors.mutedForeground }]}>{req.note}</Text>
+                          <View style={{ paddingHorizontal: 14, paddingBottom: 12 }}>
+                            <Text style={{ fontSize: 13, fontFamily: "Inter_400Regular", color: colors.mutedForeground, lineHeight: 19 }}>{req.note}</Text>
                           </View>
                         ) : null}
                       </View>
@@ -766,147 +917,20 @@ export default function FunctionDetailScreen() {
               </View>
             )}
 
-            {/* ── Service Run Sheet ────────────────────────────────────────── */}
-            <View style={s.section}>
-              <Text style={s.sectionTitle}>Service Run Sheet</Text>
-              <Text style={s.sectionSub}>{stepsDone}/{fn.timeline.length} done — tap the circle to check off a task</Text>
-            </View>
-
-            <View style={s.runSheetContainer}>
-              {(() => {
-                const firstIncompleteIdx = fn.timeline.findIndex((t) => !t.completed);
-                return fn.timeline.map((item, idx) => {
-                  const cat = getCategoryStyle(item.category ?? "setup");
-                  const isProminentService = cat.prominent;
-                  const isNextUp = idx === firstIncompleteIdx;
-                  const cardBg = item.completed
-                    ? colors.card
-                    : isNextUp
-                    ? cat.color + "18"
-                    : isProminentService
-                    ? cat.color + "10"
-                    : colors.card;
-                  const cardBorder = item.completed
-                    ? colors.border
-                    : isNextUp
-                    ? cat.color + "70"
-                    : isProminentService
-                    ? cat.color + "40"
-                    : colors.border;
-
-                  return (
-                    <Pressable
-                      key={item.id}
-                      style={({ pressed }) => [s.runSheetItem, { opacity: pressed ? 0.85 : 1 }]}
-                      onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); toggleTimelineItem(fn.id, item.id); }}
-                    >
-                      {/* Big tap-friendly checkbox on the left */}
-                      <View style={[s.bigCheck, { backgroundColor: item.completed ? colors.accent : "transparent", borderColor: item.completed ? colors.accent : isNextUp ? cat.color : colors.border }]}>
-                        {item.completed
-                          ? <Feather name="check" size={20} color="#fff" />
-                          : <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: isNextUp ? cat.color : "transparent" }} />
-                        }
-                      </View>
-
-                      {/* Task card */}
-                      <View style={[s.taskCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-                        <View style={s.taskCardHeader}>
-                          {/* Time + category badge */}
-                          <View style={[s.catBadge, { backgroundColor: cat.color + "25" }]}>
-                            <Feather name={cat.icon} size={11} color={cat.color} />
-                            <Text style={[s.catBadgeText, { color: cat.color }]}>{cat.label}</Text>
-                          </View>
-                          <Text style={[s.timeText, { color: item.completed ? colors.mutedForeground : cat.color }]}>{item.time}</Text>
-                          {isNextUp && !item.completed && (
-                            <View style={{ paddingHorizontal: 6, paddingVertical: 2, backgroundColor: cat.color, borderRadius: 5 }}>
-                              <Text style={{ fontSize: 9, fontFamily: "Inter_700Bold", color: "#fff", letterSpacing: 0.5 }}>NEXT UP</Text>
-                            </View>
-                          )}
-                          {isProminentService && !isNextUp && (
-                            <View style={{ paddingHorizontal: 5, paddingVertical: 2, backgroundColor: cat.color + "25", borderRadius: 5 }}>
-                              <Text style={{ fontSize: 9, fontFamily: "Inter_700Bold", color: cat.color }}>KEY</Text>
-                            </View>
-                          )}
-                        </View>
-                        <Text style={[s.taskText, item.completed && s.taskTextDone, { color: item.completed ? colors.mutedForeground : colors.foreground }]}>
-                          {item.task}
-                        </Text>
-                      </View>
-                    </Pressable>
-                  );
-                });
-              })()}
-            </View>
-
-            <View style={s.div} />
-
-            {/* ── Function Menu ─────────────────────────────────────────── */}
-            <View style={s.section}>
-              <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
-                <Text style={[s.sectionTitle, { flex: 1, marginBottom: 0 }]}>Function Menu</Text>
-                {canManage && fn.menu.length > 0 && (
-                  <Pressable
-                    style={({ pressed }) => ({
-                      flexDirection: "row", alignItems: "center", gap: 5,
-                      paddingHorizontal: 10, paddingVertical: 6,
-                      backgroundColor: "#22C55E20", borderRadius: 8,
-                      borderWidth: 1, borderColor: "#22C55E50",
-                      opacity: pressed ? 0.7 : 1,
-                    })}
-                    onPress={() => {
-                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                      Alert.alert(
-                        "Generate Prep List",
-                        `This will create prep tasks for ${fn.menu.length} menu item${fn.menu.length > 1 ? "s" : ""} and assign them to the right sections (Hot Kitchen, Cold Larder, Pastry, etc.).\n\nAny previously auto-generated prep for this function will be replaced.`,
-                        [
-                          { text: "Cancel", style: "cancel" },
-                          {
-                            text: "Generate",
-                            onPress: () => {
-                              generatePrepItems(fn.id);
-                              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                              Alert.alert("Done", "Prep tasks generated and added to the Prep tab.");
-                            },
-                          },
-                        ]
-                      );
-                    }}
-                  >
-                    <Feather name="list" size={12} color="#22C55E" />
-                    <Text style={{ fontSize: 11, fontFamily: "Inter_700Bold", color: "#22C55E" }}>Auto Prep</Text>
-                  </Pressable>
-                )}
-              </View>
-              {fn.menu.map((line, i) => {
-                const { course, name, desc, tags } = parseMenuLine(line);
-                return (
-                  <View key={i} style={s.menuItem}>
-                    {course ? <Text style={[s.menuCourse, { color: tc }]}>{course}</Text> : null}
-                    <Text style={s.menuDishName}>{name}</Text>
-                    {desc ? <Text style={s.menuDishDesc}>{desc}</Text> : null}
-                    {tags.length > 0 && (
-                      <View style={s.menuTagRow}>
-                        {tags.map((tag, ti) => {
-                          const tagColor = getDietaryColor(tag);
-                          return (
-                            <View key={ti} style={[s.menuTag, { backgroundColor: tagColor + "20" }]}>
-                              <Text style={[s.menuTagText, { color: tagColor }]}>{tag}</Text>
-                            </View>
-                          );
-                        })}
-                      </View>
-                    )}
-                  </View>
-                );
-              })}
-            </View>
-
             <View style={s.div} />
 
             {/* ── Staff ───────────────────────────────────────────────────── */}
             <View style={s.section}>
               <Text style={s.sectionTitle}>Staff Working This Event</Text>
-              <Text style={s.sectionSub}>{fnStaff.length} people on this team</Text>
+              <Text style={s.sectionSub}>{fnStaff.length > 0 ? `${fnStaff.length} people on this team` : "Team not yet assigned"}</Text>
+              {fnStaff.length === 0 && (
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingVertical: 10 }}>
+                  <Feather name="info" size={14} color={colors.mutedForeground} />
+                  <Text style={{ fontSize: 13, fontFamily: "Inter_400Regular", color: colors.mutedForeground, flex: 1 }}>
+                    {canManage ? "Add staff to this function via the Roster tab, then assign them here." : "Speak to your manager for your team assignment."}
+                  </Text>
+                </View>
+              )}
               {fnStaff.map((member) => {
                 const rc = getRoleColor(member.role);
                 return (
