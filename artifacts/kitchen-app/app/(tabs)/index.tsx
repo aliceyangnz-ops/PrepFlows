@@ -48,6 +48,24 @@ function getFunctionTypeColor(type: FunctionType): string {
   }
 }
 
+function getMealCategory(startTime: string): { label: string; color: string } {
+  const mins = timeToMinutes(startTime);
+  if (mins < 10 * 60 + 30) return { label: "Breakfast",      color: "#F97316" };
+  if (mins < 12 * 60)      return { label: "Morning Tea",    color: "#F59E0B" };
+  if (mins < 15 * 60)      return { label: "Lunch",          color: "#22C55E" };
+  if (mins < 17 * 60)      return { label: "Afternoon Tea",  color: "#A78BFA" };
+  return                          { label: "Dinner",          color: "#3B82F6" };
+}
+
+function abbreviateType(type: FunctionType): string {
+  switch (type) {
+    case "A-la-carte":           return "À La Carte";
+    case "Canapés + A-la-carte": return "Canapés+ALC";
+    case "School Ball":          return "School Ball";
+    default:                     return type;
+  }
+}
+
 function formatRelativeTime(isoString: string): string {
   const sent = new Date(isoString);
   const diffMin = Math.floor((Date.now() - sent.getTime()) / 60000);
@@ -184,11 +202,13 @@ export default function TodayScreen() {
     // Section labels
     sectionLabel: { fontSize: 11, fontFamily: "Inter_700Bold", color: colors.mutedForeground, letterSpacing: 1.2, textTransform: "uppercase", marginHorizontal: 20, marginBottom: 10 },
     // Unified function cards
-    fnCard: { marginHorizontal: 20, marginBottom: 10, backgroundColor: colors.card, borderRadius: colors.radius, borderWidth: 1.5, borderColor: colors.border, overflow: "hidden" },
+    fnCard: { marginHorizontal: 20, marginBottom: 10, backgroundColor: colors.card, borderRadius: colors.radius, borderWidth: 2, borderColor: colors.border, overflow: "hidden" },
     fnCardTop: { flexDirection: "row", alignItems: "stretch" },
-    fnTimeBadge: { width: 58, backgroundColor: colors.primary + "20", alignItems: "center", justifyContent: "center", paddingVertical: 14, borderRightWidth: 1, borderRightColor: colors.primary + "30" },
-    fnTimeBadgeText: { fontSize: 15, fontFamily: "Inter_700Bold", color: colors.primary },
-    fnTimeBadgeEnd: { fontSize: 10, fontFamily: "Inter_500Medium", color: colors.primary + "90", marginTop: 2 },
+    fnTimeBadge: { width: 72, alignItems: "center", justifyContent: "center", paddingVertical: 14, paddingHorizontal: 6, borderRightWidth: 1 },
+    fnTimeBadgeNum: { fontSize: 10, fontFamily: "Inter_700Bold", letterSpacing: 0.5, marginBottom: 2 },
+    fnTimeBadgeText: { fontSize: 16, fontFamily: "Inter_700Bold" },
+    fnTimeBadgeEnd: { fontSize: 10, fontFamily: "Inter_500Medium", marginTop: 1 },
+    fnTimeBadgeType: { fontSize: 9, fontFamily: "Inter_700Bold", textTransform: "uppercase", letterSpacing: 0.3, marginTop: 4, textAlign: "center" },
     fnBody: { flex: 1, padding: 12 },
     fnName: { fontSize: 16, fontFamily: "Inter_700Bold", color: colors.foreground, marginBottom: 2 },
     fnMetaRow: { flexDirection: "row", alignItems: "center", gap: 6, flexWrap: "wrap", marginBottom: 8 },
@@ -396,8 +416,9 @@ export default function TodayScreen() {
 
         {isManager ? (
           /* ── MANAGER: full cards with prep + dietary ─────────── */
-          sortedFunctions.map((fn) => {
+          sortedFunctions.map((fn, idx) => {
             const tc = getFunctionTypeColor(fn.functionType);
+            const meal = getMealCategory(fn.startTime);
             const fnPrep = prepItems.filter((p) => p.functionId === fn.id);
             const isNextEvent = nextFn?.id === fn.id;
             const TEAMS: PrepTeam[] = ["Hot Kitchen", "Cold Larder", "Pastry", "Function Team", "Butchery"];
@@ -415,19 +436,24 @@ export default function TodayScreen() {
             const fnMins = timeToMinutes(fn.startTime) - nowMinutes;
             const isUrgent = fnMins > 0 && fnMins <= 30;
             const isActive = fnMins <= 0 && timeToMinutes(fn.endTime) > nowMinutes;
+            const frameColor = isActive ? colors.accent : isUrgent ? "#EF4444" : meal.color;
             return (
-              <Pressable key={fn.id} style={({ pressed }) => [s.fnCard, isNextEvent && { borderColor: tc + "70" }, isUrgent && { borderColor: "#EF444470" }, isActive && { borderColor: colors.accent + "70" }, { opacity: pressed ? 0.85 : 1 }]}
-                onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push(`/function/${fn.id}`); }}>
+              <View key={fn.id} style={[s.fnCard, { borderColor: frameColor + "70" }]}>
                 <View style={s.fnCardTop}>
-                  <View style={[s.fnTimeBadge, { backgroundColor: isActive ? colors.accent + "20" : isUrgent ? "#EF444420" : tc + "18", borderRightColor: isActive ? colors.accent + "30" : isUrgent ? "#EF444440" : tc + "30" }]}>
-                    <Text style={[s.fnTimeBadgeText, { color: isActive ? colors.accent : isUrgent ? "#EF4444" : tc }]}>{fn.startTime}</Text>
-                    <Text style={[s.fnTimeBadgeEnd, { color: isActive ? colors.accent + "90" : isUrgent ? "#EF444490" : tc + "90" }]}>{fn.endTime}</Text>
-                    {isActive && <View style={{ marginTop: 4, paddingHorizontal: 4, paddingVertical: 1, backgroundColor: colors.accent, borderRadius: 4 }}><Text style={{ fontSize: 8, fontFamily: "Inter_700Bold", color: "#fff" }}>LIVE</Text></View>}
+                  {/* ── LEFT SQUARE: #number · time · type ── */}
+                  <View style={[s.fnTimeBadge, { backgroundColor: frameColor + "18", borderRightColor: frameColor + "35" }]}>
+                    <Text style={[s.fnTimeBadgeNum, { color: frameColor }]}>#{idx + 1}</Text>
+                    <Text style={[s.fnTimeBadgeText, { color: frameColor }]}>{fn.startTime}</Text>
+                    <Text style={[s.fnTimeBadgeEnd, { color: frameColor + "90" }]}>{fn.endTime}</Text>
+                    <Text style={[s.fnTimeBadgeType, { color: frameColor }]} numberOfLines={2}>{abbreviateType(fn.functionType)}</Text>
+                    {isActive && <View style={{ marginTop: 5, paddingHorizontal: 4, paddingVertical: 1, backgroundColor: colors.accent, borderRadius: 4 }}><Text style={{ fontSize: 8, fontFamily: "Inter_700Bold", color: "#fff" }}>LIVE</Text></View>}
                   </View>
                   <View style={s.fnBody}>
                     <Text style={s.fnName} numberOfLines={1}>{fn.name}</Text>
                     <View style={s.fnMetaRow}>
-                      <View style={[s.fnTypePill, { backgroundColor: tc + "22" }]}><Text style={[s.fnTypeText, { color: tc }]}>{fn.functionType}</Text></View>
+                      <View style={[{ paddingHorizontal: 6, paddingVertical: 2, borderRadius: 5, backgroundColor: meal.color + "20", borderWidth: 1, borderColor: meal.color + "45" }]}>
+                        <Text style={{ fontSize: 10, fontFamily: "Inter_700Bold", color: meal.color }}>{meal.label}</Text>
+                      </View>
                       <View style={s.fnMetaChip}><MaterialCommunityIcons name="door" size={10} color={colors.mutedForeground} /><Text style={s.fnMetaChipText}>{fn.room}</Text></View>
                       <View style={s.fnMetaChip}><Ionicons name="people" size={10} color={colors.mutedForeground} /><Text style={s.fnMetaChipText}>{fn.guestCount} pax</Text></View>
                     </View>
@@ -443,8 +469,8 @@ export default function TodayScreen() {
                     })}
                     {nextCourse && (
                       <View style={{ flexDirection: "row", alignItems: "center", gap: 5, marginTop: 2 }}>
-                        <Feather name="clock" size={10} color={tc} />
-                        <Text style={{ fontSize: 10, fontFamily: "Inter_600SemiBold", color: tc }}>{nextCourse.key.charAt(0).toUpperCase() + nextCourse.key.slice(1)} fire: {nextCourse.time}</Text>
+                        <Feather name="clock" size={10} color={frameColor} />
+                        <Text style={{ fontSize: 10, fontFamily: "Inter_600SemiBold", color: frameColor }}>{nextCourse.key.charAt(0).toUpperCase() + nextCourse.key.slice(1)} fire: {nextCourse.time}</Text>
                       </View>
                     )}
                   </View>
@@ -459,40 +485,44 @@ export default function TodayScreen() {
                     {dietaryReqs.length > 3 && <View style={[s.fnAlertBadge, { backgroundColor: colors.secondary, borderColor: colors.border }]}><Text style={[s.fnAlertText, { color: colors.mutedForeground }]}>+{dietaryReqs.length - 3} more</Text></View>}
                   </View>
                 )}
-              </Pressable>
+              </View>
             );
           })
         ) : (
           /* ── STAFF/TEAM LEADER: compact rows ─────────────────── */
-          sortedFunctions.map((fn) => {
-            const tc = getFunctionTypeColor(fn.functionType);
+          sortedFunctions.map((fn, idx) => {
+            const meal = getMealCategory(fn.startTime);
             const isMyFn = myFunctions.some((f) => f.id === fn.id);
             const fnMins = timeToMinutes(fn.startTime) - nowMinutes;
             const isActive = fnMins <= 0 && timeToMinutes(fn.endTime) > nowMinutes;
             const dietaryReqs = fn.dietaryRequirements ?? [];
             const hasSevere = dietaryReqs.some((d) => d.name.toLowerCase().includes("nut") || d.name.toLowerCase().includes("shellfish"));
+            const frameColor = isActive ? colors.accent : meal.color;
             return (
-              <Pressable key={fn.id}
-                style={({ pressed }) => [s.fnCard, isMyFn && { borderColor: tc + "80", borderWidth: 2 }, { opacity: pressed ? 0.85 : 1 }]}
-                onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push(`/function/${fn.id}`); }}>
+              <View key={fn.id} style={[s.fnCard, { borderColor: isMyFn ? frameColor + "90" : frameColor + "55" }]}>
                 <View style={s.fnCardTop}>
-                  <View style={[s.fnTimeBadge, { backgroundColor: isActive ? colors.accent + "20" : tc + "18", borderRightColor: isActive ? colors.accent + "30" : tc + "30" }]}>
-                    <Text style={[s.fnTimeBadgeText, { color: isActive ? colors.accent : tc }]}>{fn.startTime}</Text>
-                    <Text style={[s.fnTimeBadgeEnd, { color: isActive ? colors.accent + "90" : tc + "90" }]}>{fn.endTime}</Text>
-                    {isActive && <View style={{ marginTop: 4, paddingHorizontal: 4, paddingVertical: 1, backgroundColor: colors.accent, borderRadius: 4 }}><Text style={{ fontSize: 8, fontFamily: "Inter_700Bold", color: "#fff" }}>LIVE</Text></View>}
+                  {/* ── LEFT SQUARE: #number · time · type ── */}
+                  <View style={[s.fnTimeBadge, { backgroundColor: frameColor + "18", borderRightColor: frameColor + "35" }]}>
+                    <Text style={[s.fnTimeBadgeNum, { color: frameColor }]}>#{idx + 1}</Text>
+                    <Text style={[s.fnTimeBadgeText, { color: frameColor }]}>{fn.startTime}</Text>
+                    <Text style={[s.fnTimeBadgeEnd, { color: frameColor + "90" }]}>{fn.endTime}</Text>
+                    <Text style={[s.fnTimeBadgeType, { color: frameColor }]} numberOfLines={2}>{abbreviateType(fn.functionType)}</Text>
+                    {isActive && <View style={{ marginTop: 5, paddingHorizontal: 4, paddingVertical: 1, backgroundColor: colors.accent, borderRadius: 4 }}><Text style={{ fontSize: 8, fontFamily: "Inter_700Bold", color: "#fff" }}>LIVE</Text></View>}
                   </View>
                   <View style={s.fnBody}>
                     <Text style={s.fnName} numberOfLines={1}>{fn.name}</Text>
                     <View style={s.fnMetaRow}>
+                      <View style={{ paddingHorizontal: 6, paddingVertical: 2, borderRadius: 5, backgroundColor: meal.color + "20", borderWidth: 1, borderColor: meal.color + "45" }}>
+                        <Text style={{ fontSize: 10, fontFamily: "Inter_700Bold", color: meal.color }}>{meal.label}</Text>
+                      </View>
                       <View style={s.fnMetaChip}><MaterialCommunityIcons name="door" size={10} color={colors.mutedForeground} /><Text style={s.fnMetaChipText}>{fn.room}</Text></View>
                       <View style={s.fnMetaChip}><Ionicons name="layers-outline" size={10} color={colors.mutedForeground} /><Text style={s.fnMetaChipText}>{fn.floor}</Text></View>
-                      {isMyFn && <View style={{ paddingHorizontal: 6, paddingVertical: 2, backgroundColor: tc + "22", borderRadius: 5 }}><Text style={{ fontSize: 10, fontFamily: "Inter_700Bold", color: tc }}>Your function</Text></View>}
+                      {isMyFn && <View style={{ paddingHorizontal: 6, paddingVertical: 2, backgroundColor: frameColor + "22", borderRadius: 5 }}><Text style={{ fontSize: 10, fontFamily: "Inter_700Bold", color: frameColor }}>Your function</Text></View>}
                     </View>
                     {hasSevere && <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 2 }}><Ionicons name="alert-circle" size={11} color="#EF4444" /><Text style={{ fontSize: 10, fontFamily: "Inter_600SemiBold", color: "#EF4444" }}>Severe allergen</Text></View>}
                   </View>
-                  <Feather name="chevron-right" size={14} color={colors.mutedForeground} />
                 </View>
-              </Pressable>
+              </View>
             );
           })
         )}
