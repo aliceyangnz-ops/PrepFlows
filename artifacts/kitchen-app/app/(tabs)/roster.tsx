@@ -356,10 +356,6 @@ export default function RosterScreen() {
               <Text style={[s.statNum, { color: colors.warning }]}>{casualCount}</Text>
               <Text style={s.statLabel}>Casuals</Text>
             </View>
-            <View style={s.statCard}>
-              <Text style={[s.statNum, { color: colors.primary }]}>{functions.length}</Text>
-              <Text style={s.statLabel}>Functions</Text>
-            </View>
           </View>
         )}
 
@@ -376,20 +372,13 @@ export default function RosterScreen() {
 
             <View style={{ backgroundColor: colors.card, borderRadius: 16, borderWidth: 1.5, borderColor: colors.primary + "50", overflow: "hidden" }}>
               {/* Info strip */}
-              <View style={{ paddingHorizontal: 16, paddingTop: 14, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: colors.border }}>
-                <Text style={{ fontSize: 15, fontFamily: "Inter_700Bold", color: colors.foreground, marginBottom: 3 }}>
-                  Today's Full Runsheet
+              <View style={{ paddingHorizontal: 16, paddingTop: 14, paddingBottom: 14, borderBottomWidth: 1, borderBottomColor: colors.border }}>
+                <Text style={{ fontSize: 15, fontFamily: "Inter_700Bold", color: colors.foreground, marginBottom: 4 }}>
+                  Daily Staff Brief
                 </Text>
                 <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground, lineHeight: 18 }}>
-                  Show this QR to any casual staff — full time or front of house. They scan once and see their team, room, the full day's schedule and their name in the roster.
+                  Show this to any casual staff. One scan — they see their name, their team, and where to go.
                 </Text>
-                <View style={{ flexDirection: "row", gap: 8, marginTop: 10 }}>
-                  {functions.slice(0, 3).map((fn) => (
-                    <View key={fn.id} style={{ paddingHorizontal: 8, paddingVertical: 4, backgroundColor: colors.primary + "15", borderRadius: 6, borderWidth: 1, borderColor: colors.primary + "30" }}>
-                      <Text style={{ fontSize: 10, fontFamily: "Inter_600SemiBold", color: colors.primary }}>{fn.room}</Text>
-                    </View>
-                  ))}
-                </View>
               </View>
 
               {/* QR code — always visible */}

@@ -129,14 +129,11 @@ export default function BriefScreen() {
   /* include a catch-all "Unassigned" group for staff with no section */
   const unassigned = fnStaff.filter((m) => !m.section);
 
-  const activeCourses = COURSE_ORDER.filter(
-    (c) => fn.serviceTimes?.[c.key as keyof typeof fn.serviceTimes] || fn.menu?.[c.key as keyof typeof fn.menu]
+  const activeTimes = COURSE_ORDER.filter(
+    (c) => fn.serviceTimes?.[c.key as keyof typeof fn.serviceTimes]
   );
 
   const totalDietary = fn.dietaryRequirements?.reduce((n, r) => n + r.count, 0) ?? 0;
-
-  /* Sort timeline by time string */
-  const timeline = [...(fn.timeline ?? [])].sort((a, b) => a.time.localeCompare(b.time));
 
   return (
     <View style={s.root}>
@@ -282,37 +279,20 @@ export default function BriefScreen() {
           </View>
         )}
 
-        {/* ── RUN OF DAY ────────────────────────────────────────────── */}
-        {timeline.length > 0 && (
+        {/* ── SERVICE TIMES ────────────────────────────────────────── */}
+        {activeTimes.length > 0 && (
           <>
-            <Text style={s.sectionLabel}>Run of Day</Text>
-            <View style={s.runCard}>
-              {timeline.map((item, idx) => (
-                <View key={item.id} style={[s.runRow, idx === timeline.length - 1 && { borderBottomWidth: 0 }]}>
-                  <Text style={s.runTime}>{item.time}</Text>
-                  <Text style={s.runLabel}>{item.task}</Text>
-                  {item.completed && (
-                    <View style={[s.runDone, { backgroundColor: "#22C55E20" }]}>
-                      <Ionicons name="checkmark" size={13} color="#22C55E" />
-                    </View>
-                  )}
-                </View>
-              ))}
-            </View>
-          </>
-        )}
-
-        {/* ── MENU ─────────────────────────────────────────────────── */}
-        {fn.menu && fn.menu.length > 0 && (
-          <>
-            <Text style={s.sectionLabel}>Menu Being Served</Text>
-            <View style={s.menuCard}>
-              {fn.menu.map((dish, idx) => (
-                <View key={idx} style={[s.menuRow, idx === fn.menu.length - 1 && { borderBottomWidth: 0 }]}>
-                  <Text style={s.menuEmoji}>{["🍽","🍖","🍮","🥄","🥗"][idx] ?? "🍽"}</Text>
-                  <Text style={[s.menuDish, { flex: 1 }]}>{dish}</Text>
-                </View>
-              ))}
+            <Text style={s.sectionLabel}>Service Times</Text>
+            <View style={s.timesCard}>
+              {activeTimes.map((c) => {
+                const t = fn.serviceTimes![c.key as keyof typeof fn.serviceTimes];
+                return (
+                  <View key={c.key} style={s.timeRow}>
+                    <Text style={s.timeLabel}>{c.label}</Text>
+                    <Text style={s.timeValue}>{t}</Text>
+                  </View>
+                );
+              })}
             </View>
           </>
         )}

@@ -313,45 +313,24 @@ export default function TodayBriefScreen() {
           );
         })}
 
-        {/* ── DIETARY ALERTS SUMMARY ────────────────────────────────── */}
         {totalDietary > 0 && (
-          <>
-            <Text style={[s.sectionLabel, { marginTop: 4 }]}>⚠️ Dietary — All Staff Must Know</Text>
-            <View style={s.dietaryCard}>
-              <View style={s.dietaryHeader}>
-                <Ionicons name="warning" size={16} color="#92400E" />
-                <Text style={s.dietaryHeaderText}>Check every plate. Ask your team leader if unsure about any requirement.</Text>
-              </View>
-              {functions.flatMap((fn) =>
-                (fn.dietaryRequirements ?? []).map((req, i) => (
-                  <View key={`${fn.id}-${i}`} style={[s.dietaryRow]}>
-                    <Text style={s.dietaryFnName} numberOfLines={1}>{fn.room}</Text>
-                    <Text style={s.dietaryName}>{req.name}</Text>
-                    <Text style={s.dietaryCount}>{req.count}</Text>
-                    <Text style={{ fontSize: 11, color: "#92400E", fontFamily: "Inter_400Regular" }}> guests</Text>
-                  </View>
-                ))
-              )}
+          <View style={[s.dietaryCard, { marginBottom: 14 }]}>
+            <View style={s.dietaryHeader}>
+              <Ionicons name="warning" size={16} color="#92400E" />
+              <Text style={s.dietaryHeaderText}>⚠️ Dietary across all functions — check every plate</Text>
             </View>
-          </>
+            {functions.flatMap((fn) =>
+              (fn.dietaryRequirements ?? []).map((req, i) => (
+                <View key={`${fn.id}-${i}`} style={s.dietaryRow}>
+                  <Text style={s.dietaryFnName} numberOfLines={1}>{fn.room}</Text>
+                  <Text style={s.dietaryName}>{req.name}</Text>
+                  <Text style={s.dietaryCount}>{req.count}</Text>
+                  <Text style={{ fontSize: 11, color: "#92400E", fontFamily: "Inter_400Regular" }}> guests</Text>
+                </View>
+              ))
+            )}
+          </View>
         )}
-
-        {/* ── REMINDERS ─────────────────────────────────────────────── */}
-        <Text style={[s.sectionLabel, { marginTop: 4 }]}>Reminders</Text>
-        <View style={{ backgroundColor: "#FFFFFF", borderRadius: 14, borderWidth: 1, borderColor: "#E2E8F0", padding: 16, marginBottom: 14 }}>
-          {[
-            "Find your name above, then report to your team leader first.",
-            "Check which room your function is in — confirm with your team leader if unsure.",
-            "All dietary requirements are listed above. Check every plate.",
-            "If you are unsure about anything — ask, do not guess.",
-            "Keep your section clean throughout service.",
-          ].map((tip, i) => (
-            <View key={i} style={{ flexDirection: "row", gap: 10, marginBottom: i < 4 ? 10 : 0 }}>
-              <Text style={{ fontSize: 14, lineHeight: 20, color: "#475569" }}>{i + 1}.</Text>
-              <Text style={{ fontSize: 13, fontFamily: "Inter_400Regular", color: "#475569", lineHeight: 20, flex: 1 }}>{tip}</Text>
-            </View>
-          ))}
-        </View>
 
         <View style={s.footer}>
           <Feather name="shield" size={18} color="#CBD5E1" />
