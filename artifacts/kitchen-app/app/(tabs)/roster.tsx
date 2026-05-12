@@ -840,7 +840,7 @@ export default function RosterScreen() {
             </View>
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: 15, fontFamily: "Inter_600SemiBold", color: colors.primary }}>Plans & Pricing</Text>
-              <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground }}>First month free · $99 or $299/month</Text>
+              <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground }}>First month free · Starter, Pro $49, Team $199</Text>
             </View>
             <Feather name="chevron-right" size={16} color={colors.mutedForeground} />
           </Pressable>
