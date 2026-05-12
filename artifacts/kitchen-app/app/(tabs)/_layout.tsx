@@ -5,9 +5,11 @@ import { Icon, Label, NativeTabs } from "expo-router/unstable-native-tabs";
 import { SymbolView } from "expo-symbols";
 import { Feather, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import React from "react";
-import { Platform, StyleSheet, View, useColorScheme } from "react-native";
+import { Platform, StyleSheet, View, useColorScheme, useWindowDimensions } from "react-native";
 
+import { TabletSidebar } from "@/components/TabletSidebar";
 import { useColors } from "@/hooks/useColors";
+import { SIDEBAR_WIDTH } from "@/hooks/useIsTablet";
 
 function NativeTabLayout() {
   return (
@@ -38,82 +40,90 @@ function ClassicTabLayout() {
   const isDark = colorScheme === "dark";
   const isIOS = Platform.OS === "ios";
   const isWeb = Platform.OS === "web";
+  const { width } = useWindowDimensions();
+  const isTablet = width >= 768;
 
   return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.mutedForeground,
-        tabBarStyle: {
-          position: "absolute",
-          backgroundColor: isIOS ? "transparent" : colors.card,
-          borderTopWidth: 1,
-          borderTopColor: colors.border,
-          elevation: 0,
-          ...(isWeb ? { height: 84 } : {}),
-        },
-        tabBarBackground: () =>
-          isIOS ? (
-            <BlurView
-              intensity={80}
-              tint={isDark ? "dark" : "dark"}
-              style={StyleSheet.absoluteFill}
-            />
-          ) : isWeb ? (
-            <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.card }]} />
-          ) : null,
-      }}
-    >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: "Today",
-          tabBarIcon: ({ color }) =>
-            isIOS ? (
-              <SymbolView name="calendar" tintColor={color} size={22} />
-            ) : (
-              <Feather name="calendar" size={21} color={color} />
-            ),
+    <View style={{ flex: 1 }}>
+      <Tabs
+        screenOptions={{
+          headerShown: false,
+          tabBarActiveTintColor: colors.primary,
+          tabBarInactiveTintColor: colors.mutedForeground,
+          tabBarStyle: isTablet
+            ? { display: "none" }
+            : {
+                position: "absolute",
+                backgroundColor: isIOS ? "transparent" : colors.card,
+                borderTopWidth: 1,
+                borderTopColor: colors.border,
+                elevation: 0,
+                ...(isWeb ? { height: 84 } : {}),
+              },
+          tabBarBackground: () =>
+            isTablet ? null : isIOS ? (
+              <BlurView
+                intensity={80}
+                tint={isDark ? "dark" : "dark"}
+                style={StyleSheet.absoluteFill}
+              />
+            ) : isWeb ? (
+              <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.card }]} />
+            ) : null,
+          sceneStyle: isTablet ? { marginLeft: SIDEBAR_WIDTH } : undefined,
         }}
-      />
-      <Tabs.Screen
-        name="functions"
-        options={{
-          title: "Functions",
-          tabBarIcon: ({ color }) =>
-            isIOS ? (
-              <SymbolView name="fork.knife" tintColor={color} size={22} />
-            ) : (
-              <MaterialCommunityIcons name="silverware-fork-knife" size={21} color={color} />
-            ),
-        }}
-      />
-      <Tabs.Screen
-        name="prep"
-        options={{
-          title: "Prep",
-          tabBarIcon: ({ color }) =>
-            isIOS ? (
-              <SymbolView name="checklist" tintColor={color} size={22} />
-            ) : (
-              <Feather name="check-square" size={21} color={color} />
-            ),
-        }}
-      />
-      <Tabs.Screen
-        name="roster"
-        options={{
-          title: "Roster",
-          tabBarIcon: ({ color }) =>
-            isIOS ? (
-              <SymbolView name="person.3" tintColor={color} size={22} />
-            ) : (
-              <Ionicons name="people-outline" size={22} color={color} />
-            ),
-        }}
-      />
-    </Tabs>
+      >
+        <Tabs.Screen
+          name="index"
+          options={{
+            title: "Today",
+            tabBarIcon: ({ color }) =>
+              isIOS ? (
+                <SymbolView name="calendar" tintColor={color} size={22} />
+              ) : (
+                <Feather name="calendar" size={21} color={color} />
+              ),
+          }}
+        />
+        <Tabs.Screen
+          name="functions"
+          options={{
+            title: "Functions",
+            tabBarIcon: ({ color }) =>
+              isIOS ? (
+                <SymbolView name="fork.knife" tintColor={color} size={22} />
+              ) : (
+                <MaterialCommunityIcons name="silverware-fork-knife" size={21} color={color} />
+              ),
+          }}
+        />
+        <Tabs.Screen
+          name="prep"
+          options={{
+            title: "Prep",
+            tabBarIcon: ({ color }) =>
+              isIOS ? (
+                <SymbolView name="checklist" tintColor={color} size={22} />
+              ) : (
+                <Feather name="check-square" size={21} color={color} />
+              ),
+          }}
+        />
+        <Tabs.Screen
+          name="roster"
+          options={{
+            title: "Roster",
+            tabBarIcon: ({ color }) =>
+              isIOS ? (
+                <SymbolView name="person.3" tintColor={color} size={22} />
+              ) : (
+                <Ionicons name="people-outline" size={22} color={color} />
+              ),
+          }}
+        />
+      </Tabs>
+      {isTablet && <TabletSidebar />}
+    </View>
   );
 }
 

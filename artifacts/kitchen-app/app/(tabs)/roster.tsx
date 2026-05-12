@@ -17,6 +17,7 @@ import QRCode from "react-native-qrcode-svg";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { PrepTeam, MANAGER_ROLES, StaffMember, getAccessLevel, useKitchen } from "@/context/KitchenContext";
 import { useColors } from "@/hooks/useColors";
+import { useIsTablet } from "@/hooks/useIsTablet";
 import {
   cancelAllNotifications,
   requestNotificationPermission,
@@ -94,6 +95,7 @@ export default function RosterScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const isTablet = useIsTablet();
   const { staff, functions, prepItems, currentStaffId, notificationsEnabled, sickStaffIds, setCurrentStaff, markStaffSick, resetToSampleData, clearAllData } = useKitchen();
   const [loading, setLoading] = useState<string | null>(null);
   const [search, setSearch] = useState("");
@@ -539,6 +541,7 @@ export default function RosterScreen() {
           </View>
         )}
 
+        <View style={isTablet ? { flexDirection: "row", flexWrap: "wrap", paddingHorizontal: 8 } : {}}>
         {filteredStaff.map((member) => {
           const rc = getRoleColor(member.role);
           const tc = getTeamColor(member.section);
@@ -557,6 +560,7 @@ export default function RosterScreen() {
               key={member.id}
               style={[
                 s.rosterCard,
+                isTablet && { width: "50%", marginHorizontal: 0, paddingHorizontal: 4 },
                 {
                   backgroundColor: isSick ? "#EF444408" : isMe ? rc + "10" : colors.card,
                   borderColor: isSick ? "#EF444440" : isMe ? rc + "60" : colors.border,
@@ -701,6 +705,7 @@ export default function RosterScreen() {
             </View>
           );
         })}
+        </View>
 
         {/* Empty state */}
         {staff.length === 0 && search.length === 0 && (

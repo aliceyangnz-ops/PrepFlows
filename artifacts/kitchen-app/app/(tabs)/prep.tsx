@@ -14,6 +14,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { PrepTeam, getAccessLevel, useKitchen } from "@/context/KitchenContext";
 import { useColors } from "@/hooks/useColors";
+import { useIsTablet } from "@/hooks/useIsTablet";
 
 const TEAM_ORDER: PrepTeam[] = ["Cold Larder", "Butchery", "Hot Kitchen", "Pastry", "Function Team"];
 
@@ -58,6 +59,7 @@ export default function PrepScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const isTablet = useIsTablet();
   const { functions, prepItems, staff, currentStaffId, togglePrepItem } = useKitchen();
   const [selectedDate, setSelectedDate] = useState<DateKey>("today");
   const [viewMode, setViewMode] = useState<ViewMode>("by-team");
@@ -384,7 +386,9 @@ export default function PrepScreen() {
               </Pressable>
             </View>
 
-            {viewMode === "by-team" && TEAM_ORDER.map((team) => {
+            {viewMode === "by-team" && (
+              <View style={isTablet ? { flexDirection: "row", flexWrap: "wrap", paddingHorizontal: 8 } : {}}>
+              {TEAM_ORDER.map((team) => {
               const items = byTeam[team];
               if (!items || items.length === 0) return null;
               const done = items.filter((i) => i.completed).length;
@@ -394,7 +398,7 @@ export default function PrepScreen() {
               const members = getTeamMembers(team);
 
               return (
-                <View key={team} style={s.teamSection}>
+                <View key={team} style={[s.teamSection, isTablet && { width: "50%", paddingHorizontal: 4 }]}>
                   <View style={[s.teamHeaderCard, { borderColor: tc + "40" }]}>
                     <View style={[s.teamCardTop, { backgroundColor: tc + "12" }]}>
                       <View style={[s.teamColorBlock, { backgroundColor: tc }]} />
@@ -438,13 +442,17 @@ export default function PrepScreen() {
                 </View>
               );
             })}
+              </View>
+            )}
 
-            {viewMode === "by-event" && byEvent.map(({ fn, teamMap }) => {
+            {viewMode === "by-event" && (
+              <View style={isTablet ? { flexDirection: "row", flexWrap: "wrap", paddingHorizontal: 8 } : {}}>
+              {byEvent.map(({ fn, teamMap }) => {
               if (!fn) return null;
               const fnItems = filteredItems.filter((p) => p.functionId === fn.id);
               const fnDone = fnItems.filter((p) => p.completed).length;
               return (
-                <View key={fn.id} style={s.eventBlock}>
+                <View key={fn.id} style={[s.eventBlock, isTablet && { width: "50%", paddingHorizontal: 4 }]}>
                   <View style={s.eventHeader}>
                     <View style={s.eventTimePill}><Text style={s.eventTimePillText}>{fn.startTime}</Text></View>
                     <View style={{ flex: 1 }}>
@@ -476,6 +484,8 @@ export default function PrepScreen() {
                 </View>
               );
             })}
+              </View>
+            )}
           </>
         )}
 

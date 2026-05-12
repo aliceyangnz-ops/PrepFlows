@@ -18,6 +18,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BroadcastMessage, FunctionType, PrepTeam, getAccessLevel, useKitchen } from "@/context/KitchenContext";
 import { useColors } from "@/hooks/useColors";
+import { useIsTablet } from "@/hooks/useIsTablet";
 
 function timeToMinutes(t: string) {
   const [h, m] = t.split(":").map(Number);
@@ -88,10 +89,13 @@ function getTeamColor(team: PrepTeam): string {
   }
 }
 
+const TEAMS: PrepTeam[] = ["Hot Kitchen", "Cold Larder", "Pastry", "Function Team", "Butchery"];
+
 export default function TodayScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const isTablet = useIsTablet();
   const {
     functions, prepItems, staff, todayDate,
     currentStaffId, notificationsEnabled,
@@ -178,7 +182,6 @@ export default function TodayScreen() {
     broadcastActions: { flexDirection: "row", borderTopWidth: 1 },
     broadcastBtn: { flex: 1, paddingVertical: 11, alignItems: "center" },
     broadcastBtnText: { fontSize: 13, fontFamily: "Inter_600SemiBold" },
-    // Next event countdown widget
     countdownCard: { marginHorizontal: 20, marginBottom: 14, borderRadius: colors.radius, borderWidth: 2, overflow: "hidden" },
     countdownHeader: { paddingHorizontal: 14, paddingVertical: 8, flexDirection: "row", alignItems: "center", gap: 6, borderBottomWidth: 1 },
     countdownHeaderText: { fontSize: 10, fontFamily: "Inter_700Bold", letterSpacing: 1.2, textTransform: "uppercase" },
@@ -188,7 +191,6 @@ export default function TodayScreen() {
     countdownUnit: { fontSize: 16, fontFamily: "Inter_600SemiBold" },
     countdownName: { fontSize: 17, fontFamily: "Inter_700Bold", color: colors.foreground },
     countdownMeta: { fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground, marginTop: 3 },
-    // My card
     myCard: { marginHorizontal: 20, marginBottom: 14, borderRadius: colors.radius, borderWidth: 1, overflow: "hidden" },
     myCardHeader: { flexDirection: "row", alignItems: "center", paddingHorizontal: 14, paddingVertical: 12, gap: 10 },
     myAvatar: { width: 38, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center" },
@@ -203,9 +205,7 @@ export default function TodayScreen() {
     myEventTime: { fontSize: 13, fontFamily: "Inter_700Bold" },
     myEventName: { flex: 1, fontSize: 13, fontFamily: "Inter_500Medium", color: colors.foreground },
     myEventSub: { fontSize: 11, fontFamily: "Inter_400Regular", color: colors.mutedForeground },
-    // Section labels
     sectionLabel: { fontSize: 11, fontFamily: "Inter_700Bold", color: colors.mutedForeground, letterSpacing: 1.2, textTransform: "uppercase", marginHorizontal: 20, marginBottom: 10 },
-    // Unified function cards
     fnCard: { marginHorizontal: 20, marginBottom: 10, backgroundColor: colors.card, borderRadius: colors.radius, borderWidth: 2, borderColor: colors.border, overflow: "hidden" },
     fnCardTop: { flexDirection: "row", alignItems: "stretch" },
     fnTimeBadge: { width: 72, alignItems: "center", justifyContent: "center", paddingVertical: 14, paddingHorizontal: 6, borderRightWidth: 1 },
@@ -221,35 +221,14 @@ export default function TodayScreen() {
     fnMetaChip: { flexDirection: "row", alignItems: "center", gap: 3, paddingHorizontal: 6, paddingVertical: 2, backgroundColor: colors.secondary, borderRadius: 5 },
     fnMetaChipText: { fontSize: 10, fontFamily: "Inter_500Medium", color: colors.mutedForeground },
     fnPaxBig: { fontSize: 15, fontFamily: "Inter_700Bold", color: colors.foreground },
-    // Section progress rows inside card
     fnSectionRow: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 4 },
     fnSectionLabel: { fontSize: 10, fontFamily: "Inter_700Bold", width: 76, textTransform: "uppercase", letterSpacing: 0.4 },
     fnSectionBar: { flex: 1, height: 6, borderRadius: 3, backgroundColor: colors.border, overflow: "hidden" },
     fnSectionFill: { height: 6, borderRadius: 3 },
     fnSectionPct: { fontSize: 10, fontFamily: "Inter_700Bold", width: 30, textAlign: "right" },
-    // Dietary + alert badges
     fnAlertRow: { flexDirection: "row", gap: 6, paddingHorizontal: 12, paddingBottom: 10, flexWrap: "wrap" },
     fnAlertBadge: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, borderWidth: 1 },
     fnAlertText: { fontSize: 11, fontFamily: "Inter_700Bold" },
-    // Glance legacy (keep for layout compat)
-    glanceCard: { marginHorizontal: 20, marginBottom: 14, backgroundColor: colors.card, borderRadius: colors.radius, borderWidth: 1, borderColor: colors.border, overflow: "hidden" },
-    glanceHeader: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 14, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.border, backgroundColor: colors.secondary },
-    glanceHeaderText: { fontSize: 12, fontFamily: "Inter_700Bold", color: colors.foreground, flex: 1 },
-    glanceRow: { flexDirection: "row", alignItems: "center", paddingHorizontal: 14, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.border, gap: 10 },
-    glanceTime: { fontSize: 15, fontFamily: "Inter_700Bold", color: colors.primary, width: 46 },
-    glanceInfo: { flex: 1 },
-    glanceName: { fontSize: 14, fontFamily: "Inter_600SemiBold", color: colors.foreground },
-    glanceSub: { fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground, marginTop: 1 },
-    glanceTypePill: { paddingHorizontal: 7, paddingVertical: 3, borderRadius: 6 },
-    glanceTypeText: { fontSize: 10, fontFamily: "Inter_700Bold" },
-    glancePax: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, alignItems: "center" },
-    glancePaxNum: { fontSize: 14, fontFamily: "Inter_700Bold" },
-    glancePaxLabel: { fontSize: 9, fontFamily: "Inter_500Medium", textTransform: "uppercase", letterSpacing: 0.5 },
-    chip: { flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: colors.secondary, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
-    chipText: { fontSize: 11, fontFamily: "Inter_500Medium", color: colors.mutedForeground },
-    teamRow: { flexDirection: "row", gap: 6, marginTop: 10, flexWrap: "wrap" },
-    avatar: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20 },
-    avatarText: { fontSize: 11, fontFamily: "Inter_600SemiBold" },
     bottomPad: { height: Platform.OS === "web" ? 34 : insets.bottom + 80 },
     overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.6)", justifyContent: "flex-end" },
     sheet: { backgroundColor: colors.card, borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingBottom: Platform.OS === "ios" ? insets.bottom + 8 : 24, borderTopWidth: 1, borderColor: colors.border },
@@ -267,149 +246,92 @@ export default function TodayScreen() {
     tipText: { fontSize: 11, fontFamily: "Inter_400Regular", color: colors.mutedForeground, flex: 1 },
   });
 
-  return (
-    <View style={s.root}>
-      <ScrollView style={s.scroll} showsVerticalScrollIndicator={false}>
-        <View style={s.header}>
-          <View style={s.headerLeft}>
-            <Text style={s.dateLabel}>{todayDate}</Text>
-            <Text style={s.headerTitle}>Today's Service</Text>
-          </View>
-          {isManager && (
-            <Pressable
-              style={({ pressed }) => [s.megaBtn, { backgroundColor: showBroadcast ? AMBER + "25" : colors.card, borderColor: showBroadcast ? AMBER + "60" : colors.border, opacity: pressed ? 0.75 : 1 }]}
-              onPress={openCompose}
-            >
-              <Ionicons name="megaphone" size={18} color={showBroadcast ? AMBER : colors.mutedForeground} />
-            </Pressable>
+  // ── Shared card renderers ──────────────────────────────────
+  function renderCountdown() {
+    if (!nextFn || nextFnMins === null) return null;
+    const urgentColor = nextFnMins <= 30 ? "#EF4444" : nextFnMins <= 60 ? AMBER : colors.primary;
+    return (
+      <Pressable
+        style={({ pressed }) => [s.countdownCard, { borderColor: urgentColor, backgroundColor: urgentColor + "08", opacity: pressed ? 0.9 : 1 }]}
+        onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push(`/function/${nextFn.id}`); }}
+      >
+        <View style={[s.countdownHeader, { borderBottomColor: urgentColor + "30", backgroundColor: urgentColor + "12" }]}>
+          <Ionicons name="timer-outline" size={14} color={urgentColor} />
+          <Text style={[s.countdownHeaderText, { color: urgentColor }]}>{nextFnMins <= 0 ? "NOW" : "Next Event"}</Text>
+          {sickCount > 0 && (
+            <View style={{ marginLeft: "auto", flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, paddingVertical: 2, backgroundColor: "#EF444420", borderRadius: 6 }}>
+              <Ionicons name="alert-circle" size={12} color="#EF4444" />
+              <Text style={{ fontSize: 10, fontFamily: "Inter_700Bold", color: "#EF4444" }}>{sickCount} sick today</Text>
+            </View>
           )}
         </View>
-
-        {showBroadcast && broadcastMessage && (
-          <View style={[s.broadcastBanner, { backgroundColor: AMBER + "12", borderColor: AMBER + "50" }]}>
-            <View style={s.broadcastTop}>
-              <View style={[s.broadcastIconWrap, { backgroundColor: AMBER + "25" }]}>
-                <Ionicons name="megaphone" size={16} color={AMBER} />
-              </View>
-              <View style={s.broadcastBody}>
-                <Text style={[s.broadcastLabel, { color: AMBER }]}>Message to all staff</Text>
-                <Text style={s.broadcastText}>{broadcastMessage.text}</Text>
-                <Text style={s.broadcastMeta}>From: {broadcastMessage.senderName} · {broadcastMessage.senderRole} · {formatRelativeTime(broadcastMessage.sentAt)}</Text>
-              </View>
-            </View>
-            <View style={[s.broadcastActions, { borderTopColor: AMBER + "30" }]}>
-              {isManager ? (
-                <>
-                  <Pressable style={({ pressed }) => [s.broadcastBtn, { opacity: pressed ? 0.7 : 1, borderRightWidth: 1, borderRightColor: AMBER + "30" }]} onPress={openCompose}>
-                    <Text style={[s.broadcastBtnText, { color: colors.info }]}>Edit</Text>
-                  </Pressable>
-                  <Pressable style={({ pressed }) => [s.broadcastBtn, { opacity: pressed ? 0.7 : 1 }]} onPress={handleClearBroadcast}>
-                    <Text style={[s.broadcastBtnText, { color: "#EF4444" }]}>Remove alert</Text>
-                  </Pressable>
-                </>
-              ) : (
-                <Pressable style={({ pressed }) => [s.broadcastBtn, { opacity: pressed ? 0.7 : 1 }]} onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); dismissBroadcast(broadcastMessage.id); }}>
-                  <Text style={[s.broadcastBtnText, { color: colors.mutedForeground }]}>Got it</Text>
-                </Pressable>
-              )}
-            </View>
+        <View style={s.countdownBody}>
+          <View style={s.countdownMinRow}>
+            <Text style={[s.countdownNum, { color: urgentColor }]}>
+              {nextFnMins <= 0 ? "NOW" : nextFnMins >= 60 ? `${Math.floor(nextFnMins / 60)}h ${nextFnMins % 60}m` : nextFnMins}
+            </Text>
+            {nextFnMins > 0 && nextFnMins < 60 && (
+              <Text style={[s.countdownUnit, { color: urgentColor }]}>min</Text>
+            )}
           </View>
+          <Text style={s.countdownName} numberOfLines={1}>{nextFn.name}</Text>
+          <Text style={s.countdownMeta}>{nextFn.room} · {nextFn.floor} · {nextFn.guestCount} guests · {nextFn.startTime}–{nextFn.endTime}</Text>
+        </View>
+      </Pressable>
+    );
+  }
+
+  function renderMyShift() {
+    if (!currentMember) return null;
+    const rc = getRoleColor(currentMember.role, colors);
+    return (
+      <View style={[s.myCard, { backgroundColor: rc + "10", borderColor: rc + "40" }]}>
+        <View style={s.myCardHeader}>
+          <View style={[s.myAvatar, { backgroundColor: rc + "30" }]}>
+            <Text style={[s.myAvatarText, { color: rc }]}>{currentMember.name.split(" ").map((n) => n[0]).join("")}</Text>
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={s.myName}>{currentMember.name}</Text>
+            <Text style={[s.myRole, { color: rc }]}>{currentMember.role} · Shift {currentMember.shiftStart}–{currentMember.shiftEnd}</Text>
+          </View>
+          <View style={[s.notifPill, { backgroundColor: notificationsEnabled ? colors.accent + "20" : colors.secondary }]}>
+            <Ionicons name={notificationsEnabled ? "notifications" : "notifications-off"} size={12} color={notificationsEnabled ? colors.accent : colors.mutedForeground} />
+            <Text style={[s.notifPillText, { color: notificationsEnabled ? colors.accent : colors.mutedForeground }]}>
+              {notificationsEnabled ? "On" : "Off"}
+            </Text>
+          </View>
+        </View>
+        {myFunctions.length > 0 && (
+          <>
+            <View style={[s.myDivider, { backgroundColor: rc + "30" }]} />
+            <View style={s.myEvents}>
+              {myFunctions.map((fn) => {
+                const tc = getFunctionTypeColor(fn.functionType);
+                return (
+                  <Pressable key={fn.id} style={({ pressed }) => [s.myEventRow, { backgroundColor: rc + "12", borderColor: rc + "30" }, pressed && { opacity: 0.8 }]} onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push(`/function/${fn.id}`); }}>
+                    <Text style={[s.myEventTime, { color: rc }]}>{fn.startTime}</Text>
+                    <View style={{ flex: 1 }}>
+                      <Text style={s.myEventName} numberOfLines={1}>{fn.name}</Text>
+                      <Text style={s.myEventSub}>{fn.room} · {fn.guestCount} guests</Text>
+                    </View>
+                    <View style={[s.fnTypePill, { backgroundColor: tc + "22" }]}>
+                      <Text style={[s.fnTypeText, { color: tc }]}>{fn.functionType}</Text>
+                    </View>
+                    <Feather name="chevron-right" size={14} color={colors.mutedForeground} />
+                  </Pressable>
+                );
+              })}
+            </View>
+          </>
         )}
+      </View>
+    );
+  }
 
-        {/* ── NEXT EVENT COUNTDOWN ──────────────────────────────────── */}
-        {nextFn && nextFnMins !== null && (
-          <Pressable
-            style={({ pressed }) => [
-              s.countdownCard,
-              {
-                borderColor: nextFnMins <= 30 ? "#EF4444" : nextFnMins <= 60 ? AMBER : colors.primary,
-                backgroundColor: nextFnMins <= 30 ? "#EF444408" : nextFnMins <= 60 ? AMBER + "08" : colors.primary + "08",
-                opacity: pressed ? 0.9 : 1,
-              },
-            ]}
-            onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push(`/function/${nextFn.id}`); }}
-          >
-            <View style={[
-              s.countdownHeader,
-              { borderBottomColor: nextFnMins <= 30 ? "#EF444430" : nextFnMins <= 60 ? AMBER + "40" : colors.primary + "30",
-                backgroundColor: nextFnMins <= 30 ? "#EF444412" : nextFnMins <= 60 ? AMBER + "12" : colors.primary + "12" }
-            ]}>
-              <Ionicons name="timer-outline" size={14} color={nextFnMins <= 30 ? "#EF4444" : nextFnMins <= 60 ? AMBER : colors.primary} />
-              <Text style={[s.countdownHeaderText, { color: nextFnMins <= 30 ? "#EF4444" : nextFnMins <= 60 ? AMBER : colors.primary }]}>
-                {nextFnMins <= 0 ? "NOW" : "Next Event"}
-              </Text>
-              {sickCount > 0 && (
-                <View style={{ marginLeft: "auto", flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, paddingVertical: 2, backgroundColor: "#EF444420", borderRadius: 6 }}>
-                  <Ionicons name="alert-circle" size={12} color="#EF4444" />
-                  <Text style={{ fontSize: 10, fontFamily: "Inter_700Bold", color: "#EF4444" }}>{sickCount} sick today</Text>
-                </View>
-              )}
-            </View>
-            <View style={s.countdownBody}>
-              <View style={s.countdownMinRow}>
-                <Text style={[s.countdownNum, { color: nextFnMins <= 30 ? "#EF4444" : nextFnMins <= 60 ? AMBER : colors.primary }]}>
-                  {nextFnMins <= 0 ? "NOW" : nextFnMins >= 60 ? `${Math.floor(nextFnMins / 60)}h ${nextFnMins % 60}m` : nextFnMins}
-                </Text>
-                {nextFnMins > 0 && nextFnMins < 60 && (
-                  <Text style={[s.countdownUnit, { color: nextFnMins <= 30 ? "#EF4444" : AMBER }]}>min</Text>
-                )}
-              </View>
-              <Text style={s.countdownName} numberOfLines={1}>{nextFn.name}</Text>
-              <Text style={s.countdownMeta}>{nextFn.room} · {nextFn.floor} · {nextFn.guestCount} guests · {nextFn.startTime}–{nextFn.endTime}</Text>
-            </View>
-          </Pressable>
-        )}
-
-        {/* ── MY SHIFT CARD ─────────────────────────────────────────── */}
-        {currentMember && (() => {
-          const rc = getRoleColor(currentMember.role, colors);
-          return (
-            <View style={[s.myCard, { backgroundColor: rc + "10", borderColor: rc + "40" }]}>
-              <View style={s.myCardHeader}>
-                <View style={[s.myAvatar, { backgroundColor: rc + "30" }]}>
-                  <Text style={[s.myAvatarText, { color: rc }]}>{currentMember.name.split(" ").map((n) => n[0]).join("")}</Text>
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={s.myName}>{currentMember.name}</Text>
-                  <Text style={[s.myRole, { color: rc }]}>{currentMember.role} · Shift {currentMember.shiftStart}–{currentMember.shiftEnd}</Text>
-                </View>
-                <View style={[s.notifPill, { backgroundColor: notificationsEnabled ? colors.accent + "20" : colors.secondary }]}>
-                  <Ionicons name={notificationsEnabled ? "notifications" : "notifications-off"} size={12} color={notificationsEnabled ? colors.accent : colors.mutedForeground} />
-                  <Text style={[s.notifPillText, { color: notificationsEnabled ? colors.accent : colors.mutedForeground }]}>
-                    {notificationsEnabled ? "On" : "Off"}
-                  </Text>
-                </View>
-              </View>
-              {myFunctions.length > 0 && (
-                <>
-                  <View style={[s.myDivider, { backgroundColor: rc + "30" }]} />
-                  <View style={s.myEvents}>
-                    {myFunctions.map((fn) => {
-                      const tc = getFunctionTypeColor(fn.functionType);
-                      return (
-                        <Pressable key={fn.id} style={({ pressed }) => [s.myEventRow, { backgroundColor: rc + "12", borderColor: rc + "30" }, pressed && { opacity: 0.8 }]} onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push(`/function/${fn.id}`); }}>
-                          <Text style={[s.myEventTime, { color: rc }]}>{fn.startTime}</Text>
-                          <View style={{ flex: 1 }}>
-                            <Text style={s.myEventName} numberOfLines={1}>{fn.name}</Text>
-                            <Text style={s.myEventSub}>{fn.room} · {fn.guestCount} guests</Text>
-                          </View>
-                          <View style={[s.fnTypePill, { backgroundColor: tc + "22" }]}>
-                            <Text style={[s.fnTypeText, { color: tc }]}>{fn.functionType}</Text>
-                          </View>
-                          <Feather name="chevron-right" size={14} color={colors.mutedForeground} />
-                        </Pressable>
-                      );
-                    })}
-                  </View>
-                </>
-              )}
-            </View>
-          );
-        })()}
-
-        {/* ── TODAY'S FUNCTIONS ────────────────────────────────────── */}
+  function renderFunctionList() {
+    return (
+      <>
         <Text style={s.sectionLabel}>Today's Functions</Text>
-
         {sortedFunctions.length === 0 && (
           <View style={{ marginHorizontal: 20, padding: 24, borderRadius: colors.radius, borderWidth: 1, borderColor: colors.border, alignItems: "center", gap: 8 }}>
             <Feather name="calendar" size={28} color={colors.mutedForeground} />
@@ -417,15 +339,12 @@ export default function TodayScreen() {
             <Text style={{ fontSize: 13, fontFamily: "Inter_400Regular", color: colors.mutedForeground, textAlign: "center" }}>Add functions from the Functions tab</Text>
           </View>
         )}
-
         {isManager ? (
-          /* ── MANAGER: full cards with prep + dietary ─────────── */
           sortedFunctions.map((fn, idx) => {
             const tc = getFunctionTypeColor(fn.functionType);
             const meal = getMealCategory(fn.startTime);
             const fnPrep = prepItems.filter((p) => p.functionId === fn.id);
             const isNextEvent = nextFn?.id === fn.id;
-            const TEAMS: PrepTeam[] = ["Hot Kitchen", "Cold Larder", "Pastry", "Function Team", "Butchery"];
             const teamProgress = TEAMS.map((team) => {
               const teamItems = fnPrep.filter((p) => p.team === team);
               if (teamItems.length === 0) return null;
@@ -450,7 +369,6 @@ export default function TodayScreen() {
             return (
               <View key={fn.id} style={[s.fnCard, { borderColor: frameColor + "70" }]}>
                 <View style={s.fnCardTop}>
-                  {/* ── LEFT SQUARE: #number · time · type ── */}
                   <View style={[s.fnTimeBadge, { backgroundColor: frameColor + "18", borderRightColor: frameColor + "35" }]}>
                     <Text style={[s.fnTimeBadgeNum, { color: frameColor }]}>#{idx + 1}</Text>
                     <Text style={[s.fnTimeBadgeText, { color: frameColor }]}>{fn.startTime}</Text>
@@ -461,7 +379,7 @@ export default function TodayScreen() {
                   <View style={s.fnBody}>
                     <Text style={s.fnName} numberOfLines={1}>{fn.name}</Text>
                     <View style={s.fnMetaRow}>
-                      <View style={[{ paddingHorizontal: 6, paddingVertical: 2, borderRadius: 5, backgroundColor: meal.color + "20", borderWidth: 1, borderColor: meal.color + "45" }]}>
+                      <View style={{ paddingHorizontal: 6, paddingVertical: 2, borderRadius: 5, backgroundColor: meal.color + "20", borderWidth: 1, borderColor: meal.color + "45" }}>
                         <Text style={{ fontSize: 10, fontFamily: "Inter_700Bold", color: meal.color }}>{meal.label}</Text>
                       </View>
                       <View style={s.fnMetaChip}><MaterialCommunityIcons name="door" size={10} color={colors.mutedForeground} /><Text style={s.fnMetaChipText}>{fn.room}</Text></View>
@@ -499,7 +417,6 @@ export default function TodayScreen() {
             );
           })
         ) : (
-          /* ── STAFF/TEAM LEADER: compact rows ─────────────────── */
           sortedFunctions.map((fn, idx) => {
             const meal = getMealCategory(fn.startTime);
             const isMyFn = myFunctions.some((f) => f.id === fn.id);
@@ -511,7 +428,6 @@ export default function TodayScreen() {
             return (
               <View key={fn.id} style={[s.fnCard, { borderColor: isMyFn ? frameColor + "90" : frameColor + "55" }]}>
                 <View style={s.fnCardTop}>
-                  {/* ── LEFT SQUARE: #number · time · type ── */}
                   <View style={[s.fnTimeBadge, { backgroundColor: frameColor + "18", borderRightColor: frameColor + "35" }]}>
                     <Text style={[s.fnTimeBadgeNum, { color: frameColor }]}>#{idx + 1}</Text>
                     <Text style={[s.fnTimeBadgeText, { color: frameColor }]}>{fn.startTime}</Text>
@@ -537,44 +453,269 @@ export default function TodayScreen() {
             );
           })
         )}
-        <View style={s.bottomPad} />
-      </ScrollView>
+      </>
+    );
+  }
 
-      <Modal visible={composeVisible} transparent animationType="slide" onRequestClose={() => setComposeVisible(false)}>
-        <TouchableWithoutFeedback onPress={() => setComposeVisible(false)}>
-          <View style={s.overlay}>
-            <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "position" : undefined}>
-              <TouchableWithoutFeedback>
-                <View style={s.sheet}>
-                  <View style={s.handle} />
-                  <View style={s.sheetHeader}>
-                    <Ionicons name="megaphone" size={20} color={AMBER} />
-                    <View style={{ flex: 1 }}>
-                      <Text style={s.sheetTitle}>Send message to all staff</Text>
-                      {currentMember && <Text style={s.sheetSub}>From: {currentMember.name} · {currentMember.role}</Text>}
-                    </View>
-                    <Pressable style={({ pressed }) => [s.closeBtn, { opacity: pressed ? 0.6 : 1 }]} onPress={() => setComposeVisible(false)}>
-                      <Feather name="x" size={16} color={colors.mutedForeground} />
-                    </Pressable>
-                  </View>
-                  <Pressable style={s.inputWrap} onPress={() => inputRef.current?.focus()}>
-                    <TextInput ref={inputRef} style={s.textInput} placeholder="Type your message here…" placeholderTextColor={colors.mutedForeground} multiline maxLength={200} value={draftText} onChangeText={setDraftText} autoFocus />
-                  </Pressable>
-                  <Text style={[s.charCount, { color: draftText.length > 160 ? colors.warning : colors.mutedForeground }]}>{draftText.length}/200</Text>
-                  <Pressable style={({ pressed }) => [s.sendBtn, { backgroundColor: draftText.trim().length > 0 ? AMBER : colors.secondary, opacity: pressed ? 0.85 : 1 }]} onPress={sendBroadcast} disabled={draftText.trim().length === 0}>
-                    <Ionicons name="megaphone" size={16} color={draftText.trim().length > 0 ? "#fff" : colors.mutedForeground} />
-                    <Text style={[s.sendBtnText, { color: draftText.trim().length > 0 ? "#fff" : colors.mutedForeground }]}>Send to all staff</Text>
-                  </Pressable>
-                  <View style={s.tipRow}>
-                    <Ionicons name="information-circle-outline" size={14} color={colors.mutedForeground} />
-                    <Text style={s.tipText}>Staff will see this message when they open the app.</Text>
+  // ── iPad right column panels ───────────────────────────────
+  function renderPrepOverview() {
+    const teamStats = TEAMS.map((team) => {
+      const items = prepItems.filter((p) => p.team === team);
+      if (items.length === 0) return null;
+      const done = items.filter((p) => p.completed).length;
+      return { team, done, total: items.length, pct: done / items.length };
+    }).filter(Boolean) as { team: PrepTeam; done: number; total: number; pct: number }[];
+
+    return (
+      <View style={{ marginHorizontal: 16, marginBottom: 14, backgroundColor: colors.card, borderRadius: colors.radius, borderWidth: 1, borderColor: colors.border, overflow: "hidden" }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 14, paddingVertical: 11, borderBottomWidth: 1, borderBottomColor: colors.border, backgroundColor: colors.secondary }}>
+          <Feather name="check-square" size={13} color={colors.primary} />
+          <Text style={{ fontSize: 11, fontFamily: "Inter_700Bold", color: colors.foreground, flex: 1, letterSpacing: 0.5 }}>PREP OVERVIEW</Text>
+          <Text style={{ fontSize: 12, fontFamily: "Inter_700Bold", color: prepPercent >= 1 ? colors.accent : colors.primary }}>
+            {completedPrep}/{totalPrep}
+          </Text>
+        </View>
+        {totalPrep === 0 ? (
+          <View style={{ padding: 20, alignItems: "center" }}>
+            <Text style={{ fontSize: 13, fontFamily: "Inter_400Regular", color: colors.mutedForeground }}>No prep items yet</Text>
+          </View>
+        ) : (
+          <View style={{ padding: 14 }}>
+            {/* Overall bar */}
+            <View style={{ height: 8, borderRadius: 4, backgroundColor: colors.border, marginBottom: 12, overflow: "hidden" }}>
+              <View style={{ height: 8, borderRadius: 4, backgroundColor: prepPercent >= 1 ? colors.accent : colors.primary, width: `${prepPercent * 100}%` }} />
+            </View>
+            {teamStats.map(({ team, done, total, pct }) => {
+              const tc = getTeamColor(team);
+              return (
+                <View key={team} style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 7 }}>
+                  <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: tc }} />
+                  <Text style={{ fontSize: 11, fontFamily: "Inter_500Medium", color: colors.mutedForeground, flex: 1 }} numberOfLines={1}>
+                    {team.replace(" Kitchen", "").replace(" Larder", "").replace(" Team", "")}
+                  </Text>
+                  <Text style={{ fontSize: 11, fontFamily: "Inter_700Bold", color: pct >= 1 ? colors.accent : tc }}>{done}/{total}</Text>
+                  <View style={{ width: 60, height: 5, borderRadius: 3, backgroundColor: colors.border, overflow: "hidden" }}>
+                    <View style={{ height: 5, borderRadius: 3, backgroundColor: pct >= 1 ? colors.accent : tc, width: `${pct * 100}%` }} />
                   </View>
                 </View>
-              </TouchableWithoutFeedback>
-            </KeyboardAvoidingView>
+              );
+            })}
           </View>
-        </TouchableWithoutFeedback>
-      </Modal>
+        )}
+      </View>
+    );
+  }
+
+  function renderDietaryPanel() {
+    const allDietary: Record<string, { count: number; color: string }> = {};
+    let hasSevere = false;
+    sortedFunctions.forEach((fn) => {
+      (fn.dietaryRequirements ?? []).forEach((d) => {
+        if (!allDietary[d.name]) {
+          const n = d.name.toLowerCase();
+          const color = n.includes("gluten") ? "#22C55E" : n.includes("vegan") ? "#84CC16" : n.includes("nut") ? "#F59E0B" : n.includes("dairy") ? "#60A5FA" : n.includes("shellfish") ? "#F97316" : n.includes("halal") ? "#14B8A6" : "#94A3B8";
+          allDietary[d.name] = { count: 0, color };
+        }
+        allDietary[d.name].count += d.count;
+        if (d.name.toLowerCase().includes("nut") || d.name.toLowerCase().includes("shellfish")) hasSevere = true;
+      });
+    });
+    const entries = Object.entries(allDietary);
+    if (entries.length === 0) return null;
+    return (
+      <View style={{ marginHorizontal: 16, marginBottom: 14, backgroundColor: colors.card, borderRadius: colors.radius, borderWidth: 1, borderColor: colors.border, overflow: "hidden" }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 14, paddingVertical: 11, borderBottomWidth: 1, borderBottomColor: colors.border, backgroundColor: colors.secondary }}>
+          <Ionicons name="alert-circle-outline" size={13} color={hasSevere ? "#EF4444" : AMBER} />
+          <Text style={{ fontSize: 11, fontFamily: "Inter_700Bold", color: colors.foreground, flex: 1, letterSpacing: 0.5 }}>DIETARY TODAY</Text>
+          {hasSevere && <Text style={{ fontSize: 10, fontFamily: "Inter_700Bold", color: "#EF4444" }}>ALLERGEN</Text>}
+        </View>
+        <View style={{ padding: 12, flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
+          {entries.map(([name, { count, color }]) => (
+            <View key={name} style={{ flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, paddingVertical: 5, borderRadius: 8, borderWidth: 1, backgroundColor: color + "15", borderColor: color + "40" }}>
+              <Text style={{ fontSize: 12, fontFamily: "Inter_700Bold", color }}>{count}×</Text>
+              <Text style={{ fontSize: 11, fontFamily: "Inter_500Medium", color: colors.foreground }}>{name}</Text>
+            </View>
+          ))}
+        </View>
+      </View>
+    );
+  }
+
+  function renderRosterSnapshot() {
+    const activeStaff = staff.filter((m) => !sickStaffIds.includes(m.id));
+    const bySection: Record<string, typeof staff> = {};
+    activeStaff.forEach((m) => {
+      const key = m.section ?? m.role;
+      if (!bySection[key]) bySection[key] = [];
+      bySection[key].push(m);
+    });
+    return (
+      <View style={{ marginHorizontal: 16, marginBottom: 14, backgroundColor: colors.card, borderRadius: colors.radius, borderWidth: 1, borderColor: colors.border, overflow: "hidden" }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 14, paddingVertical: 11, borderBottomWidth: 1, borderBottomColor: colors.border, backgroundColor: colors.secondary }}>
+          <Ionicons name="people-outline" size={13} color={colors.accent} />
+          <Text style={{ fontSize: 11, fontFamily: "Inter_700Bold", color: colors.foreground, flex: 1, letterSpacing: 0.5 }}>STAFF ON DUTY</Text>
+          <Text style={{ fontSize: 11, fontFamily: "Inter_700Bold", color: colors.accent }}>{activeStaff.length} active</Text>
+          {sickCount > 0 && <Text style={{ fontSize: 11, fontFamily: "Inter_700Bold", color: "#EF4444" }}>{sickCount} sick</Text>}
+        </View>
+        <View style={{ padding: 12, gap: 6 }}>
+          {Object.entries(bySection).slice(0, 6).map(([section, members]) => (
+            <View key={section} style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+              <Text style={{ fontSize: 11, fontFamily: "Inter_500Medium", color: colors.mutedForeground, width: 100 }} numberOfLines={1}>{section}</Text>
+              <View style={{ flex: 1, flexDirection: "row", flexWrap: "wrap", gap: 4 }}>
+                {members.slice(0, 4).map((m) => (
+                  <View key={m.id} style={{ paddingHorizontal: 6, paddingVertical: 2, backgroundColor: colors.secondary, borderRadius: 5 }}>
+                    <Text style={{ fontSize: 10, fontFamily: "Inter_500Medium", color: colors.foreground }}>{m.name.split(" ")[0]}</Text>
+                  </View>
+                ))}
+                {members.length > 4 && <Text style={{ fontSize: 10, fontFamily: "Inter_400Regular", color: colors.mutedForeground, paddingVertical: 2 }}>+{members.length - 4}</Text>}
+              </View>
+            </View>
+          ))}
+          {Object.keys(bySection).length === 0 && (
+            <Text style={{ fontSize: 13, fontFamily: "Inter_400Regular", color: colors.mutedForeground }}>No staff added yet</Text>
+          )}
+        </View>
+      </View>
+    );
+  }
+
+  const broadcastBanner = showBroadcast && broadcastMessage ? (
+    <View style={[s.broadcastBanner, { backgroundColor: AMBER + "12", borderColor: AMBER + "50" }]}>
+      <View style={s.broadcastTop}>
+        <View style={[s.broadcastIconWrap, { backgroundColor: AMBER + "25" }]}>
+          <Ionicons name="megaphone" size={16} color={AMBER} />
+        </View>
+        <View style={s.broadcastBody}>
+          <Text style={[s.broadcastLabel, { color: AMBER }]}>Message to all staff</Text>
+          <Text style={s.broadcastText}>{broadcastMessage.text}</Text>
+          <Text style={s.broadcastMeta}>From: {broadcastMessage.senderName} · {broadcastMessage.senderRole} · {formatRelativeTime(broadcastMessage.sentAt)}</Text>
+        </View>
+      </View>
+      <View style={[s.broadcastActions, { borderTopColor: AMBER + "30" }]}>
+        {isManager ? (
+          <>
+            <Pressable style={({ pressed }) => [s.broadcastBtn, { opacity: pressed ? 0.7 : 1, borderRightWidth: 1, borderRightColor: AMBER + "30" }]} onPress={openCompose}>
+              <Text style={[s.broadcastBtnText, { color: colors.info }]}>Edit</Text>
+            </Pressable>
+            <Pressable style={({ pressed }) => [s.broadcastBtn, { opacity: pressed ? 0.7 : 1 }]} onPress={handleClearBroadcast}>
+              <Text style={[s.broadcastBtnText, { color: "#EF4444" }]}>Remove alert</Text>
+            </Pressable>
+          </>
+        ) : (
+          <Pressable style={({ pressed }) => [s.broadcastBtn, { opacity: pressed ? 0.7 : 1 }]} onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); dismissBroadcast(broadcastMessage.id); }}>
+            <Text style={[s.broadcastBtnText, { color: colors.mutedForeground }]}>Got it</Text>
+          </Pressable>
+        )}
+      </View>
+    </View>
+  ) : null;
+
+  const composeModal = (
+    <Modal visible={composeVisible} transparent animationType="slide" onRequestClose={() => setComposeVisible(false)}>
+      <TouchableWithoutFeedback onPress={() => setComposeVisible(false)}>
+        <View style={s.overlay}>
+          <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "position" : undefined}>
+            <TouchableWithoutFeedback>
+              <View style={s.sheet}>
+                <View style={s.handle} />
+                <View style={s.sheetHeader}>
+                  <Ionicons name="megaphone" size={20} color={AMBER} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={s.sheetTitle}>Send message to all staff</Text>
+                    {currentMember && <Text style={s.sheetSub}>From: {currentMember.name} · {currentMember.role}</Text>}
+                  </View>
+                  <Pressable style={({ pressed }) => [s.closeBtn, { opacity: pressed ? 0.6 : 1 }]} onPress={() => setComposeVisible(false)}>
+                    <Feather name="x" size={16} color={colors.mutedForeground} />
+                  </Pressable>
+                </View>
+                <Pressable style={s.inputWrap} onPress={() => inputRef.current?.focus()}>
+                  <TextInput ref={inputRef} style={s.textInput} placeholder="Type your message here…" placeholderTextColor={colors.mutedForeground} multiline maxLength={200} value={draftText} onChangeText={setDraftText} autoFocus />
+                </Pressable>
+                <Text style={[s.charCount, { color: draftText.length > 160 ? colors.warning : colors.mutedForeground }]}>{draftText.length}/200</Text>
+                <Pressable style={({ pressed }) => [s.sendBtn, { backgroundColor: draftText.trim().length > 0 ? AMBER : colors.secondary, opacity: pressed ? 0.85 : 1 }]} onPress={sendBroadcast} disabled={draftText.trim().length === 0}>
+                  <Ionicons name="megaphone" size={16} color={draftText.trim().length > 0 ? "#fff" : colors.mutedForeground} />
+                  <Text style={[s.sendBtnText, { color: draftText.trim().length > 0 ? "#fff" : colors.mutedForeground }]}>Send to all staff</Text>
+                </Pressable>
+                <View style={s.tipRow}>
+                  <Ionicons name="information-circle-outline" size={14} color={colors.mutedForeground} />
+                  <Text style={s.tipText}>Staff will see this message when they open the app.</Text>
+                </View>
+              </View>
+            </TouchableWithoutFeedback>
+          </KeyboardAvoidingView>
+        </View>
+      </TouchableWithoutFeedback>
+    </Modal>
+  );
+
+  if (isTablet) {
+    return (
+      <View style={[s.root, { flexDirection: "row" }]}>
+        {/* ── LEFT COLUMN: main content ───────────────────────────── */}
+        <ScrollView style={{ flex: 0.58 }} showsVerticalScrollIndicator={false}>
+          <View style={s.header}>
+            <View style={s.headerLeft}>
+              <Text style={s.dateLabel}>{todayDate}</Text>
+              <Text style={[s.headerTitle, { fontSize: 30 }]}>Today's Service</Text>
+            </View>
+            {isManager && (
+              <Pressable
+                style={({ pressed }) => [s.megaBtn, { backgroundColor: showBroadcast ? AMBER + "25" : colors.card, borderColor: showBroadcast ? AMBER + "60" : colors.border, opacity: pressed ? 0.75 : 1 }]}
+                onPress={openCompose}
+              >
+                <Ionicons name="megaphone" size={18} color={showBroadcast ? AMBER : colors.mutedForeground} />
+              </Pressable>
+            )}
+          </View>
+          {broadcastBanner}
+          {renderCountdown()}
+          {renderMyShift()}
+          {renderFunctionList()}
+          <View style={{ height: 40 }} />
+        </ScrollView>
+
+        {/* ── RIGHT COLUMN: dashboard panels ─────────────────────── */}
+        <ScrollView
+          style={{ flex: 0.42, borderLeftWidth: 1, borderLeftColor: colors.border, backgroundColor: colors.background }}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={{ paddingTop: topPad + 20, paddingBottom: 40 }}>
+            <Text style={[s.sectionLabel, { marginHorizontal: 16, marginBottom: 14 }]}>Dashboard</Text>
+            {renderPrepOverview()}
+            {renderDietaryPanel()}
+            {renderRosterSnapshot()}
+          </View>
+        </ScrollView>
+
+        {composeModal}
+      </View>
+    );
+  }
+
+  return (
+    <View style={s.root}>
+      <ScrollView style={s.scroll} showsVerticalScrollIndicator={false}>
+        <View style={s.header}>
+          <View style={s.headerLeft}>
+            <Text style={s.dateLabel}>{todayDate}</Text>
+            <Text style={s.headerTitle}>Today's Service</Text>
+          </View>
+          {isManager && (
+            <Pressable
+              style={({ pressed }) => [s.megaBtn, { backgroundColor: showBroadcast ? AMBER + "25" : colors.card, borderColor: showBroadcast ? AMBER + "60" : colors.border, opacity: pressed ? 0.75 : 1 }]}
+              onPress={openCompose}
+            >
+              <Ionicons name="megaphone" size={18} color={showBroadcast ? AMBER : colors.mutedForeground} />
+            </Pressable>
+          )}
+        </View>
+        {broadcastBanner}
+        {renderCountdown()}
+        {renderMyShift()}
+        {renderFunctionList()}
+        <View style={s.bottomPad} />
+      </ScrollView>
+      {composeModal}
     </View>
   );
 }
