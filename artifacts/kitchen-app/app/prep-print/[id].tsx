@@ -138,9 +138,9 @@ export default function PrepPrintScreen() {
       "══════════════════════════════════════",
       "KITCHENCOMMAND — FULL FUNCTION SHEET",
       "══════════════════════════════════════",
-      fn.name.toUpperCase(),
-      `Room: ${fn.room}  |  ${fn.floor}`,
-      `Service: ${fn.startTime} – ${fn.endTime}  |  ${fn.guestCount} guests  |  ${fn.functionType}`,
+      fn!.name.toUpperCase(),
+      `Room: ${fn!.room}  |  ${fn!.floor}`,
+      `Service: ${fn!.startTime} – ${fn!.endTime}  |  ${fn!.guestCount} guests  |  ${fn!.functionType}`,
       `Printed: ${today}, ${printedAt}`,
       "",
     ];
@@ -157,7 +157,7 @@ export default function PrepPrintScreen() {
       lines.push("────────────────────────────────");
       lines.push("SERVICE RUN SHEET");
       lines.push("────────────────────────────────");
-      fn.timeline.forEach((t) => {
+      fn!.timeline.forEach((t) => {
         const cat = getCategoryStyle(t.category ?? "setup");
         const done = t.completed ? "✓" : "○";
         lines.push(`${done} ${t.time}  [${cat.label}]  ${t.task}`);
@@ -186,7 +186,7 @@ export default function PrepPrintScreen() {
 
     lines.push("", "KitchenCommand");
     try {
-      await Share.share({ message: lines.join("\n"), title: `Function Sheet — ${fn.name}` });
+      await Share.share({ message: lines.join("\n"), title: `Function Sheet — ${fn!.name}` });
     } catch {}
   }
 
@@ -356,7 +356,7 @@ export default function PrepPrintScreen() {
           <Text style={[s.sectionDividerText, { color: "#1E293B", flex: 1 }]}>Service Run Sheet</Text>
           <View style={[s.sectionCount, { backgroundColor: "#E2E8F0" }]}>
             <Text style={[s.sectionCountText, { color: "#475569" }]}>
-              {tasksDone}/{fn.timeline.length} done
+              {tasksDone}/{fn!.timeline.length} done
             </Text>
           </View>
         </View>

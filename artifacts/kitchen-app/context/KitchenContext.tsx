@@ -2,6 +2,19 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Notifications from "expo-notifications";
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { Platform } from "react-native";
+import { isSupabaseConfigured } from "../lib/supabase";
+import {
+  clearBroadcastInSupabase,
+  deleteFunctionFromSupabase,
+  deleteStaffFromSupabase,
+  loadFromSupabase,
+  migrateToSupabase,
+  subscribeToKitchenChanges,
+  upsertBroadcastToSupabase,
+  upsertFunctionToSupabase,
+  upsertPrepItemToSupabase,
+  upsertStaffToSupabase,
+} from "../lib/supabase-sync";
 
 if (Platform.OS !== "web") {
   Notifications.setNotificationHandler({
@@ -700,6 +713,7 @@ const STORAGE_KEY_BROADCAST = "@kitchen_broadcast";
 const STORAGE_KEY_DISMISSED = "@kitchen_dismissed_broadcast";
 const STORAGE_KEY_STAFF = "@kitchen_staff_v1";
 const STORAGE_KEY_HIDDEN = "@kitchen_hidden_fns_v1";
+const STORAGE_KEY_MIGRATED = "@kitchen_supabase_migrated_v1";
 
 export function KitchenProvider({ children }: { children: React.ReactNode }) {
   const [functions, setFunctions] = useState<KitchenFunction[]>(SAMPLE_FUNCTIONS);
@@ -732,30 +746,82 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     (async () => {
+      // ── Step 1: Load from AsyncStorage (fast, works offline) ─────────────────
+      let localFunctions: KitchenFunction[] = [];
+      let localStaff: StaffMember[] = [];
+      let localPrepItems: PrepItem[] = [];
+      let localBroadcast: BroadcastMessage | null = null;
       try {
-        const [storedFunctions, storedPrep, storedCurrentStaff, storedNotifs, storedBroadcast, storedDismissed, storedSick, storedStaffList, storedHidden] =
-          await Promise.all([
-            AsyncStorage.getItem(STORAGE_KEY_FUNCTIONS),
-            AsyncStorage.getItem(STORAGE_KEY_PREP),
-            AsyncStorage.getItem(STORAGE_KEY_CURRENT_STAFF),
-            AsyncStorage.getItem(STORAGE_KEY_NOTIFS),
-            AsyncStorage.getItem(STORAGE_KEY_BROADCAST),
-            AsyncStorage.getItem(STORAGE_KEY_DISMISSED),
-            AsyncStorage.getItem(STORAGE_KEY_SICK),
-            AsyncStorage.getItem(STORAGE_KEY_STAFF),
-            AsyncStorage.getItem(STORAGE_KEY_HIDDEN),
-          ]);
-        if (storedFunctions) setFunctions(JSON.parse(storedFunctions));
-        if (storedPrep) setPrepItems(JSON.parse(storedPrep));
+        const [
+          storedFunctions,
+          storedPrep,
+          storedCurrentStaff,
+          storedNotifs,
+          storedBroadcast,
+          storedDismissed,
+          storedSick,
+          storedStaffList,
+          storedHidden,
+        ] = await Promise.all([
+          AsyncStorage.getItem(STORAGE_KEY_FUNCTIONS),
+          AsyncStorage.getItem(STORAGE_KEY_PREP),
+          AsyncStorage.getItem(STORAGE_KEY_CURRENT_STAFF),
+          AsyncStorage.getItem(STORAGE_KEY_NOTIFS),
+          AsyncStorage.getItem(STORAGE_KEY_BROADCAST),
+          AsyncStorage.getItem(STORAGE_KEY_DISMISSED),
+          AsyncStorage.getItem(STORAGE_KEY_SICK),
+          AsyncStorage.getItem(STORAGE_KEY_STAFF),
+          AsyncStorage.getItem(STORAGE_KEY_HIDDEN),
+        ]);
+        if (storedFunctions) { localFunctions = JSON.parse(storedFunctions); setFunctions(localFunctions); }
+        if (storedPrep) { localPrepItems = JSON.parse(storedPrep); setPrepItems(localPrepItems); }
         if (storedCurrentStaff) setCurrentStaffIdState(storedCurrentStaff);
         if (storedNotifs) setNotificationsEnabled(storedNotifs === "true");
-        if (storedBroadcast) setBroadcastState(JSON.parse(storedBroadcast));
+        if (storedBroadcast) { localBroadcast = JSON.parse(storedBroadcast); setBroadcastState(localBroadcast); }
         if (storedDismissed) setDismissedBroadcastId(storedDismissed);
         if (storedSick) setSickStaffIds(JSON.parse(storedSick));
-        if (storedStaffList) setStaff(JSON.parse(storedStaffList));
+        if (storedStaffList) { localStaff = JSON.parse(storedStaffList); setStaff(localStaff); }
         if (storedHidden) setHiddenFunctionIds(JSON.parse(storedHidden));
       } catch {
-        // use defaults
+        // use defaults on parse errors
+      }
+
+      // ── Step 2: Hydrate from Supabase if credentials are available ────────────
+      if (isSupabaseConfigured()) {
+        try {
+          const remote = await loadFromSupabase();
+          const hasRemoteData =
+            remote.functions.length > 0 ||
+            remote.staff.length > 0 ||
+            remote.prepItems.length > 0;
+
+          if (hasRemoteData) {
+            // Supabase is source of truth — overwrite local state and sync AsyncStorage
+            setFunctions(remote.functions);
+            setStaff(remote.staff);
+            setPrepItems(remote.prepItems);
+            if (remote.broadcast) setBroadcastState(remote.broadcast);
+            await Promise.all([
+              AsyncStorage.setItem(STORAGE_KEY_FUNCTIONS, JSON.stringify(remote.functions)),
+              AsyncStorage.setItem(STORAGE_KEY_STAFF, JSON.stringify(remote.staff)),
+              AsyncStorage.setItem(STORAGE_KEY_PREP, JSON.stringify(remote.prepItems)),
+            ]);
+          } else {
+            // Supabase is empty — check if we need to migrate local data up (one-time)
+            const migrated = await AsyncStorage.getItem(STORAGE_KEY_MIGRATED);
+            if (!migrated && (localFunctions.length > 0 || localStaff.length > 0)) {
+              await migrateToSupabase({
+                functions: localFunctions,
+                staff: localStaff,
+                prepItems: localPrepItems,
+                broadcast: localBroadcast,
+              });
+              await AsyncStorage.setItem(STORAGE_KEY_MIGRATED, "true");
+            }
+          }
+        } catch {
+          // Supabase unavailable — continue with AsyncStorage data loaded above
+        }
       }
     })();
   }, []);
@@ -771,6 +837,7 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
     if (!isCallerManager()) return;
     setBroadcastState(msg);
     AsyncStorage.setItem(STORAGE_KEY_BROADCAST, JSON.stringify(msg));
+    if (isSupabaseConfigured()) upsertBroadcastToSupabase(msg).catch(() => {});
   }, []);
 
   const clearBroadcast = useCallback(() => {
@@ -779,6 +846,7 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
     setDismissedBroadcastId(null);
     AsyncStorage.removeItem(STORAGE_KEY_BROADCAST);
     AsyncStorage.removeItem(STORAGE_KEY_DISMISSED);
+    if (isSupabaseConfigured()) clearBroadcastInSupabase().catch(() => {});
   }, []);
 
   const dismissBroadcast = useCallback((id: string) => {
@@ -797,6 +865,10 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
         item.id === id ? { ...item, completed: !item.completed } : item
       );
       AsyncStorage.setItem(STORAGE_KEY_PREP, JSON.stringify(updated));
+      if (isSupabaseConfigured()) {
+        const changed = updated.find((i) => i.id === id);
+        if (changed) upsertPrepItemToSupabase(changed).catch(() => {});
+      }
       return updated;
     });
   }, []);
@@ -809,6 +881,10 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
           : fn
       );
       AsyncStorage.setItem(STORAGE_KEY_FUNCTIONS, JSON.stringify(updated));
+      if (isSupabaseConfigured()) {
+        const changed = updated.find((fn) => fn.id === functionId);
+        if (changed) upsertFunctionToSupabase(changed).catch(() => {});
+      }
       return updated;
     });
   }, []);
@@ -824,6 +900,10 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
     setFunctions((prev) => {
       const updated = prev.map((fn) => fn.id === id ? { ...fn, ...updates } : fn);
       AsyncStorage.setItem(STORAGE_KEY_FUNCTIONS, JSON.stringify(updated));
+      if (isSupabaseConfigured()) {
+        const changed = updated.find((fn) => fn.id === id);
+        if (changed) upsertFunctionToSupabase(changed).catch(() => {});
+      }
       return updated;
     });
   }, []);
@@ -835,6 +915,7 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
       AsyncStorage.setItem(STORAGE_KEY_FUNCTIONS, JSON.stringify(updated));
       return updated;
     });
+    if (isSupabaseConfigured()) upsertFunctionToSupabase(fn).catch(() => {});
     // Auto-generate prep items from menu when adding a new function
     if (fn.menu && fn.menu.length > 0) {
       const generated = generatePrepFromMenu(fn);
@@ -844,6 +925,9 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
           AsyncStorage.setItem(STORAGE_KEY_PREP, JSON.stringify(updated));
           return updated;
         });
+        if (isSupabaseConfigured()) {
+          Promise.all(generated.map((item) => upsertPrepItemToSupabase(item))).catch(() => {});
+        }
       }
     }
   }, []);
@@ -861,6 +945,9 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
       AsyncStorage.setItem(STORAGE_KEY_PREP, JSON.stringify(updated));
       return updated;
     });
+    if (isSupabaseConfigured()) {
+      Promise.all(generated.map((item) => upsertPrepItemToSupabase(item))).catch(() => {});
+    }
   }, []);
 
   const deleteFunction = useCallback((id: string) => {
@@ -870,6 +957,7 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
       AsyncStorage.setItem(STORAGE_KEY_FUNCTIONS, JSON.stringify(updated));
       return updated;
     });
+    if (isSupabaseConfigured()) deleteFunctionFromSupabase(id).catch(() => {});
   }, []);
 
   const markStaffSick = useCallback((staffId: string, sick: boolean) => {
@@ -888,6 +976,7 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
       AsyncStorage.setItem(STORAGE_KEY_STAFF, JSON.stringify(updated));
       return updated;
     });
+    if (isSupabaseConfigured()) upsertStaffToSupabase(member).catch(() => {});
   }, []);
 
   const updateStaff = useCallback((id: string, updates: Partial<StaffMember>) => {
@@ -895,6 +984,10 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
     setStaff((prev) => {
       const updated = prev.map((m) => m.id === id ? { ...m, ...updates } : m);
       AsyncStorage.setItem(STORAGE_KEY_STAFF, JSON.stringify(updated));
+      if (isSupabaseConfigured()) {
+        const changed = updated.find((m) => m.id === id);
+        if (changed) upsertStaffToSupabase(changed).catch(() => {});
+      }
       return updated;
     });
   }, []);
@@ -906,6 +999,7 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
       AsyncStorage.setItem(STORAGE_KEY_STAFF, JSON.stringify(updated));
       return updated;
     });
+    if (isSupabaseConfigured()) deleteStaffFromSupabase(id).catch(() => {});
     setSickStaffIds((prev) => prev.filter((x) => x !== id));
     setCurrentStaffIdState((prev) => {
       if (prev === id) {
@@ -1042,6 +1136,70 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
       }
     })();
   }, [notificationsEnabled, functions]);
+
+  // ── Supabase Realtime — sync changes from other devices ──────────────────────
+  useEffect(() => {
+    if (!isSupabaseConfigured()) return;
+    const sub = subscribeToKitchenChanges({
+      onFunctionChange: (type, fn, oldId) => {
+        setFunctions((prev) => {
+          if (type === "DELETE") {
+            const id = oldId ?? fn.id;
+            const updated = prev.filter((f) => f.id !== id);
+            if (updated.length !== prev.length) AsyncStorage.setItem(STORAGE_KEY_FUNCTIONS, JSON.stringify(updated));
+            return updated;
+          }
+          const exists = prev.find((f) => f.id === fn.id);
+          const updated = exists
+            ? prev.map((f) => (f.id === fn.id ? fn : f))
+            : [...prev, fn].sort((a, b) => a.startTime.localeCompare(b.startTime));
+          AsyncStorage.setItem(STORAGE_KEY_FUNCTIONS, JSON.stringify(updated));
+          return updated;
+        });
+      },
+      onStaffChange: (type, member, oldId) => {
+        setStaff((prev) => {
+          if (type === "DELETE") {
+            const id = oldId ?? member.id;
+            const updated = prev.filter((m) => m.id !== id);
+            if (updated.length !== prev.length) AsyncStorage.setItem(STORAGE_KEY_STAFF, JSON.stringify(updated));
+            return updated;
+          }
+          const exists = prev.find((m) => m.id === member.id);
+          const updated = exists
+            ? prev.map((m) => (m.id === member.id ? member : m))
+            : [...prev, member];
+          AsyncStorage.setItem(STORAGE_KEY_STAFF, JSON.stringify(updated));
+          return updated;
+        });
+      },
+      onPrepChange: (type, item, oldId) => {
+        setPrepItems((prev) => {
+          if (type === "DELETE") {
+            const id = oldId ?? item.id;
+            const updated = prev.filter((p) => p.id !== id);
+            if (updated.length !== prev.length) AsyncStorage.setItem(STORAGE_KEY_PREP, JSON.stringify(updated));
+            return updated;
+          }
+          const exists = prev.find((p) => p.id === item.id);
+          const updated = exists
+            ? prev.map((p) => (p.id === item.id ? item : p))
+            : [...prev, item];
+          AsyncStorage.setItem(STORAGE_KEY_PREP, JSON.stringify(updated));
+          return updated;
+        });
+      },
+      onBroadcastChange: (_, msg) => {
+        setBroadcastState(msg);
+        if (msg) {
+          AsyncStorage.setItem(STORAGE_KEY_BROADCAST, JSON.stringify(msg));
+        } else {
+          AsyncStorage.removeItem(STORAGE_KEY_BROADCAST);
+        }
+      },
+    });
+    return () => sub.unsubscribe();
+  }, []);
 
   return (
     <KitchenContext.Provider

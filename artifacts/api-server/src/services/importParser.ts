@@ -437,6 +437,9 @@ export function convertRowToFunction(
     chefInCharge: row.chefInCharge ?? null,
     importJobId,
     sourceSystem,
+    workspaceId: null,
+    createdBy: null,
+    updatedBy: null,
   };
 }
 

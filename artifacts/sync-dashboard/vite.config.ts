@@ -59,6 +59,13 @@ export default defineConfig({
     dedupe: ["react", "react-dom"],
   },
   root: path.resolve(import.meta.dirname),
+  // Inject Supabase public credentials at build time from Replit Secrets.
+  // These are read from environment variables — never hardcoded.
+  // __SUPABASE_URL__ and __SUPABASE_ANON_KEY__ are declared in src/lib/supabase.ts.
+  define: {
+    __SUPABASE_URL__: JSON.stringify(process.env.SUPABASE_URL ?? ""),
+    __SUPABASE_ANON_KEY__: JSON.stringify(process.env.SUPABASE_ANON_KEY ?? ""),
+  },
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
