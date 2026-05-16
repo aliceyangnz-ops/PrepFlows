@@ -53,6 +53,24 @@ CREATE POLICY "webhook_events_allow_all"     ON webhook_events     FOR ALL USING
 CREATE POLICY "workspaces_allow_all"         ON workspaces         FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "profiles_allow_all"           ON profiles           FOR ALL USING (true) WITH CHECK (true);
 
+-- ── 5. Auth bridge: profiles.id → auth.users(id) ────────────────────────────
+-- Drizzle cannot reference the auth schema directly; this constraint is
+-- applied here after table creation.  Safe to run multiple times (IF NOT EXISTS).
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.table_constraints
+    WHERE constraint_name = 'profiles_id_fkey'
+      AND table_name = 'profiles'
+  ) THEN
+    ALTER TABLE profiles
+      ADD CONSTRAINT profiles_id_fkey
+      FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE;
+  END IF;
+END
+$$;
+
 -- ── Done ─────────────────────────────────────────────────────────────────────
 -- TODO (when auth is enabled):
 --   - Replace "allow all" policies with auth.uid()-scoped policies

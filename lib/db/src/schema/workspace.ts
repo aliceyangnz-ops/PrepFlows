@@ -6,6 +6,7 @@ import {
   timestamp,
   uuid,
 } from "drizzle-orm/pg-core";
+import { kitchenFunctionsTable } from "./kitchen";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 
 // ── workspaces ───────────────────────────────────────────────────────────────
@@ -58,7 +59,7 @@ export const staffMembersTable = pgTable("staff_members", {
 
 export const prepItemsTable = pgTable("prep_items", {
   id:           text("id").primaryKey(),
-  functionId:   text("function_id").notNull(),
+  functionId:   text("function_id").notNull().references(() => kitchenFunctionsTable.id, { onDelete: "cascade" }),
   category:     text("category").notNull().default(""),
   team:         text("team").notNull().default(""),
   dish:         text("dish").notNull().default(""),
@@ -78,14 +79,18 @@ export const prepItemsTable = pgTable("prep_items", {
 // Kitchen-wide announcements (maps to AsyncStorage @kitchen_broadcast).
 
 export const broadcastMessagesTable = pgTable("broadcast_messages", {
-  id:         text("id").primaryKey(),
-  text:       text("text").notNull(),
-  senderName: text("sender_name").notNull().default(""),
-  senderRole: text("sender_role").notNull().default(""),
-  sentAt:     text("sent_at").notNull().default(""),
-  isActive:   boolean("is_active").notNull().default(true),
+  id:          text("id").primaryKey(),
+  text:        text("text").notNull(),
+  senderName:  text("sender_name").notNull().default(""),
+  senderRole:  text("sender_role").notNull().default(""),
+  /** Future auth link — maps to auth.users.id once auth is enabled */
+  senderId:    uuid("sender_id"),
+  sentAt:      text("sent_at").notNull().default(""),
+  isActive:    boolean("is_active").notNull().default(true),
+  /** Array of staff IDs (from staff_members.id) who have dismissed this broadcast */
+  dismissedBy: jsonb("dismissed_by").$type<string[]>().default([]),
   workspaceId: uuid("workspace_id"),
-  createdAt:  timestamp("created_at").notNull().defaultNow(),
+  createdAt:   timestamp("created_at").notNull().defaultNow(),
 });
 
 // ── Zod schemas + inferred types ─────────────────────────────────────────────

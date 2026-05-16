@@ -94,6 +94,26 @@ export function useSyncEvents() {
           });
         },
       )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "connector_configs" },
+        (payload) => {
+          const type = payload.eventType;
+          const row = (type === "DELETE" ? payload.old : payload.new) as Record<string, unknown>;
+          const event: SyncEvent = {
+            id: (row.id as string) ?? crypto.randomUUID(),
+            type: "connector_config",
+            connectorId: row.id as string | undefined,
+            status: row.status as string | undefined,
+            message:
+              type === "DELETE"
+                ? `Connector removed`
+                : `Connector "${(row.name as string) ?? row.id}" ${type === "INSERT" ? "added" : "updated"} — status: ${(row.status as string) ?? "unknown"}`,
+            timestamp: (row.updated_at as string) ?? new Date().toISOString(),
+          };
+          setEvents((prev) => [event, ...prev].slice(0, 100));
+        },
+      )
       .subscribe((status) => {
         setSupabaseConnected(status === "SUBSCRIBED");
       });

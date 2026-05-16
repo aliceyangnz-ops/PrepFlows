@@ -80,7 +80,7 @@ export const connectorConfigsTable = pgTable("connector_configs", {
 
 export const syncRecordsTable = pgTable("sync_records", {
   id:                 uuid("id").primaryKey().defaultRandom(),
-  connectorConfigId:  uuid("connector_config_id").notNull(),
+  connectorConfigId:  uuid("connector_config_id").notNull().references(() => connectorConfigsTable.id, { onDelete: "cascade" }),
   connectorName:      text("connector_name").notNull().default(""),
   source:             connectorSourceEnum("source").notNull(),
   trigger:            syncTriggerEnum("trigger").notNull(),
@@ -103,7 +103,7 @@ export const syncRecordsTable = pgTable("sync_records", {
 
 export const webhookEventsTable = pgTable("webhook_events", {
   id:                uuid("id").primaryKey().defaultRandom(),
-  connectorConfigId: text("connector_config_id").notNull(),
+  connectorConfigId: uuid("connector_config_id").notNull().references(() => connectorConfigsTable.id, { onDelete: "cascade" }),
   source:            connectorSourceEnum("source").notNull(),
   payload:           jsonb("payload").$type<Record<string, unknown>>().notNull().default({}),
   headers:           jsonb("headers").$type<Record<string, string>>().notNull().default({}),
@@ -120,7 +120,7 @@ export const webhookEventsTable = pgTable("webhook_events", {
 
 export const normalizedEventsTable = pgTable("normalized_events", {
   id:                uuid("id").primaryKey().defaultRandom(),
-  connectorConfigId: uuid("connector_config_id").notNull(),
+  connectorConfigId: uuid("connector_config_id").notNull().references(() => connectorConfigsTable.id, { onDelete: "cascade" }),
   source:            connectorSourceEnum("source").notNull(),
   sourceEventId:     text("source_event_id").notNull(),
   payload:           jsonb("payload").$type<Record<string, unknown>>().notNull().default({}),
@@ -136,7 +136,7 @@ export const normalizedEventsTable = pgTable("normalized_events", {
 
 export const mappingRulesTable = pgTable("mapping_rules", {
   id:                uuid("id").primaryKey().defaultRandom(),
-  connectorConfigId: uuid("connector_config_id").notNull(),
+  connectorConfigId: uuid("connector_config_id").notNull().references(() => connectorConfigsTable.id, { onDelete: "cascade" }),
   sourceField:       text("source_field").notNull(),
   targetField:       text("target_field").notNull(),
   transform:         text("transform"), // jsonpath expression or named transform

@@ -176,6 +176,15 @@ export async function loadFromSupabase(): Promise<{
       .limit(1),
   ]);
 
+  // Throw so the caller (KitchenContext hydration) can fall back to AsyncStorage
+  const errs = [
+    fns.error         && `kitchen_functions: ${fns.error.message}`,
+    staffRows.error   && `staff_members: ${staffRows.error.message}`,
+    prepRows.error    && `prep_items: ${prepRows.error.message}`,
+    broadcastRows.error && `broadcast_messages: ${broadcastRows.error.message}`,
+  ].filter(Boolean);
+  if (errs.length > 0) throw new Error(`Supabase load failed: ${errs.join("; ")}`);
+
   return {
     functions: ((fns.data ?? []) as Record<string, unknown>[]).map(rowToFn),
     staff: ((staffRows.data ?? []) as Record<string, unknown>[]).map(rowToStaff),
@@ -197,40 +206,40 @@ export async function migrateToSupabase(data: {
 }): Promise<void> {
   if (!supabase) return;
 
-  // Supabase builders are PromiseLike (thenable) but not Promise — collect as callbacks
-  const ops: Array<() => PromiseLike<unknown>> = [];
+  // Supabase builders are PromiseLike — wrap with Promise.resolve and check error field
+  // (Supabase JS never throws; errors are returned in the .error property)
+  type PostgREST = { error: { message: string } | null };
+  const run = (label: string, builder: PromiseLike<PostgREST>): Promise<void> =>
+    Promise.resolve(builder).then(({ error }) => {
+      if (error) throw new Error(`${label}: ${error.message}`);
+    });
+
+  const tasks: Array<Promise<void>> = [];
 
   if (data.functions.length > 0) {
-    ops.push(() =>
-      supabase!
-        .from("kitchen_functions")
-        .upsert(data.functions.map(fnToRow), { onConflict: "id" }),
-    );
+    tasks.push(run("kitchen_functions",
+      supabase.from("kitchen_functions").upsert(data.functions.map(fnToRow), { onConflict: "id" }),
+    ));
   }
   if (data.staff.length > 0) {
-    ops.push(() =>
-      supabase!
-        .from("staff_members")
-        .upsert(data.staff.map(staffToRow), { onConflict: "id" }),
-    );
+    tasks.push(run("staff_members",
+      supabase.from("staff_members").upsert(data.staff.map(staffToRow), { onConflict: "id" }),
+    ));
   }
   if (data.prepItems.length > 0) {
-    ops.push(() =>
-      supabase!
-        .from("prep_items")
-        .upsert(data.prepItems.map(prepToRow), { onConflict: "id" }),
-    );
+    tasks.push(run("prep_items",
+      supabase.from("prep_items").upsert(data.prepItems.map(prepToRow), { onConflict: "id" }),
+    ));
   }
   if (data.broadcast) {
     const broadcast = data.broadcast;
-    ops.push(() =>
-      supabase!
-        .from("broadcast_messages")
-        .upsert([broadcastToRow(broadcast)], { onConflict: "id" }),
-    );
+    tasks.push(run("broadcast_messages",
+      supabase.from("broadcast_messages").upsert([broadcastToRow(broadcast)], { onConflict: "id" }),
+    ));
   }
 
-  await Promise.all(ops.map((op) => op()));
+  // Throws on any write failure — KitchenContext will NOT set the migration-complete flag
+  await Promise.all(tasks);
 }
 
 // ── Individual upsert / delete helpers ──────────────────────────────────────
