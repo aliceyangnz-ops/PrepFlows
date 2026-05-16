@@ -30,6 +30,157 @@ const COLUMN_ALIASES: Record<string, string[]> = {
   chefInCharge:  ["chef", "chef in charge", "executive chef", "head chef", "assigned chef", "cook"],
 };
 
+// ─── Canonical field labels & order ──────────────────────────────────────
+export const CANONICAL_LABELS: Record<string, string> = {
+  name:         "Event name",
+  date:         "Date",
+  startTime:    "Start time",
+  endTime:      "End time",
+  room:         "Room / Space",
+  floor:        "Floor / Level",
+  pax:          "Guest count",
+  menu:         "Menu",
+  dietaryNotes: "Dietary notes",
+  eventNotes:   "Notes",
+  functionType: "Function type",
+  chefInCharge: "Chef",
+  venue:        "Venue",
+};
+
+export const CANONICAL_ORDER = [
+  "name", "date", "startTime", "endTime", "pax",
+  "room", "floor", "menu", "dietaryNotes",
+  "eventNotes", "functionType", "chefInCharge", "venue",
+] as const;
+
+// ─── Smart scoring helpers ─────────────────────────────────────────────────
+
+function levenshtein(a: string, b: string): number {
+  const m = a.length, n = b.length;
+  const dp: number[][] = Array.from({ length: m + 1 }, (_, i) =>
+    Array.from({ length: n + 1 }, (_, j) => (i === 0 ? j : j === 0 ? i : 0)),
+  );
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      const prev = dp[i - 1]!;
+      const curr = dp[i]!;
+      curr[j] = a[i - 1] === b[j - 1]
+        ? (prev[j - 1] ?? 0)
+        : 1 + Math.min(prev[j] ?? Infinity, curr[j - 1] ?? Infinity, prev[j - 1] ?? Infinity);
+    }
+  }
+  return dp[m]![n] ?? Math.max(m, n);
+}
+
+function tokenize(s: string): string[] {
+  return s.toLowerCase().replace(/[^a-z0-9]/g, " ").split(/\s+/).filter(Boolean);
+}
+
+function scoreHeader(
+  header: string,
+  canonical: string,
+  aliases: string[],
+): { score: number; method: "exact" | "alias" | "smart" | "fuzzy" | "unmatched" } {
+  const norm = header.trim().toLowerCase();
+
+  if (norm === canonical.toLowerCase()) return { score: 100, method: "exact" };
+  if (aliases.some((a) => norm === a)) return { score: 90, method: "alias" };
+
+  // Partial alias containment
+  for (const a of aliases) {
+    if (norm.includes(a) || (a.length > 4 && a.includes(norm))) {
+      return { score: 75, method: "alias" };
+    }
+  }
+
+  // Token overlap against aliases
+  const headerTokens = new Set(tokenize(header));
+  let bestTokenScore = 0;
+  for (const a of [canonical, ...aliases]) {
+    const aliasTokens = tokenize(a);
+    if (aliasTokens.length === 0) continue;
+    const overlap = aliasTokens.filter((t) => headerTokens.has(t)).length;
+    const ratio = overlap / Math.max(aliasTokens.length, headerTokens.size);
+    if (ratio > 0) bestTokenScore = Math.max(bestTokenScore, Math.round(ratio * 70));
+  }
+  if (bestTokenScore >= 50) return { score: bestTokenScore, method: "smart" };
+
+  // Levenshtein on short aliases
+  const candidates = [canonical, ...aliases.filter((a) => a.length <= 20)];
+  let minDist = Infinity;
+  for (const c of candidates) {
+    const d = levenshtein(norm, c);
+    if (d < minDist) minDist = d;
+  }
+  if (minDist <= 2) return { score: 60, method: "smart" };
+  if (minDist <= 4) return { score: 40, method: "fuzzy" };
+  if (minDist <= 6 && norm.length > 4) return { score: 25, method: "fuzzy" };
+
+  if (bestTokenScore > 0) return { score: bestTokenScore, method: "fuzzy" };
+  return { score: 0, method: "unmatched" };
+}
+
+// ─── Column mapping detail type ────────────────────────────────────────────
+export interface ColumnMappingDetail {
+  canonical: string;
+  label: string;
+  header: string | null;
+  confidence: number;
+  method: "exact" | "alias" | "smart" | "fuzzy" | "override" | "unmatched";
+  alternatives: Array<{ header: string; score: number }>;
+}
+
+/**
+ * Score all spreadsheet headers against every canonical kitchen field.
+ * Accepts optional manual overrides { canonical → spreadsheet header }.
+ */
+export function scoreColumnMapping(
+  headers: string[],
+  overrides?: Record<string, string>,
+): ColumnMappingDetail[] {
+  const results: ColumnMappingDetail[] = [];
+  for (const canonical of CANONICAL_ORDER) {
+    const aliases = COLUMN_ALIASES[canonical] ?? [];
+    const label = CANONICAL_LABELS[canonical] ?? canonical;
+
+    // Manual override wins outright
+    if (overrides?.[canonical]) {
+      const oh = overrides[canonical]!;
+      results.push({
+        canonical, label,
+        header: headers.includes(oh) ? oh : null,
+        confidence: 100,
+        method: "override",
+        alternatives: [],
+      });
+      continue;
+    }
+
+    const scores = headers
+      .map((h) => ({ header: h, ...scoreHeader(h, canonical, aliases) }))
+      .sort((a, b) => b.score - a.score);
+
+    const best = scores[0];
+    if (!best || best.score < 40) {
+      results.push({
+        canonical, label, header: null, confidence: 0, method: "unmatched",
+        alternatives: scores.filter((s) => s.score >= 20).slice(0, 3)
+          .map((s) => ({ header: s.header, score: s.score })),
+      });
+    } else {
+      results.push({
+        canonical, label,
+        header: best.header,
+        confidence: best.score,
+        method: best.method,
+        alternatives: scores.slice(1).filter((s) => s.score >= 20).slice(0, 3)
+          .map((s) => ({ header: s.header, score: s.score })),
+      });
+    }
+  }
+  return results;
+}
+
 // ─── Source system detection ───────────────────────────────────────────────
 export type SourceSystem = "moments_explorer" | "delphi" | "opera" | "ivvy" | "priava" | "tripleseat" | "generic";
 
@@ -50,18 +201,15 @@ export function detectSourceSystem(filename: string, headers: string[]): SourceS
   return "generic";
 }
 
-// ─── Column mapping ────────────────────────────────────────────────────────
-export function autoMapColumns(headers: string[]): Record<string, string> {
+// ─── Column mapping (flat Record shim over scoreColumnMapping) ─────────────
+export function autoMapColumns(
+  headers: string[],
+  overrides?: Record<string, string>,
+): Record<string, string> {
+  const details = scoreColumnMapping(headers, overrides);
   const mapping: Record<string, string> = {};
-  for (const header of headers) {
-    const normalized = header.trim().toLowerCase();
-    for (const [canonical, aliases] of Object.entries(COLUMN_ALIASES)) {
-      if (aliases.some((a) => normalized === a || normalized.includes(a))) {
-        if (!mapping[canonical]) {
-          mapping[canonical] = header;
-        }
-      }
-    }
+  for (const d of details) {
+    if (d.header !== null) mapping[d.canonical] = d.header;
   }
   return mapping;
 }

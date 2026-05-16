@@ -3,10 +3,12 @@ import { db, importJobsTable, kitchenFunctionsTable } from "@workspace/db";
 import { eq, desc, gte } from "drizzle-orm";
 import {
   autoMapColumns,
+  scoreColumnMapping,
   detectSourceSystem,
   mapRawRow,
   validateRow,
   convertRowToFunction,
+  type ColumnMappingDetail,
   type ValidationError,
   type ValidationWarning,
 } from "../services/importParser.js";
@@ -23,10 +25,11 @@ const router: IRouter = Router();
  * Returns: import job record + preview of parsed events + column mapping
  */
 router.post("/import/parse", async (req: Request, res: Response) => {
-  const { rows, filename, uploadedBy = "unknown" } = req.body as {
+  const { rows, filename, uploadedBy = "unknown", columnOverrides } = req.body as {
     rows: Record<string, unknown>[];
     filename: string;
     uploadedBy?: string;
+    columnOverrides?: Record<string, string>;
   };
 
   if (!Array.isArray(rows) || rows.length === 0) {
@@ -35,7 +38,8 @@ router.post("/import/parse", async (req: Request, res: Response) => {
   }
 
   const headers = Object.keys(rows[0] || {});
-  const columnMapping = autoMapColumns(headers);
+  const columnMappingDetails: ColumnMappingDetail[] = scoreColumnMapping(headers, columnOverrides);
+  const columnMapping = autoMapColumns(headers, columnOverrides);
   const sourceSystem = detectSourceSystem(filename || "", headers);
 
   const seenNames = new Set<string>();
@@ -73,6 +77,7 @@ router.post("/import/parse", async (req: Request, res: Response) => {
     filename,
     sourceSystem,
     columnMapping,
+    columnMappingDetails,
     totalRows: rows.length,
     validRows: rows.length - allErrors.filter((e) => e.field === "name").length,
     errors: allErrors,

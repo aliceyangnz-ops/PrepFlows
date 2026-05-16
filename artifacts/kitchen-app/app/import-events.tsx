@@ -2,12 +2,19 @@ import { Feather, Ionicons } from "@expo/vector-icons";
 import * as DocumentPicker from "expo-document-picker";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   ActivityIndicator,
   Alert,
   Animated,
   FlatList,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -23,6 +30,7 @@ import {
   confirmImport,
   fetchImportHistory,
   parseImport,
+  type ColumnMappingDetail,
   type ImportHistoryItem,
   type ImportParseResult,
 } from "@/services/cloudSync";
@@ -40,7 +48,6 @@ async function parseSpreadsheet(
     const res = await fetch(uri);
     data = await res.arrayBuffer();
   } else {
-    // On native: read as base64 then convert to ArrayBuffer
     const FileSystem = await import("expo-file-system");
     const b64 = await FileSystem.default.readAsStringAsync(uri, {
       encoding: "base64",
@@ -59,6 +66,277 @@ async function parseSpreadsheet(
     raw: false,
   });
   return rows;
+}
+
+// ─── Confidence badge config ───────────────────────────────────────────────
+
+function getConfidenceConfig(method: ColumnMappingDetail["method"]) {
+  switch (method) {
+    case "exact":    return { label: "Exact",   color: "#22C55E", icon: "check-circle" as const };
+    case "override": return { label: "Custom",  color: "#22C55E", icon: "edit-2" as const };
+    case "alias":    return { label: "Matched", color: "#22C55E", icon: "check" as const };
+    case "smart":    return { label: "AI",      color: "#F97316", icon: "cpu" as const };
+    case "fuzzy":    return { label: "Fuzzy",   color: "#F59E0B", icon: "zap" as const };
+    default:         return { label: "—",       color: "#6B7280", icon: "minus" as const };
+  }
+}
+
+// ─── ColumnMappingEditor ───────────────────────────────────────────────────
+
+function ColumnMappingEditor({
+  details,
+  availableHeaders,
+  onOverride,
+  isRemapping,
+}: {
+  details: ColumnMappingDetail[];
+  availableHeaders: string[];
+  onOverride: (canonical: string, header: string | null) => void;
+  isRemapping: boolean;
+}) {
+  const colors = useColors();
+  const [pickerCanonical, setPickerCanonical] = useState<string | null>(null);
+
+  const pickerDetail = details.find((d) => d.canonical === pickerCanonical) ?? null;
+  const mappedCount = details.filter((d) => d.header !== null).length;
+  const aiCount = details.filter(
+    (d) => d.method === "smart" || d.method === "fuzzy",
+  ).length;
+  const overrideCount = details.filter((d) => d.method === "override").length;
+
+  if (details.length === 0) return null;
+
+  return (
+    <View style={[ms.card, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
+      {/* Header */}
+      <View style={ms.cardHeader}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+          <Text style={[ms.cardTitle, { color: colors.mutedForeground }]}>
+            Column mapping
+          </Text>
+          <View style={[ms.aiBadge, { backgroundColor: colors.primary + "20" }]}>
+            <Feather name="cpu" size={9} color={colors.primary} />
+            <Text style={[ms.aiBadgeText, { color: colors.primary }]}>Smart</Text>
+          </View>
+          {overrideCount > 0 && (
+            <View style={[ms.aiBadge, { backgroundColor: "#22C55E20" }]}>
+              <Feather name="edit-2" size={9} color="#22C55E" />
+              <Text style={[ms.aiBadgeText, { color: "#22C55E" }]}>
+                {overrideCount} custom
+              </Text>
+            </View>
+          )}
+        </View>
+        {isRemapping ? (
+          <ActivityIndicator size="small" color={colors.primary} />
+        ) : (
+          <Text style={[ms.summaryText, { color: colors.mutedForeground }]}>
+            {mappedCount}/{details.length}
+            {aiCount > 0 ? ` · ${aiCount} AI` : ""}
+          </Text>
+        )}
+      </View>
+
+      {/* Legend */}
+      <View style={[ms.legend, { borderBottomColor: colors.border }]}>
+        {(
+          [
+            { label: "Exact match", color: "#22C55E" },
+            { label: "AI matched",  color: "#F97316" },
+            { label: "Fuzzy",       color: "#F59E0B" },
+            { label: "Not found",   color: "#6B7280" },
+          ] as const
+        ).map((item) => (
+          <View key={item.label} style={ms.legendItem}>
+            <View style={[ms.legendDot, { backgroundColor: item.color }]} />
+            <Text style={[ms.legendText, { color: colors.mutedForeground }]}>
+              {item.label}
+            </Text>
+          </View>
+        ))}
+      </View>
+
+      {/* Mapping rows */}
+      {details.map((d, i) => {
+        const cfg = getConfidenceConfig(d.method);
+        const isLast = i === details.length - 1;
+        return (
+          <Pressable
+            key={d.canonical}
+            style={[
+              ms.row,
+              !isLast && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border },
+            ]}
+            onPress={() => setPickerCanonical(d.canonical)}
+          >
+            {/* Confidence dot */}
+            <View style={[ms.dot, { backgroundColor: cfg.color + (d.header ? "FF" : "40") }]} />
+
+            {/* Field label */}
+            <Text
+              style={[
+                ms.fieldLabel,
+                {
+                  color: d.header ? colors.foreground : colors.mutedForeground,
+                  fontWeight: d.header ? "500" : "400",
+                },
+              ]}
+            >
+              {d.label}
+            </Text>
+
+            {/* Arrow */}
+            <Feather
+              name="arrow-right"
+              size={11}
+              color={d.header ? colors.primary : colors.mutedForeground}
+              style={{ marginHorizontal: 8, opacity: d.header ? 1 : 0.4 }}
+            />
+
+            {/* Mapped header + badge */}
+            <View style={ms.rowRight}>
+              <Text
+                style={[
+                  ms.headerText,
+                  {
+                    color: d.header ? colors.primary : colors.mutedForeground,
+                    fontStyle: d.header ? "normal" : "italic",
+                    opacity: d.header ? 1 : 0.6,
+                  },
+                ]}
+                numberOfLines={1}
+              >
+                {d.header ?? "Not detected"}
+              </Text>
+              <View style={[ms.confBadge, { backgroundColor: cfg.color + "20" }]}>
+                <Feather name={cfg.icon} size={9} color={cfg.color} />
+                <Text style={[ms.confBadgeText, { color: cfg.color }]}>
+                  {cfg.label}
+                </Text>
+              </View>
+              <Feather name="chevron-right" size={13} color={colors.mutedForeground} style={{ opacity: 0.5 }} />
+            </View>
+          </Pressable>
+        );
+      })}
+
+      {/* Header picker bottom sheet modal */}
+      <Modal
+        visible={pickerCanonical !== null}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setPickerCanonical(null)}
+      >
+        <Pressable
+          style={ms.modalOverlay}
+          onPress={() => setPickerCanonical(null)}
+        >
+          <Pressable
+            style={[ms.modalSheet, { backgroundColor: colors.card }]}
+            onPress={(e) => e.stopPropagation()}
+          >
+            <View style={[ms.modalHandle, { backgroundColor: colors.border }]} />
+
+            <Text style={[ms.modalTitle, { color: colors.foreground }]}>
+              Map "{pickerDetail?.label}"
+            </Text>
+            <Text style={[ms.modalSubtitle, { color: colors.mutedForeground }]}>
+              Choose which spreadsheet column maps to this field
+            </Text>
+
+            {/* Current auto-suggestion */}
+            {pickerDetail?.alternatives && pickerDetail.alternatives.length > 0 && (
+              <View style={[ms.suggestionsBox, { backgroundColor: colors.background, borderColor: colors.border }]}>
+                <Text style={[ms.suggestionsTitle, { color: colors.mutedForeground }]}>
+                  Other suggestions
+                </Text>
+                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
+                  {pickerDetail.alternatives.map((alt) => (
+                    <Pressable
+                      key={alt.header}
+                      style={[ms.suggestionChip, { borderColor: colors.primary + "60", backgroundColor: colors.primary + "10" }]}
+                      onPress={() => {
+                        onOverride(pickerCanonical!, alt.header);
+                        setPickerCanonical(null);
+                      }}
+                    >
+                      <Text style={[ms.suggestionChipText, { color: colors.primary }]} numberOfLines={1}>
+                        {alt.header}
+                      </Text>
+                      <Text style={[ms.suggestionScore, { color: colors.primary }]}>
+                        {alt.score}%
+                      </Text>
+                    </Pressable>
+                  ))}
+                </View>
+              </View>
+            )}
+
+            <ScrollView style={{ maxHeight: 320 }} showsVerticalScrollIndicator={false}>
+              {/* Not mapped option */}
+              <Pressable
+                style={[ms.pickerItem, { borderBottomColor: colors.border }]}
+                onPress={() => {
+                  onOverride(pickerCanonical!, null);
+                  setPickerCanonical(null);
+                }}
+              >
+                <Text style={[ms.pickerItemText, { color: colors.mutedForeground, fontStyle: "italic" }]}>
+                  — Not mapped —
+                </Text>
+                {pickerDetail?.header === null && (
+                  <Feather name="check" size={16} color={colors.primary} />
+                )}
+              </Pressable>
+
+              {/* All spreadsheet headers */}
+              {availableHeaders.map((h) => {
+                const isSelected = pickerDetail?.header === h;
+                return (
+                  <Pressable
+                    key={h}
+                    style={[
+                      ms.pickerItem,
+                      { borderBottomColor: colors.border },
+                      isSelected && { backgroundColor: colors.primary + "12" },
+                    ]}
+                    onPress={() => {
+                      onOverride(pickerCanonical!, h);
+                      setPickerCanonical(null);
+                    }}
+                  >
+                    <Text
+                      style={[
+                        ms.pickerItemText,
+                        {
+                          color: isSelected ? colors.primary : colors.foreground,
+                          fontWeight: isSelected ? "700" : "400",
+                        },
+                      ]}
+                    >
+                      {h}
+                    </Text>
+                    {isSelected && (
+                      <Feather name="check" size={16} color={colors.primary} />
+                    )}
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+
+            <Pressable
+              style={[ms.modalCancel, { borderTopColor: colors.border }]}
+              onPress={() => setPickerCanonical(null)}
+            >
+              <Text style={[ms.modalCancelText, { color: colors.mutedForeground }]}>
+                Cancel
+              </Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
+    </View>
+  );
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────
@@ -143,24 +421,6 @@ function ValidationTable({
   );
 }
 
-function ColumnMappingTable({ mapping }: { mapping: Record<string, string> }) {
-  const colors = useColors();
-  const entries = Object.entries(mapping);
-  if (entries.length === 0) return null;
-  return (
-    <View style={[s.mappingTable, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
-      <Text style={[s.mappingTitle, { color: colors.mutedForeground }]}>Detected column mapping</Text>
-      {entries.map(([canonical, header]) => (
-        <View key={canonical} style={s.mappingRow}>
-          <Text style={[s.mappingCanonical, { color: colors.mutedForeground }]}>{canonical}</Text>
-          <Feather name="arrow-right" size={12} color={colors.mutedForeground} style={{ marginHorizontal: 6 }} />
-          <Text style={[s.mappingHeader, { color: colors.primary }]}>{header}</Text>
-        </View>
-      ))}
-    </View>
-  );
-}
-
 function PreviewCard({ row, index }: { row: Record<string, unknown>; index: number }) {
   const colors = useColors();
   return (
@@ -197,14 +457,22 @@ export default function ImportEventsScreen() {
 
   const [step, setStep] = useState<Step>("upload");
   const [isLoading, setIsLoading] = useState(false);
+  const [isRemapping, setIsRemapping] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [filename, setFilename] = useState("");
   const [rawRows, setRawRows] = useState<Record<string, unknown>[]>([]);
   const [parseResult, setParseResult] = useState<ImportParseResult | null>(null);
+  const [columnOverrides, setColumnOverrides] = useState<Record<string, string>>({});
   const [history, setHistory] = useState<ImportHistoryItem[]>([]);
   const [historyLoading, setHistoryLoading] = useState(true);
   const [importResult, setImportResult] = useState<{ imported: number; failed: number } | null>(null);
   const [activeTab, setActiveTab] = useState<"upload" | "history">("upload");
+
+  // All headers from the uploaded spreadsheet (for the picker)
+  const availableHeaders = useMemo(
+    () => (rawRows.length > 0 ? Object.keys(rawRows[0] ?? {}) : []),
+    [rawRows],
+  );
 
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
@@ -231,6 +499,7 @@ export default function ImportEventsScreen() {
 
   const handleFile = useCallback(async (uri: string, name: string) => {
     setIsLoading(true);
+    setColumnOverrides({});
     try {
       const rows = await parseSpreadsheet(uri, name);
       if (rows.length === 0) {
@@ -283,6 +552,37 @@ export default function ImportEventsScreen() {
     [handleFile],
   );
 
+  // When the user manually overrides a column mapping → re-parse with the new overrides
+  const handleMappingOverride = useCallback(
+    async (canonical: string, header: string | null) => {
+      const newOverrides: Record<string, string> = { ...columnOverrides };
+      if (header === null) {
+        delete newOverrides[canonical];
+      } else {
+        newOverrides[canonical] = header;
+      }
+      setColumnOverrides(newOverrides);
+
+      if (!parseResult || rawRows.length === 0) return;
+      setIsRemapping(true);
+      try {
+        const result = await parseImport({
+          rows: rawRows,
+          filename,
+          uploadedBy,
+          columnOverrides: newOverrides,
+        });
+        setParseResult(result);
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      } catch {
+        // Silently ignore re-parse errors — keep existing result
+      } finally {
+        setIsRemapping(false);
+      }
+    },
+    [columnOverrides, parseResult, rawRows, filename, uploadedBy],
+  );
+
   const handleConfirmImport = useCallback(async () => {
     if (!parseResult) return;
     setStep("importing");
@@ -290,11 +590,9 @@ export default function ImportEventsScreen() {
     try {
       const result = await confirmImport(parseResult.jobId, rawRows, uploadedBy);
 
-      // Refresh import history
       const newHistory = await fetchImportHistory().catch(() => history);
       setHistory(newHistory);
 
-      // Pull newly imported functions into local context
       const { fetchCloudFunctions } = await import("@/services/cloudSync");
       const cloudFns = await fetchCloudFunctions();
       const importedIds = new Set(result.importedIds);
@@ -322,6 +620,7 @@ export default function ImportEventsScreen() {
     setRawRows([]);
     setParseResult(null);
     setImportResult(null);
+    setColumnOverrides({});
   }, []);
 
   // ── Render ──────────────────────────────────────────────────────────────
@@ -380,7 +679,6 @@ export default function ImportEventsScreen() {
   const renderReview = () => {
     if (!parseResult) return null;
     const hasErrors = parseResult.errors.length > 0;
-    const hasWarnings = parseResult.warnings.length > 0;
     return (
       <ScrollView contentContainerStyle={s.scrollContent}>
         {/* Summary */}
@@ -412,8 +710,13 @@ export default function ImportEventsScreen() {
           </View>
         </View>
 
-        {/* Column mapping */}
-        <ColumnMappingTable mapping={parseResult.columnMapping} />
+        {/* Smart column mapping editor */}
+        <ColumnMappingEditor
+          details={parseResult.columnMappingDetails ?? []}
+          availableHeaders={availableHeaders}
+          onOverride={handleMappingOverride}
+          isRemapping={isRemapping}
+        />
 
         {/* Errors / warnings */}
         <ValidationTable items={parseResult.errors} type="error" />
@@ -647,11 +950,6 @@ const s = StyleSheet.create({
   sourceBadgeRow:   { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 16, paddingVertical: 10, borderTopWidth: StyleSheet.hairlineWidth },
   sourceBadgeText:  { fontSize: 12, fontWeight: "500" },
   sectionLabel:     { fontSize: 12, fontWeight: "600", textTransform: "uppercase", letterSpacing: 0.5, marginTop: 12, marginBottom: 6 },
-  mappingTable:     { borderRadius: 10, borderWidth: 1, padding: 12, marginBottom: 12 },
-  mappingTitle:     { fontSize: 11, fontWeight: "600", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 },
-  mappingRow:       { flexDirection: "row", alignItems: "center", marginBottom: 4 },
-  mappingCanonical: { fontSize: 12, width: 100 },
-  mappingHeader:    { fontSize: 12, fontWeight: "600", flex: 1 },
   validationTable:  { borderRadius: 10, borderWidth: 1, padding: 12, marginBottom: 10 },
   validationTitle:  { fontSize: 12, fontWeight: "700", marginBottom: 8 },
   validationRow:    { flexDirection: "row", alignItems: "flex-start", marginBottom: 4, gap: 8 },
@@ -684,4 +982,40 @@ const s = StyleSheet.create({
   badgeText:        { fontSize: 11, fontWeight: "700" },
   emptyHistory:     { flex: 1, alignItems: "center", justifyContent: "center", padding: 40, gap: 12 },
   emptyHistoryText: { fontSize: 15 },
+});
+
+// ─── ColumnMappingEditor styles (ms = mapping styles) ────────────────────
+
+const ms = StyleSheet.create({
+  card:             { borderRadius: 12, borderWidth: 1, marginBottom: 12, overflow: "hidden" },
+  cardHeader:       { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 14, paddingTop: 12, paddingBottom: 8 },
+  cardTitle:        { fontSize: 11, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.5 },
+  aiBadge:          { flexDirection: "row", alignItems: "center", gap: 3, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
+  aiBadgeText:      { fontSize: 10, fontWeight: "700" },
+  summaryText:      { fontSize: 11, fontWeight: "600" },
+  legend:           { flexDirection: "row", flexWrap: "wrap", gap: 10, paddingHorizontal: 14, paddingBottom: 10, borderBottomWidth: StyleSheet.hairlineWidth },
+  legendItem:       { flexDirection: "row", alignItems: "center", gap: 4 },
+  legendDot:        { width: 6, height: 6, borderRadius: 3 },
+  legendText:       { fontSize: 10 },
+  row:              { flexDirection: "row", alignItems: "center", paddingHorizontal: 14, paddingVertical: 11 },
+  dot:              { width: 7, height: 7, borderRadius: 4, marginRight: 10, flexShrink: 0 },
+  fieldLabel:       { fontSize: 12, width: 96, flexShrink: 0 },
+  rowRight:         { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "flex-end", gap: 5, minWidth: 0 },
+  headerText:       { fontSize: 12, fontWeight: "600", flex: 1, textAlign: "right" },
+  confBadge:        { flexDirection: "row", alignItems: "center", gap: 3, paddingHorizontal: 5, paddingVertical: 2, borderRadius: 4, flexShrink: 0 },
+  confBadgeText:    { fontSize: 9, fontWeight: "700" },
+  modalOverlay:     { flex: 1, backgroundColor: "#00000070", justifyContent: "flex-end" },
+  modalSheet:       { borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingTop: 12, paddingBottom: 32, maxHeight: "85%" },
+  modalHandle:      { width: 36, height: 4, borderRadius: 2, alignSelf: "center", marginBottom: 16 },
+  modalTitle:       { fontSize: 16, fontWeight: "700", paddingHorizontal: 20, marginBottom: 4 },
+  modalSubtitle:    { fontSize: 13, paddingHorizontal: 20, marginBottom: 12, lineHeight: 18 },
+  suggestionsBox:   { marginHorizontal: 16, marginBottom: 12, padding: 12, borderRadius: 10, borderWidth: 1 },
+  suggestionsTitle: { fontSize: 10, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 },
+  suggestionChip:   { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, borderWidth: 1 },
+  suggestionChipText: { fontSize: 12, fontWeight: "600", maxWidth: 120 },
+  suggestionScore:  { fontSize: 10, fontWeight: "700" },
+  pickerItem:       { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 20, paddingVertical: 14, borderBottomWidth: StyleSheet.hairlineWidth },
+  pickerItemText:   { fontSize: 14, flex: 1 },
+  modalCancel:      { paddingVertical: 16, alignItems: "center", borderTopWidth: StyleSheet.hairlineWidth },
+  modalCancelText:  { fontSize: 15, fontWeight: "600" },
 });

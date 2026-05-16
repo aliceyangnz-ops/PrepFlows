@@ -22,10 +22,20 @@ const BASE_URL = (() => {
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
+export interface ColumnMappingDetail {
+  canonical: string;
+  label: string;
+  header: string | null;
+  confidence: number;
+  method: "exact" | "alias" | "smart" | "fuzzy" | "override" | "unmatched";
+  alternatives: Array<{ header: string; score: number }>;
+}
+
 export interface ImportParseRequest {
   rows: Record<string, unknown>[];
   filename: string;
   uploadedBy?: string;
+  columnOverrides?: Record<string, string>;
 }
 
 export interface ImportParseResult {
@@ -33,6 +43,7 @@ export interface ImportParseResult {
   filename: string;
   sourceSystem: string;
   columnMapping: Record<string, string>;
+  columnMappingDetails: ColumnMappingDetail[];
   totalRows: number;
   validRows: number;
   errors: Array<{ row: number; field: string; message: string }>;
