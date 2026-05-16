@@ -10,13 +10,18 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: connectors
+    description: Banquet connector configuration
+  - name: sync
+    description: Sync operations and history
+  - name: webhooks
+    description: Incoming webhook events
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +29,243 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # ── Connectors ────────────────────────────────────────────────────────────────
+  /connectors/sources:
+    get:
+      operationId: listConnectorSources
+      tags: [connectors]
+      summary: List available PMS source types
+      responses:
+        "200":
+          description: Source list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sources:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ConnectorSource"
+
+  /connectors:
+    get:
+      operationId: listConnectors
+      tags: [connectors]
+      summary: List all connector configurations
+      responses:
+        "200":
+          description: Connector list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  connectors:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Connector"
+    post:
+      operationId: createConnector
+      tags: [connectors]
+      summary: Create a connector configuration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConnectorInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  connector:
+                    $ref: "#/components/schemas/Connector"
+
+  /connectors/{id}:
+    get:
+      operationId: getConnector
+      tags: [connectors]
+      summary: Get a single connector
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Connector
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  connector:
+                    $ref: "#/components/schemas/Connector"
+    patch:
+      operationId: updateConnector
+      tags: [connectors]
+      summary: Update a connector configuration
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConnectorUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  connector:
+                    $ref: "#/components/schemas/Connector"
+    delete:
+      operationId: deleteConnector
+      tags: [connectors]
+      summary: Delete a connector
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deleted: { type: boolean }
+
+  # ── Sync ──────────────────────────────────────────────────────────────────────
+  /sync/records:
+    get:
+      operationId: listSyncRecords
+      tags: [sync]
+      summary: List sync history records
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, default: 50 }
+        - name: offset
+          in: query
+          schema: { type: integer, default: 0 }
+        - name: connectorId
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: Sync record list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  records:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/SyncRecord"
+
+  /sync/records/{id}:
+    get:
+      operationId: getSyncRecord
+      tags: [sync]
+      summary: Get a single sync record
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Sync record
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  record:
+                    $ref: "#/components/schemas/SyncRecord"
+    delete:
+      operationId: deleteSyncRecord
+      tags: [sync]
+      summary: Delete a sync record
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deleted: { type: boolean }
+
+  /sync/{connectorId}:
+    post:
+      operationId: triggerSync
+      tags: [sync]
+      summary: Trigger a manual sync for a connector
+      parameters:
+        - name: connectorId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SyncTriggerInput"
+      responses:
+        "200":
+          description: Sync started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncResult"
+
+  # ── Webhooks ──────────────────────────────────────────────────────────────────
+  /webhooks/events:
+    get:
+      operationId: listWebhookEvents
+      tags: [webhooks]
+      summary: List recent webhook events
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, default: 50 }
+      responses:
+        "200":
+          description: Webhook event list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  events:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/WebhookEvent"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +276,115 @@ components:
       required:
         - status
 
+    ConnectorSource:
+      type: object
+      properties:
+        source:
+          type: string
+        displayName:
+          type: string
+      required: [source, displayName]
+
+    Connector:
+      type: object
+      properties:
+        id:           { type: string }
+        name:         { type: string }
+        source:       { type: string }
+        status:       { type: string }
+        apiEndpoint:  { type: ["string", "null"] }
+        webhookPath:  { type: string }
+        schedule:     { type: ["string", "null"] }
+        lastSyncAt:   { type: ["string", "null"] }
+        lastSyncStatus: { type: ["string", "null"] }
+        lastSyncError:  { type: ["string", "null"] }
+        createdAt:    { type: string }
+        updatedAt:    { type: string }
+      required: [id, name, source, status, webhookPath, createdAt, updatedAt]
+
+    ConnectorInput:
+      type: object
+      properties:
+        name:          { type: string }
+        source:        { type: string }
+        apiEndpoint:   { type: string }
+        apiKey:        { type: string }
+        webhookSecret: { type: string }
+        schedule:      { type: string }
+      required: [name, source]
+
+    ConnectorUpdate:
+      type: object
+      properties:
+        name:          { type: string }
+        status:        { type: string }
+        apiEndpoint:   { type: string }
+        apiKey:        { type: string }
+        webhookSecret: { type: string }
+        schedule:      { type: string }
+
+    SyncRecord:
+      type: object
+      properties:
+        id:                { type: string }
+        connectorConfigId: { type: string }
+        connectorName:     { type: string }
+        source:            { type: string }
+        trigger:           { type: string }
+        status:            { type: string }
+        eventsProcessed:   { type: integer }
+        eventsCreated:     { type: integer }
+        eventsUpdated:     { type: integer }
+        eventsSkipped:     { type: integer }
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              row:      { type: integer }
+              field:    { type: string }
+              message:  { type: string }
+              severity: { type: string }
+        startedAt:    { type: string }
+        completedAt:  { type: ["string", "null"] }
+        durationMs:   { type: ["integer", "null"] }
+      required: [id, connectorConfigId, connectorName, source, trigger, status,
+                 eventsProcessed, eventsCreated, eventsUpdated, eventsSkipped,
+                 errors, startedAt]
+
+    SyncTriggerInput:
+      type: object
+      properties:
+        rows:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+      required: [rows]
+
+    SyncResult:
+      type: object
+      properties:
+        syncRecordId: { type: string }
+        created:      { type: integer }
+        updated:      { type: integer }
+        skipped:      { type: integer }
+        errors:
+          type: array
+          items:
+            type: object
+      required: [syncRecordId, created, updated, skipped, errors]
+
+    WebhookEvent:
+      type: object
+      properties:
+        id:                { type: string }
+        connectorConfigId: { type: string }
+        source:            { type: string }
+        payload:           { type: object, additionalProperties: true }
+        headers:           { type: object, additionalProperties: true }
+        processed:         { type: boolean }
+        error:             { type: ["string", "null"] }
+        receivedAt:        { type: string }
+        processedAt:       { type: ["string", "null"] }
+      required: [id, connectorConfigId, source, payload, headers, processed, receivedAt]

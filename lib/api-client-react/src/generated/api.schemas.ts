@@ -8,3 +8,156 @@
 export interface HealthStatus {
   status: string;
 }
+
+export interface ConnectorSource {
+  source: string;
+  displayName: string;
+}
+
+export interface Connector {
+  id: string;
+  name: string;
+  source: string;
+  status: string;
+  /** @nullable */
+  apiEndpoint?: string | null;
+  webhookPath: string;
+  /** @nullable */
+  schedule?: string | null;
+  /** @nullable */
+  lastSyncAt?: string | null;
+  /** @nullable */
+  lastSyncStatus?: string | null;
+  /** @nullable */
+  lastSyncError?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ConnectorInput {
+  name: string;
+  source: string;
+  apiEndpoint?: string;
+  apiKey?: string;
+  webhookSecret?: string;
+  schedule?: string;
+}
+
+export interface ConnectorUpdate {
+  name?: string;
+  status?: string;
+  apiEndpoint?: string;
+  apiKey?: string;
+  webhookSecret?: string;
+  schedule?: string;
+}
+
+export type SyncRecordErrorsItem = {
+  row?: number;
+  field?: string;
+  message?: string;
+  severity?: string;
+};
+
+export interface SyncRecord {
+  id: string;
+  connectorConfigId: string;
+  connectorName: string;
+  source: string;
+  trigger: string;
+  status: string;
+  eventsProcessed: number;
+  eventsCreated: number;
+  eventsUpdated: number;
+  eventsSkipped: number;
+  errors: SyncRecordErrorsItem[];
+  startedAt: string;
+  /** @nullable */
+  completedAt?: string | null;
+  /** @nullable */
+  durationMs?: number | null;
+}
+
+export type SyncTriggerInputRowsItem = { [key: string]: unknown };
+
+export interface SyncTriggerInput {
+  rows: SyncTriggerInputRowsItem[];
+}
+
+export type SyncResultErrorsItem = { [key: string]: unknown };
+
+export interface SyncResult {
+  syncRecordId: string;
+  created: number;
+  updated: number;
+  skipped: number;
+  errors: SyncResultErrorsItem[];
+}
+
+export type WebhookEventPayload = { [key: string]: unknown };
+
+export type WebhookEventHeaders = { [key: string]: unknown };
+
+export interface WebhookEvent {
+  id: string;
+  connectorConfigId: string;
+  source: string;
+  payload: WebhookEventPayload;
+  headers: WebhookEventHeaders;
+  processed: boolean;
+  /** @nullable */
+  error?: string | null;
+  receivedAt: string;
+  /** @nullable */
+  processedAt?: string | null;
+}
+
+export type ListConnectorSources200 = {
+  sources?: ConnectorSource[];
+};
+
+export type ListConnectors200 = {
+  connectors?: Connector[];
+};
+
+export type CreateConnector201 = {
+  connector?: Connector;
+};
+
+export type GetConnector200 = {
+  connector?: Connector;
+};
+
+export type UpdateConnector200 = {
+  connector?: Connector;
+};
+
+export type DeleteConnector200 = {
+  deleted?: boolean;
+};
+
+export type ListSyncRecordsParams = {
+  limit?: number;
+  offset?: number;
+  connectorId?: string;
+};
+
+export type ListSyncRecords200 = {
+  records?: SyncRecord[];
+};
+
+export type GetSyncRecord200 = {
+  record?: SyncRecord;
+};
+
+export type DeleteSyncRecord200 = {
+  deleted?: boolean;
+};
+
+export type ListWebhookEventsParams = {
+  limit?: number;
+};
+
+export type ListWebhookEvents200 = {
+  events?: WebhookEvent[];
+};

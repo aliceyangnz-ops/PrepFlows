@@ -8,9 +8,264 @@
 import * as zod from "zod";
 
 /**
- * Returns server health status
  * @summary Health check
  */
 export const HealthCheckResponse = zod.object({
   status: zod.string(),
+});
+
+/**
+ * @summary List available PMS source types
+ */
+export const ListConnectorSourcesResponse = zod.object({
+  sources: zod
+    .array(
+      zod.object({
+        source: zod.string(),
+        displayName: zod.string(),
+      }),
+    )
+    .optional(),
+});
+
+/**
+ * @summary List all connector configurations
+ */
+export const ListConnectorsResponse = zod.object({
+  connectors: zod
+    .array(
+      zod.object({
+        id: zod.string(),
+        name: zod.string(),
+        source: zod.string(),
+        status: zod.string(),
+        apiEndpoint: zod.string().nullish(),
+        webhookPath: zod.string(),
+        schedule: zod.string().nullish(),
+        lastSyncAt: zod.string().nullish(),
+        lastSyncStatus: zod.string().nullish(),
+        lastSyncError: zod.string().nullish(),
+        createdAt: zod.string(),
+        updatedAt: zod.string(),
+      }),
+    )
+    .optional(),
+});
+
+/**
+ * @summary Create a connector configuration
+ */
+export const CreateConnectorBody = zod.object({
+  name: zod.string(),
+  source: zod.string(),
+  apiEndpoint: zod.string().optional(),
+  apiKey: zod.string().optional(),
+  webhookSecret: zod.string().optional(),
+  schedule: zod.string().optional(),
+});
+
+/**
+ * @summary Get a single connector
+ */
+export const GetConnectorParams = zod.object({
+  id: zod.coerce.string(),
+});
+
+export const GetConnectorResponse = zod.object({
+  connector: zod
+    .object({
+      id: zod.string(),
+      name: zod.string(),
+      source: zod.string(),
+      status: zod.string(),
+      apiEndpoint: zod.string().nullish(),
+      webhookPath: zod.string(),
+      schedule: zod.string().nullish(),
+      lastSyncAt: zod.string().nullish(),
+      lastSyncStatus: zod.string().nullish(),
+      lastSyncError: zod.string().nullish(),
+      createdAt: zod.string(),
+      updatedAt: zod.string(),
+    })
+    .optional(),
+});
+
+/**
+ * @summary Update a connector configuration
+ */
+export const UpdateConnectorParams = zod.object({
+  id: zod.coerce.string(),
+});
+
+export const UpdateConnectorBody = zod.object({
+  name: zod.string().optional(),
+  status: zod.string().optional(),
+  apiEndpoint: zod.string().optional(),
+  apiKey: zod.string().optional(),
+  webhookSecret: zod.string().optional(),
+  schedule: zod.string().optional(),
+});
+
+export const UpdateConnectorResponse = zod.object({
+  connector: zod
+    .object({
+      id: zod.string(),
+      name: zod.string(),
+      source: zod.string(),
+      status: zod.string(),
+      apiEndpoint: zod.string().nullish(),
+      webhookPath: zod.string(),
+      schedule: zod.string().nullish(),
+      lastSyncAt: zod.string().nullish(),
+      lastSyncStatus: zod.string().nullish(),
+      lastSyncError: zod.string().nullish(),
+      createdAt: zod.string(),
+      updatedAt: zod.string(),
+    })
+    .optional(),
+});
+
+/**
+ * @summary Delete a connector
+ */
+export const DeleteConnectorParams = zod.object({
+  id: zod.coerce.string(),
+});
+
+export const DeleteConnectorResponse = zod.object({
+  deleted: zod.boolean().optional(),
+});
+
+/**
+ * @summary List sync history records
+ */
+export const listSyncRecordsQueryLimitDefault = 50;
+export const listSyncRecordsQueryOffsetDefault = 0;
+
+export const ListSyncRecordsQueryParams = zod.object({
+  limit: zod.coerce.number().default(listSyncRecordsQueryLimitDefault),
+  offset: zod.coerce.number().default(listSyncRecordsQueryOffsetDefault),
+  connectorId: zod.coerce.string().optional(),
+});
+
+export const ListSyncRecordsResponse = zod.object({
+  records: zod
+    .array(
+      zod.object({
+        id: zod.string(),
+        connectorConfigId: zod.string(),
+        connectorName: zod.string(),
+        source: zod.string(),
+        trigger: zod.string(),
+        status: zod.string(),
+        eventsProcessed: zod.number(),
+        eventsCreated: zod.number(),
+        eventsUpdated: zod.number(),
+        eventsSkipped: zod.number(),
+        errors: zod.array(
+          zod.object({
+            row: zod.number().optional(),
+            field: zod.string().optional(),
+            message: zod.string().optional(),
+            severity: zod.string().optional(),
+          }),
+        ),
+        startedAt: zod.string(),
+        completedAt: zod.string().nullish(),
+        durationMs: zod.number().nullish(),
+      }),
+    )
+    .optional(),
+});
+
+/**
+ * @summary Get a single sync record
+ */
+export const GetSyncRecordParams = zod.object({
+  id: zod.coerce.string(),
+});
+
+export const GetSyncRecordResponse = zod.object({
+  record: zod
+    .object({
+      id: zod.string(),
+      connectorConfigId: zod.string(),
+      connectorName: zod.string(),
+      source: zod.string(),
+      trigger: zod.string(),
+      status: zod.string(),
+      eventsProcessed: zod.number(),
+      eventsCreated: zod.number(),
+      eventsUpdated: zod.number(),
+      eventsSkipped: zod.number(),
+      errors: zod.array(
+        zod.object({
+          row: zod.number().optional(),
+          field: zod.string().optional(),
+          message: zod.string().optional(),
+          severity: zod.string().optional(),
+        }),
+      ),
+      startedAt: zod.string(),
+      completedAt: zod.string().nullish(),
+      durationMs: zod.number().nullish(),
+    })
+    .optional(),
+});
+
+/**
+ * @summary Delete a sync record
+ */
+export const DeleteSyncRecordParams = zod.object({
+  id: zod.coerce.string(),
+});
+
+export const DeleteSyncRecordResponse = zod.object({
+  deleted: zod.boolean().optional(),
+});
+
+/**
+ * @summary Trigger a manual sync for a connector
+ */
+export const TriggerSyncParams = zod.object({
+  connectorId: zod.coerce.string(),
+});
+
+export const TriggerSyncBody = zod.object({
+  rows: zod.array(zod.record(zod.string(), zod.unknown())),
+});
+
+export const TriggerSyncResponse = zod.object({
+  syncRecordId: zod.string(),
+  created: zod.number(),
+  updated: zod.number(),
+  skipped: zod.number(),
+  errors: zod.array(zod.object({}).passthrough()),
+});
+
+/**
+ * @summary List recent webhook events
+ */
+export const listWebhookEventsQueryLimitDefault = 50;
+
+export const ListWebhookEventsQueryParams = zod.object({
+  limit: zod.coerce.number().default(listWebhookEventsQueryLimitDefault),
+});
+
+export const ListWebhookEventsResponse = zod.object({
+  events: zod
+    .array(
+      zod.object({
+        id: zod.string(),
+        connectorConfigId: zod.string(),
+        source: zod.string(),
+        payload: zod.record(zod.string(), zod.unknown()),
+        headers: zod.record(zod.string(), zod.unknown()),
+        processed: zod.boolean(),
+        error: zod.string().nullish(),
+        receivedAt: zod.string(),
+        processedAt: zod.string().nullish(),
+      }),
+    )
+    .optional(),
 });

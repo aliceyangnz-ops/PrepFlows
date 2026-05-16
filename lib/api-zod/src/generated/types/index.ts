@@ -6,4 +6,29 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from "./connector";
+export * from "./connectorInput";
+export * from "./connectorSource";
+export * from "./connectorUpdate";
+export * from "./createConnector201";
+export * from "./deleteConnector200";
+export * from "./deleteSyncRecord200";
+export * from "./getConnector200";
+export * from "./getSyncRecord200";
 export * from "./healthStatus";
+export * from "./listConnectors200";
+export * from "./listConnectorSources200";
+export * from "./listSyncRecords200";
+export * from "./listSyncRecordsParams";
+export * from "./listWebhookEvents200";
+export * from "./listWebhookEventsParams";
+export * from "./syncRecord";
+export * from "./syncRecordErrorsItem";
+export * from "./syncResult";
+export * from "./syncResultErrorsItem";
+export * from "./syncTriggerInput";
+export * from "./syncTriggerInputRowsItem";
+export * from "./updateConnector200";
+export * from "./webhookEvent";
+export * from "./webhookEventHeaders";
+export * from "./webhookEventPayload";

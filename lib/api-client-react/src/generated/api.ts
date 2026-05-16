@@ -5,18 +5,39 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import type {
+  MutationFunction,
   QueryFunction,
   QueryKey,
+  UseMutationOptions,
+  UseMutationResult,
   UseQueryOptions,
   UseQueryResult,
 } from "@tanstack/react-query";
 
-import type { HealthStatus } from "./api.schemas";
+import type {
+  ConnectorInput,
+  ConnectorUpdate,
+  CreateConnector201,
+  DeleteConnector200,
+  DeleteSyncRecord200,
+  GetConnector200,
+  GetSyncRecord200,
+  HealthStatus,
+  ListConnectorSources200,
+  ListConnectors200,
+  ListSyncRecords200,
+  ListSyncRecordsParams,
+  ListWebhookEvents200,
+  ListWebhookEventsParams,
+  SyncResult,
+  SyncTriggerInput,
+  UpdateConnector200,
+} from "./api.schemas";
 
 import { customFetch } from "../custom-fetch";
-import type { ErrorType } from "../custom-fetch";
+import type { ErrorType, BodyType } from "../custom-fetch";
 
 type AwaitedInput<T> = PromiseLike<T> | T;
 
@@ -25,7 +46,6 @@ type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 /**
- * Returns server health status
  * @summary Health check
  */
 export const getHealthCheckUrl = () => {
@@ -92,6 +112,949 @@ export function useHealthCheck<
   request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getHealthCheckQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary List available PMS source types
+ */
+export const getListConnectorSourcesUrl = () => {
+  return `/api/connectors/sources`;
+};
+
+export const listConnectorSources = async (
+  options?: RequestInit,
+): Promise<ListConnectorSources200> => {
+  return customFetch<ListConnectorSources200>(getListConnectorSourcesUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListConnectorSourcesQueryKey = () => {
+  return [`/api/connectors/sources`] as const;
+};
+
+export const getListConnectorSourcesQueryOptions = <
+  TData = Awaited<ReturnType<typeof listConnectorSources>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listConnectorSources>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListConnectorSourcesQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listConnectorSources>>
+  > = ({ signal }) => listConnectorSources({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listConnectorSources>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListConnectorSourcesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listConnectorSources>>
+>;
+export type ListConnectorSourcesQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List available PMS source types
+ */
+
+export function useListConnectorSources<
+  TData = Awaited<ReturnType<typeof listConnectorSources>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listConnectorSources>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListConnectorSourcesQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary List all connector configurations
+ */
+export const getListConnectorsUrl = () => {
+  return `/api/connectors`;
+};
+
+export const listConnectors = async (
+  options?: RequestInit,
+): Promise<ListConnectors200> => {
+  return customFetch<ListConnectors200>(getListConnectorsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListConnectorsQueryKey = () => {
+  return [`/api/connectors`] as const;
+};
+
+export const getListConnectorsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listConnectors>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listConnectors>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListConnectorsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listConnectors>>> = ({
+    signal,
+  }) => listConnectors({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listConnectors>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListConnectorsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listConnectors>>
+>;
+export type ListConnectorsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List all connector configurations
+ */
+
+export function useListConnectors<
+  TData = Awaited<ReturnType<typeof listConnectors>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listConnectors>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListConnectorsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Create a connector configuration
+ */
+export const getCreateConnectorUrl = () => {
+  return `/api/connectors`;
+};
+
+export const createConnector = async (
+  connectorInput: ConnectorInput,
+  options?: RequestInit,
+): Promise<CreateConnector201> => {
+  return customFetch<CreateConnector201>(getCreateConnectorUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(connectorInput),
+  });
+};
+
+export const getCreateConnectorMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createConnector>>,
+    TError,
+    { data: BodyType<ConnectorInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createConnector>>,
+  TError,
+  { data: BodyType<ConnectorInput> },
+  TContext
+> => {
+  const mutationKey = ["createConnector"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createConnector>>,
+    { data: BodyType<ConnectorInput> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createConnector(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateConnectorMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createConnector>>
+>;
+export type CreateConnectorMutationBody = BodyType<ConnectorInput>;
+export type CreateConnectorMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Create a connector configuration
+ */
+export const useCreateConnector = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createConnector>>,
+    TError,
+    { data: BodyType<ConnectorInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createConnector>>,
+  TError,
+  { data: BodyType<ConnectorInput> },
+  TContext
+> => {
+  return useMutation(getCreateConnectorMutationOptions(options));
+};
+
+/**
+ * @summary Get a single connector
+ */
+export const getGetConnectorUrl = (id: string) => {
+  return `/api/connectors/${id}`;
+};
+
+export const getConnector = async (
+  id: string,
+  options?: RequestInit,
+): Promise<GetConnector200> => {
+  return customFetch<GetConnector200>(getGetConnectorUrl(id), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetConnectorQueryKey = (id: string) => {
+  return [`/api/connectors/${id}`] as const;
+};
+
+export const getGetConnectorQueryOptions = <
+  TData = Awaited<ReturnType<typeof getConnector>>,
+  TError = ErrorType<unknown>,
+>(
+  id: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getConnector>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetConnectorQueryKey(id);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getConnector>>> = ({
+    signal,
+  }) => getConnector(id, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getConnector>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetConnectorQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getConnector>>
+>;
+export type GetConnectorQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get a single connector
+ */
+
+export function useGetConnector<
+  TData = Awaited<ReturnType<typeof getConnector>>,
+  TError = ErrorType<unknown>,
+>(
+  id: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getConnector>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetConnectorQueryOptions(id, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Update a connector configuration
+ */
+export const getUpdateConnectorUrl = (id: string) => {
+  return `/api/connectors/${id}`;
+};
+
+export const updateConnector = async (
+  id: string,
+  connectorUpdate: ConnectorUpdate,
+  options?: RequestInit,
+): Promise<UpdateConnector200> => {
+  return customFetch<UpdateConnector200>(getUpdateConnectorUrl(id), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(connectorUpdate),
+  });
+};
+
+export const getUpdateConnectorMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateConnector>>,
+    TError,
+    { id: string; data: BodyType<ConnectorUpdate> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateConnector>>,
+  TError,
+  { id: string; data: BodyType<ConnectorUpdate> },
+  TContext
+> => {
+  const mutationKey = ["updateConnector"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateConnector>>,
+    { id: string; data: BodyType<ConnectorUpdate> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updateConnector(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateConnectorMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateConnector>>
+>;
+export type UpdateConnectorMutationBody = BodyType<ConnectorUpdate>;
+export type UpdateConnectorMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Update a connector configuration
+ */
+export const useUpdateConnector = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateConnector>>,
+    TError,
+    { id: string; data: BodyType<ConnectorUpdate> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateConnector>>,
+  TError,
+  { id: string; data: BodyType<ConnectorUpdate> },
+  TContext
+> => {
+  return useMutation(getUpdateConnectorMutationOptions(options));
+};
+
+/**
+ * @summary Delete a connector
+ */
+export const getDeleteConnectorUrl = (id: string) => {
+  return `/api/connectors/${id}`;
+};
+
+export const deleteConnector = async (
+  id: string,
+  options?: RequestInit,
+): Promise<DeleteConnector200> => {
+  return customFetch<DeleteConnector200>(getDeleteConnectorUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteConnectorMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteConnector>>,
+    TError,
+    { id: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteConnector>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  const mutationKey = ["deleteConnector"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteConnector>>,
+    { id: string }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return deleteConnector(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteConnectorMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteConnector>>
+>;
+
+export type DeleteConnectorMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Delete a connector
+ */
+export const useDeleteConnector = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteConnector>>,
+    TError,
+    { id: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteConnector>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  return useMutation(getDeleteConnectorMutationOptions(options));
+};
+
+/**
+ * @summary List sync history records
+ */
+export const getListSyncRecordsUrl = (params?: ListSyncRecordsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/sync/records?${stringifiedParams}`
+    : `/api/sync/records`;
+};
+
+export const listSyncRecords = async (
+  params?: ListSyncRecordsParams,
+  options?: RequestInit,
+): Promise<ListSyncRecords200> => {
+  return customFetch<ListSyncRecords200>(getListSyncRecordsUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListSyncRecordsQueryKey = (params?: ListSyncRecordsParams) => {
+  return [`/api/sync/records`, ...(params ? [params] : [])] as const;
+};
+
+export const getListSyncRecordsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listSyncRecords>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListSyncRecordsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listSyncRecords>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListSyncRecordsQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listSyncRecords>>> = ({
+    signal,
+  }) => listSyncRecords(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listSyncRecords>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListSyncRecordsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listSyncRecords>>
+>;
+export type ListSyncRecordsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List sync history records
+ */
+
+export function useListSyncRecords<
+  TData = Awaited<ReturnType<typeof listSyncRecords>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListSyncRecordsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listSyncRecords>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListSyncRecordsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Get a single sync record
+ */
+export const getGetSyncRecordUrl = (id: string) => {
+  return `/api/sync/records/${id}`;
+};
+
+export const getSyncRecord = async (
+  id: string,
+  options?: RequestInit,
+): Promise<GetSyncRecord200> => {
+  return customFetch<GetSyncRecord200>(getGetSyncRecordUrl(id), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetSyncRecordQueryKey = (id: string) => {
+  return [`/api/sync/records/${id}`] as const;
+};
+
+export const getGetSyncRecordQueryOptions = <
+  TData = Awaited<ReturnType<typeof getSyncRecord>>,
+  TError = ErrorType<unknown>,
+>(
+  id: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getSyncRecord>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetSyncRecordQueryKey(id);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getSyncRecord>>> = ({
+    signal,
+  }) => getSyncRecord(id, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getSyncRecord>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetSyncRecordQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getSyncRecord>>
+>;
+export type GetSyncRecordQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get a single sync record
+ */
+
+export function useGetSyncRecord<
+  TData = Awaited<ReturnType<typeof getSyncRecord>>,
+  TError = ErrorType<unknown>,
+>(
+  id: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getSyncRecord>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetSyncRecordQueryOptions(id, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Delete a sync record
+ */
+export const getDeleteSyncRecordUrl = (id: string) => {
+  return `/api/sync/records/${id}`;
+};
+
+export const deleteSyncRecord = async (
+  id: string,
+  options?: RequestInit,
+): Promise<DeleteSyncRecord200> => {
+  return customFetch<DeleteSyncRecord200>(getDeleteSyncRecordUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteSyncRecordMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteSyncRecord>>,
+    TError,
+    { id: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteSyncRecord>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  const mutationKey = ["deleteSyncRecord"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteSyncRecord>>,
+    { id: string }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return deleteSyncRecord(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteSyncRecordMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteSyncRecord>>
+>;
+
+export type DeleteSyncRecordMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Delete a sync record
+ */
+export const useDeleteSyncRecord = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteSyncRecord>>,
+    TError,
+    { id: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteSyncRecord>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  return useMutation(getDeleteSyncRecordMutationOptions(options));
+};
+
+/**
+ * @summary Trigger a manual sync for a connector
+ */
+export const getTriggerSyncUrl = (connectorId: string) => {
+  return `/api/sync/${connectorId}`;
+};
+
+export const triggerSync = async (
+  connectorId: string,
+  syncTriggerInput: SyncTriggerInput,
+  options?: RequestInit,
+): Promise<SyncResult> => {
+  return customFetch<SyncResult>(getTriggerSyncUrl(connectorId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(syncTriggerInput),
+  });
+};
+
+export const getTriggerSyncMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof triggerSync>>,
+    TError,
+    { connectorId: string; data: BodyType<SyncTriggerInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof triggerSync>>,
+  TError,
+  { connectorId: string; data: BodyType<SyncTriggerInput> },
+  TContext
+> => {
+  const mutationKey = ["triggerSync"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof triggerSync>>,
+    { connectorId: string; data: BodyType<SyncTriggerInput> }
+  > = (props) => {
+    const { connectorId, data } = props ?? {};
+
+    return triggerSync(connectorId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type TriggerSyncMutationResult = NonNullable<
+  Awaited<ReturnType<typeof triggerSync>>
+>;
+export type TriggerSyncMutationBody = BodyType<SyncTriggerInput>;
+export type TriggerSyncMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Trigger a manual sync for a connector
+ */
+export const useTriggerSync = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof triggerSync>>,
+    TError,
+    { connectorId: string; data: BodyType<SyncTriggerInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof triggerSync>>,
+  TError,
+  { connectorId: string; data: BodyType<SyncTriggerInput> },
+  TContext
+> => {
+  return useMutation(getTriggerSyncMutationOptions(options));
+};
+
+/**
+ * @summary List recent webhook events
+ */
+export const getListWebhookEventsUrl = (params?: ListWebhookEventsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/webhooks/events?${stringifiedParams}`
+    : `/api/webhooks/events`;
+};
+
+export const listWebhookEvents = async (
+  params?: ListWebhookEventsParams,
+  options?: RequestInit,
+): Promise<ListWebhookEvents200> => {
+  return customFetch<ListWebhookEvents200>(getListWebhookEventsUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListWebhookEventsQueryKey = (
+  params?: ListWebhookEventsParams,
+) => {
+  return [`/api/webhooks/events`, ...(params ? [params] : [])] as const;
+};
+
+export const getListWebhookEventsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listWebhookEvents>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListWebhookEventsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listWebhookEvents>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListWebhookEventsQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listWebhookEvents>>
+  > = ({ signal }) => listWebhookEvents(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listWebhookEvents>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListWebhookEventsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listWebhookEvents>>
+>;
+export type ListWebhookEventsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List recent webhook events
+ */
+
+export function useListWebhookEvents<
+  TData = Awaited<ReturnType<typeof listWebhookEvents>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListWebhookEventsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listWebhookEvents>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListWebhookEventsQueryOptions(params, options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;
