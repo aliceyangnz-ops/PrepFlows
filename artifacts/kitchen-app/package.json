@@ -57,6 +57,9 @@
     "zod-validation-error": "^3.4.0"
   },
   "dependencies": {
-    "react-native-qrcode-svg": "^6.3.21"
+    "expo-document-picker": "^55.0.13",
+    "expo-file-system": "^55.0.20",
+    "react-native-qrcode-svg": "^6.3.21",
+    "xlsx": "^0.18.5"
   }
 }

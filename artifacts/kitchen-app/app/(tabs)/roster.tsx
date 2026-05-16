@@ -845,6 +845,27 @@ export default function RosterScreen() {
             <Feather name="chevron-right" size={16} color={colors.mutedForeground} />
           </Pressable>
 
+          {/* Import Events */}
+          {isManager && (
+            <Pressable
+              style={({ pressed }) => ({
+                flexDirection: "row", alignItems: "center", gap: 14,
+                padding: 16, borderRadius: 12, borderWidth: 1, borderColor: "#22C55E50",
+                backgroundColor: "#22C55E08", marginBottom: 10, opacity: pressed ? 0.7 : 1,
+              })}
+              onPress={() => { setShowSettings(false); router.push("/import-events"); }}
+            >
+              <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: "#22C55E20", alignItems: "center", justifyContent: "center" }}>
+                <Feather name="upload-cloud" size={18} color="#22C55E" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 15, fontFamily: "Inter_600SemiBold", color: "#22C55E" }}>Import Events</Text>
+                <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground }}>XLSX · CSV · Moments Explorer · Delphi · Opera</Text>
+              </View>
+              <Feather name="chevron-right" size={16} color={colors.mutedForeground} />
+            </Pressable>
+          )}
+
           {/* Manage staff */}
           <Pressable
             style={({ pressed }) => ({
