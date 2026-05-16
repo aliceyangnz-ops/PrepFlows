@@ -17,6 +17,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BroadcastMessage, FunctionType, PrepTeam, getAccessLevel, useKitchen } from "@/context/KitchenContext";
+import { useAlerts, type KitchenAlert, type AlertCategory } from "@/hooks/useAlerts";
 import { useColors } from "@/hooks/useColors";
 import { useIsTablet } from "@/hooks/useIsTablet";
 
@@ -123,6 +124,7 @@ export default function TodayScreen() {
     ?? null;
   const nextFnMins = nextFn ? timeToMinutes(nextFn.startTime) - nowMinutes : null;
   const sickCount = sickStaffIds.length;
+  const { alerts, criticalCount, warningCount, infoCount, alertsByFunctionId, dismissAlert, dismissAll } = useAlerts();
 
   const totalPrep = prepItems.length;
   const completedPrep = prepItems.filter((p) => p.completed).length;
@@ -366,6 +368,7 @@ export default function TodayScreen() {
             const isUrgent = fnMins > 0 && fnMins <= 30;
             const isActive = fnMins <= 0 && timeToMinutes(fn.endTime) > nowMinutes;
             const frameColor = isActive ? colors.accent : isUrgent ? "#EF4444" : meal.color;
+            const fnAlerts = alertsByFunctionId.get(fn.id) ?? [];
             return (
               <View key={fn.id} style={[s.fnCard, { borderColor: frameColor + "70" }]}>
                 <View style={s.fnCardTop}>
@@ -403,8 +406,19 @@ export default function TodayScreen() {
                     )}
                   </View>
                 </View>
-                {(totalDietary > 0 || hasSevere) && (
+                {(totalDietary > 0 || hasSevere || fnAlerts.some((a) => a.severity !== "info")) && (
                   <View style={s.fnAlertRow}>
+                    {fnAlerts.filter((a) => a.severity !== "info").slice(0, 2).map((a) => {
+                      const ac = a.severity === "critical" ? "#EF4444" : "#F59E0B";
+                      const OPS_ICONS: Record<AlertCategory, React.ComponentProps<typeof Feather>["name"]> = { dietary: "alert-triangle", overlap: "copy", staffing: "users", timeline: "clock", prep: "check-square" };
+                      const OPS_LABELS: Record<AlertCategory, string> = { dietary: "Allergen risk", overlap: "Room conflict", staffing: "Understaffed", timeline: "Timeline late", prep: "Prep behind" };
+                      return (
+                        <View key={a.id} style={[s.fnAlertBadge, { backgroundColor: ac + "12", borderColor: ac + "40" }]}>
+                          <Feather name={OPS_ICONS[a.category]} size={10} color={ac} />
+                          <Text style={[s.fnAlertText, { color: ac }]}>{OPS_LABELS[a.category]}</Text>
+                        </View>
+                      );
+                    })}
                     {hasSevere && <View style={[s.fnAlertBadge, { backgroundColor: "#EF444412", borderColor: "#EF444440" }]}><Ionicons name="alert-circle" size={12} color="#EF4444" /><Text style={[s.fnAlertText, { color: "#EF4444" }]}>Severe allergen</Text></View>}
                     {dietaryReqs.slice(0, 3).map((d, i) => {
                       const dc = (() => { const n = d.name.toLowerCase(); if (n.includes("gluten")) return "#22C55E"; if (n.includes("vegan")) return "#84CC16"; if (n.includes("nut")) return "#F59E0B"; if (n.includes("dairy")) return "#60A5FA"; if (n.includes("shellfish")) return "#F97316"; if (n.includes("halal")) return "#14B8A6"; return "#94A3B8"; })();
@@ -425,6 +439,7 @@ export default function TodayScreen() {
             const dietaryReqs = fn.dietaryRequirements ?? [];
             const hasSevere = dietaryReqs.some((d) => d.name.toLowerCase().includes("nut") || d.name.toLowerCase().includes("shellfish"));
             const frameColor = isActive ? colors.accent : meal.color;
+            const fnAlerts = alertsByFunctionId.get(fn.id) ?? [];
             return (
               <View key={fn.id} style={[s.fnCard, { borderColor: isMyFn ? frameColor + "90" : frameColor + "55" }]}>
                 <View style={s.fnCardTop}>
@@ -447,6 +462,16 @@ export default function TodayScreen() {
                       {isMyFn && <View style={{ paddingHorizontal: 6, paddingVertical: 2, backgroundColor: frameColor + "22", borderRadius: 5 }}><Text style={{ fontSize: 10, fontFamily: "Inter_700Bold", color: frameColor }}>Your function</Text></View>}
                     </View>
                     {hasSevere && <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 2 }}><Ionicons name="alert-circle" size={11} color="#EF4444" /><Text style={{ fontSize: 10, fontFamily: "Inter_600SemiBold", color: "#EF4444" }}>Severe allergen</Text></View>}
+                    {fnAlerts.filter((a) => a.severity !== "info" && a.category !== "dietary").slice(0, 1).map((a) => {
+                      const ac = a.severity === "critical" ? "#EF4444" : "#F59E0B";
+                      const OPS_LABELS: Record<AlertCategory, string> = { dietary: "Allergen risk", overlap: "Room conflict", staffing: "Understaffed", timeline: "Timeline late", prep: "Prep behind" };
+                      return (
+                        <View key={a.id} style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 2 }}>
+                          <Ionicons name="alert-circle" size={11} color={ac} />
+                          <Text style={{ fontSize: 10, fontFamily: "Inter_600SemiBold", color: ac }}>{OPS_LABELS[a.category]}</Text>
+                        </View>
+                      );
+                    })}
                   </View>
                 </View>
               </View>
@@ -668,6 +693,7 @@ export default function TodayScreen() {
             )}
           </View>
           {broadcastBanner}
+          <AlertsPanel alerts={alerts} criticalCount={criticalCount} warningCount={warningCount} infoCount={infoCount} onDismiss={dismissAlert} onDismissAll={dismissAll} onPress={(fnId) => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push(`/function/${fnId}`); }} />
           {renderCountdown()}
           {renderMyShift()}
           {renderFunctionList()}
@@ -710,6 +736,7 @@ export default function TodayScreen() {
           )}
         </View>
         {broadcastBanner}
+        <AlertsPanel alerts={alerts} criticalCount={criticalCount} warningCount={warningCount} infoCount={infoCount} onDismiss={dismissAlert} onDismissAll={dismissAll} onPress={(fnId) => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push(`/function/${fnId}`); }} />
         {renderCountdown()}
         {renderMyShift()}
         {renderFunctionList()}
@@ -719,3 +746,191 @@ export default function TodayScreen() {
     </View>
   );
 }
+
+// ─── AlertsPanel component ────────────────────────────────────────────────────
+
+const SEVERITY_CONFIG: Record<string, { color: string }> = {
+  critical: { color: "#EF4444" },
+  warning:  { color: "#F59E0B" },
+  info:     { color: "#3B82F6" },
+};
+
+const CATEGORY_CONFIG: Record<AlertCategory, { icon: React.ComponentProps<typeof Feather>["name"]; label: string }> = {
+  dietary:  { icon: "alert-triangle", label: "Dietary" },
+  overlap:  { icon: "copy",           label: "Room conflict" },
+  staffing: { icon: "users",          label: "Staffing" },
+  timeline: { icon: "clock",          label: "Timeline" },
+  prep:     { icon: "check-square",   label: "Prep" },
+};
+
+function AlertsPanel({
+  alerts,
+  criticalCount,
+  warningCount,
+  infoCount,
+  onDismiss,
+  onDismissAll,
+  onPress,
+}: {
+  alerts: KitchenAlert[];
+  criticalCount: number;
+  warningCount: number;
+  infoCount: number;
+  onDismiss: (id: string) => void;
+  onDismissAll: () => void;
+  onPress: (functionId: string) => void;
+}) {
+  const colors = useColors();
+  const [expanded, setExpanded] = React.useState(criticalCount > 0);
+
+  React.useEffect(() => {
+    if (criticalCount > 0) setExpanded(true);
+  }, [criticalCount]);
+
+  if (alerts.length === 0) return null;
+
+  const primaryColor =
+    criticalCount > 0 ? "#EF4444" : warningCount > 0 ? "#F59E0B" : "#3B82F6";
+
+  return (
+    <View
+      style={[
+        ap.wrap,
+        {
+          marginHorizontal: 20,
+          marginBottom: 14,
+          borderRadius: colors.radius,
+          borderColor: primaryColor + "45",
+          backgroundColor: colors.card,
+        },
+      ]}
+    >
+      {/* ── Header ── */}
+      <Pressable
+        style={[
+          ap.header,
+          {
+            backgroundColor: primaryColor + "12",
+            borderBottomColor: expanded ? primaryColor + "30" : "transparent",
+            borderBottomWidth: expanded ? 1 : 0,
+          },
+        ]}
+        onPress={() => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          setExpanded((e) => !e);
+        }}
+      >
+        <View style={[ap.headerIcon, { backgroundColor: primaryColor + "25" }]}>
+          <Ionicons name="alert-circle" size={15} color={primaryColor} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={[ap.headerTitle, { color: primaryColor }]}>
+            {alerts.length} operational alert{alerts.length !== 1 ? "s" : ""}
+          </Text>
+          <View style={ap.headerBadges}>
+            {criticalCount > 0 && (
+              <View style={[ap.sevBadge, { backgroundColor: "#EF444420" }]}>
+                <Text style={[ap.sevBadgeText, { color: "#EF4444" }]}>{criticalCount} critical</Text>
+              </View>
+            )}
+            {warningCount > 0 && (
+              <View style={[ap.sevBadge, { backgroundColor: "#F59E0B20" }]}>
+                <Text style={[ap.sevBadgeText, { color: "#F59E0B" }]}>{warningCount} warning</Text>
+              </View>
+            )}
+            {infoCount > 0 && (
+              <View style={[ap.sevBadge, { backgroundColor: "#3B82F620" }]}>
+                <Text style={[ap.sevBadgeText, { color: "#3B82F6" }]}>{infoCount} info</Text>
+              </View>
+            )}
+          </View>
+        </View>
+        <Feather name={expanded ? "chevron-up" : "chevron-down"} size={15} color={primaryColor} />
+      </Pressable>
+
+      {/* ── Alert rows ── */}
+      {expanded &&
+        alerts.map((alert, i) => {
+          const sc = SEVERITY_CONFIG[alert.severity]!;
+          const cc = CATEGORY_CONFIG[alert.category];
+          const isLast = i === alerts.length - 1 && !alerts.some((a) => a.dismissible);
+          return (
+            <Pressable
+              key={alert.id}
+              style={[
+                ap.row,
+                {
+                  borderBottomColor: colors.border,
+                  borderBottomWidth: isLast ? 0 : StyleSheet.hairlineWidth,
+                },
+              ]}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                if (alert.functionId) onPress(alert.functionId);
+              }}
+            >
+              <View style={[ap.accentBar, { backgroundColor: sc.color }]} />
+              <View style={[ap.catIcon, { backgroundColor: sc.color + "18" }]}>
+                <Feather name={cc.icon} size={12} color={sc.color} />
+              </View>
+              <View style={ap.rowBody}>
+                <Text style={[ap.rowTitle, { color: colors.foreground }]}>{alert.title}</Text>
+                <Text
+                  style={[ap.rowDetail, { color: colors.mutedForeground }]}
+                  numberOfLines={2}
+                >
+                  {alert.detail}
+                </Text>
+              </View>
+              {alert.dismissible && (
+                <Pressable
+                  hitSlop={8}
+                  style={[ap.xBtn, { backgroundColor: colors.secondary }]}
+                  onPress={(e) => {
+                    e.stopPropagation();
+                    onDismiss(alert.id);
+                  }}
+                >
+                  <Feather name="x" size={11} color={colors.mutedForeground} />
+                </Pressable>
+              )}
+            </Pressable>
+          );
+        })}
+
+      {/* ── Dismiss-all footer ── */}
+      {expanded && alerts.some((a) => a.dismissible) && (
+        <Pressable
+          style={[ap.dismissAll, { borderTopColor: colors.border, backgroundColor: colors.secondary }]}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            onDismissAll();
+          }}
+        >
+          <Text style={[ap.dismissAllText, { color: colors.mutedForeground }]}>
+            Dismiss all alerts
+          </Text>
+        </Pressable>
+      )}
+    </View>
+  );
+}
+
+const ap = StyleSheet.create({
+  wrap:           { borderWidth: 1, overflow: "hidden" },
+  header:         { flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 14, paddingVertical: 12 },
+  headerIcon:     { width: 30, height: 30, borderRadius: 15, alignItems: "center", justifyContent: "center" },
+  headerTitle:    { fontSize: 13, fontFamily: "Inter_700Bold", marginBottom: 3 },
+  headerBadges:   { flexDirection: "row", flexWrap: "wrap", gap: 5 },
+  sevBadge:       { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
+  sevBadgeText:   { fontSize: 10, fontFamily: "Inter_700Bold" },
+  row:            { flexDirection: "row", alignItems: "flex-start", paddingVertical: 10, paddingRight: 10 },
+  accentBar:      { width: 3, alignSelf: "stretch", borderRadius: 2, marginRight: 10 },
+  catIcon:        { width: 26, height: 26, borderRadius: 13, alignItems: "center", justifyContent: "center", marginRight: 10, marginTop: 1, flexShrink: 0 },
+  rowBody:        { flex: 1 },
+  rowTitle:       { fontSize: 12, fontFamily: "Inter_600SemiBold", marginBottom: 2 },
+  rowDetail:      { fontSize: 11, fontFamily: "Inter_400Regular", lineHeight: 16 },
+  xBtn:           { width: 22, height: 22, borderRadius: 11, alignItems: "center", justifyContent: "center", marginLeft: 8, marginTop: 2, flexShrink: 0 },
+  dismissAll:     { paddingVertical: 10, alignItems: "center", borderTopWidth: StyleSheet.hairlineWidth },
+  dismissAllText: { fontSize: 12, fontFamily: "Inter_600SemiBold" },
+});
