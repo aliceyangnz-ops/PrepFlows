@@ -1,10 +1,11 @@
 /**
  * Supabase sync helpers for KitchenCommand.
  *
- * Each function is a fire-and-forget operation (returns Promise<void>).
- * Errors are swallowed — the app continues on AsyncStorage if Supabase is
- * unavailable.  Mappers convert between app camelCase types and DB snake_case
- * column names returned by the Supabase REST layer.
+ * Each write helper is fire-and-forget: it awaits the Supabase response,
+ * checks the .error field (Supabase JS never throws), and warns on failure.
+ * The app always continues from AsyncStorage whether Supabase fails or not.
+ * Mappers convert between app camelCase types and DB snake_case column names
+ * returned by the Supabase REST layer.
  */
 import { supabase } from "./supabase";
 import type {
@@ -242,44 +243,65 @@ export async function migrateToSupabase(data: {
   await Promise.all(tasks);
 }
 
+// ── Write helper ─────────────────────────────────────────────────────────────
+// Awaits a Supabase PromiseLike, checks the .error field, and warns on failure.
+// Never throws — safe for fire-and-forget callers in KitchenContext.
+
+type PostgRESTResult = { error: { message: string } | null };
+const wb = (label: string, builder: PromiseLike<PostgRESTResult>): Promise<void> =>
+  Promise.resolve(builder).then(({ error }) => {
+    if (error) console.warn(`[supabase-sync] ${label}:`, error.message);
+  });
+
 // ── Individual upsert / delete helpers ──────────────────────────────────────
 
 export async function upsertFunctionToSupabase(fn: KitchenFunction): Promise<void> {
   if (!supabase) return;
-  await supabase.from("kitchen_functions").upsert(fnToRow(fn), { onConflict: "id" });
+  await wb("upsertFunction",
+    supabase.from("kitchen_functions").upsert(fnToRow(fn), { onConflict: "id" }),
+  );
 }
 
 export async function deleteFunctionFromSupabase(id: string): Promise<void> {
   if (!supabase) return;
-  await supabase.from("kitchen_functions").delete().eq("id", id);
+  await wb("deleteFunction",
+    supabase.from("kitchen_functions").delete().eq("id", id),
+  );
 }
 
 export async function upsertStaffToSupabase(member: StaffMember): Promise<void> {
   if (!supabase) return;
-  await supabase.from("staff_members").upsert(staffToRow(member), { onConflict: "id" });
+  await wb("upsertStaff",
+    supabase.from("staff_members").upsert(staffToRow(member), { onConflict: "id" }),
+  );
 }
 
 export async function deleteStaffFromSupabase(id: string): Promise<void> {
   if (!supabase) return;
-  await supabase.from("staff_members").delete().eq("id", id);
+  await wb("deleteStaff",
+    supabase.from("staff_members").delete().eq("id", id),
+  );
 }
 
 export async function upsertPrepItemToSupabase(item: PrepItem): Promise<void> {
   if (!supabase) return;
-  await supabase.from("prep_items").upsert(prepToRow(item), { onConflict: "id" });
+  await wb("upsertPrepItem",
+    supabase.from("prep_items").upsert(prepToRow(item), { onConflict: "id" }),
+  );
 }
 
 export async function upsertBroadcastToSupabase(msg: BroadcastMessage): Promise<void> {
   if (!supabase) return;
-  await supabase.from("broadcast_messages").upsert(broadcastToRow(msg), { onConflict: "id" });
+  await wb("upsertBroadcast",
+    supabase.from("broadcast_messages").upsert(broadcastToRow(msg), { onConflict: "id" }),
+  );
 }
 
 export async function clearBroadcastInSupabase(): Promise<void> {
   if (!supabase) return;
-  await supabase
-    .from("broadcast_messages")
-    .update({ is_active: false })
-    .eq("is_active", true);
+  await wb("clearBroadcast",
+    supabase.from("broadcast_messages").update({ is_active: false }).eq("is_active", true),
+  );
 }
 
 // ── Realtime subscriptions ───────────────────────────────────────────────────
