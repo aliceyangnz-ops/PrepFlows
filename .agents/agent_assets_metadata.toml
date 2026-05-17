@@ -1,8 +1,25 @@
 uploads = []
-outputs = []
 
 [[generated]]
 id = "Mbrlr1oWUS-mWgdoZZx_N"
 uri = "file://artifacts/kitchen-app/assets/images/icon.png"
 type = "image"
-title = "generated_image"
+title = "kitchencommand app icon"
+
+[[generated]]
+id = "hZ6LZ3ffuEaC1IX11ZMns"
+uri = "file://artifacts/kitchen-app/assets/images/splash.png"
+type = "image"
+title = "kitchencommand splash clean"
+
+[[outputs]]
+id = "r7POdARTufhxKszBWx7G8"
+uri = "file://artifacts/kitchen-app/assets/images/icon.png"
+type = "image"
+title = "KitchenCommand App Icon (1024×1024)"
+
+[[outputs]]
+id = "Q7qOqhWdD9Quy9e6hL8RX"
+uri = "file://artifacts/kitchen-app/assets/images/splash.png"
+type = "image"
+title = "KitchenCommand Splash Screen"
