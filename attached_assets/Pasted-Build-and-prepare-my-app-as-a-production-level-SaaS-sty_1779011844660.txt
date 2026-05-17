@@ -1,0 +1,140 @@
+Build and prepare my app as a production-level SaaS style iOS application for Apple App Store deployment.
+
+PROJECT TYPE:
+A professional hospitality operations platform designed for catering kitchens, banquet production teams, and event operations management.
+
+APP POSITIONING:
+This is NOT a simple kitchen helper app.
+This should feel like:
+- Monday.com for hospitality
+- Kitchen Operating System
+- Catering Operations Platform
+- Real-time banquet coordination system
+
+TARGET USERS:
+- Executive chefs
+- Sous chefs
+- Catering operations managers
+- Production kitchen staff
+- Banquet coordinators
+- Event teams
+
+CORE FEATURES:
+- Live function timeline
+- Prep lists
+- Staff roster
+- Department collaboration
+- Real-time service updates
+- Countdown timers
+- Kitchen communication
+- Function sheets
+- Task completion tracking
+- Multi-role dashboard
+- Event production overview
+
+DESIGN DIRECTION:
+Create a modern premium SaaS UI similar to:
+- Linear
+- Notion
+- Stripe Dashboard
+- Monday.com
+- Slack
+- Apple native design language
+
+STYLE REQUIREMENTS:
+- Minimalist
+- Dark mode first
+- Clean typography
+- Spacious layout
+- Smooth animations
+- Professional enterprise appearance
+- High-end operational dashboard feel
+- Fast and responsive UX
+
+MOBILE UX REQUIREMENTS:
+- Fully optimized for iPhone
+- Native app experience
+- Bottom navigation
+- Gesture friendly
+- Large readable kitchen-safe UI
+- Fast loading
+- Offline-friendly structure
+- Production-ready architecture
+
+TECH STACK:
+Frontend:
+- React Native
+- Expo SDK latest
+- Expo Router
+
+Backend:
+- Supabase
+
+Authentication:
+- Supabase Auth
+
+Database:
+- Real-time Supabase PostgreSQL
+
+STATE MANAGEMENT:
+- Zustand or React Context
+
+UI:
+- NativeWind or Tailwind
+- Modern component system
+- Reusable SaaS components
+
+IMPORTANT:
+Do NOT build this like a website wrapper.
+This must feel like a real native iOS SaaS application.
+
+ADD:
+- Splash screen
+- App icon system
+- Loading states
+- Empty states
+- Skeleton loaders
+- Error handling
+- Notification architecture
+- Settings page
+- User profile
+- Role-based access
+- Real-time sync
+
+APPLE APP STORE PREPARATION:
+Prepare the app for App Store production release.
+
+Include:
+- app.json configuration
+- EAS Build setup
+- iOS bundle identifier
+- production folder structure
+- optimized assets
+- app permissions setup
+- TestFlight preparation
+- App Store deployment readiness
+
+CREATE:
+1. Premium SaaS homepage/dashboard
+2. Modern navigation system
+3. Real-time operations dashboard
+4. Event cards
+5. Production timeline UI
+6. Staff management UI
+7. Kitchen communication feed
+8. Clean onboarding screens
+9. Authentication flow
+10. Professional settings panel
+
+BRANDING STYLE:
+The product should feel scalable enough to become:
+“Hospitality Operating System”
+
+PREFERRED BRAND FEEL:
+Enterprise SaaS
+Operational intelligence
+Professional kitchen workflow
+Modern hospitality technology
+
+FINAL GOAL:
+Generate a scalable, production-ready, investor-quality iOS SaaS application that can be published to Apple App Store via Expo EAS and used by real hospitality operations teams.

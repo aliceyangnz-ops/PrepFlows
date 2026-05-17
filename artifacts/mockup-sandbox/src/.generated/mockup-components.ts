@@ -4,5 +4,8 @@ export const modules: ModuleMap = {
   "./components/mockups/kitchen-app/FunctionDetail.tsx": () => import("../components/mockups/kitchen-app/FunctionDetail.tsx"),
   "./components/mockups/kitchen-app/PrepList.tsx": () => import("../components/mockups/kitchen-app/PrepList.tsx"),
   "./components/mockups/kitchen-app/Roster.tsx": () => import("../components/mockups/kitchen-app/Roster.tsx"),
-  "./components/mockups/kitchen-app/TodayDashboard.tsx": () => import("../components/mockups/kitchen-app/TodayDashboard.tsx")
+  "./components/mockups/kitchen-app/TodayDashboard.tsx": () => import("../components/mockups/kitchen-app/TodayDashboard.tsx"),
+  "./components/mockups/kitchen-saas/FunctionPremium.tsx": () => import("../components/mockups/kitchen-saas/FunctionPremium.tsx"),
+  "./components/mockups/kitchen-saas/RosterPremium.tsx": () => import("../components/mockups/kitchen-saas/RosterPremium.tsx"),
+  "./components/mockups/kitchen-saas/TodayPremium.tsx": () => import("../components/mockups/kitchen-saas/TodayPremium.tsx")
 };
