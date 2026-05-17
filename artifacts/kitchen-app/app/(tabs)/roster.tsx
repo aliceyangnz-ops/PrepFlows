@@ -48,7 +48,8 @@ function getRoleColor(role: string): string {
   switch (role) {
     case "Head Chef":        return "#F97316";
     case "Sous Chef":        return "#3B82F6";
-    case "Pastry Chef":      return "#A78BFA";
+    case "Pastry Chef":      return "#8B5CF6";
+    case "Pastry":           return "#8B5CF6";
     case "Function Captain": return "#3B82F6";
     case "Casual":           return "#F59E0B";
     default:                 return "#6B7A94";
@@ -224,10 +225,10 @@ export default function RosterScreen() {
     statLabel: { fontSize: 9, fontFamily: "Inter_600SemiBold", color: colors.mutedForeground, textTransform: "uppercase", letterSpacing: 0.8, marginTop: 2 },
     noResults: { alignItems: "center", paddingVertical: 40 },
     noResultsText: { fontSize: 14, fontFamily: "Inter_500Medium", color: colors.mutedForeground },
-    rosterCard: { marginHorizontal: 20, marginBottom: 12, borderRadius: colors.radius, borderWidth: 1, overflow: "hidden" },
+    rosterCard: { marginHorizontal: 20, marginBottom: 12, borderRadius: 12, borderWidth: 1, backgroundColor: '#161B22', borderColor: 'rgba(255,255,255,0.08)', overflow: "hidden", borderLeftWidth: 4 },
     staffTopRow: { flexDirection: "row", alignItems: "flex-start", padding: 14, borderBottomWidth: 1, gap: 10 },
-    avatar: { width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center" },
-    avatarText: { fontSize: 14, fontFamily: "Inter_700Bold" },
+    avatar: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" },
+    avatarText: { fontSize: 14, fontFamily: "Inter_700Bold", color: '#FFFFFF' },
     staffInfo: { flex: 1, gap: 2 },
     staffName: { fontSize: 15, fontFamily: "Inter_700Bold", color: colors.foreground },
     staffRoleText: { fontSize: 12, fontFamily: "Inter_500Medium" },
@@ -251,8 +252,6 @@ export default function RosterScreen() {
     timelineContainer: { paddingHorizontal: 14, paddingVertical: 10 },
     timelineHeader: { flexDirection: "row", marginBottom: 4 },
     hourLabel: { fontSize: 9, fontFamily: "Inter_500Medium", color: colors.mutedForeground, textAlign: "center" },
-    timelineBg: { height: 10, borderRadius: 5, position: "relative", overflow: "hidden" },
-    shiftBar: { position: "absolute", height: 10, borderRadius: 5 },
     functionsSection: { paddingHorizontal: 14, paddingBottom: 10, gap: 6 },
     funcBadge: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 10, paddingVertical: 7, borderRadius: 8, borderWidth: 1 },
     funcBadgeLeft: { flex: 1 },
@@ -284,7 +283,18 @@ export default function RosterScreen() {
     prepSummaryText: { flex: 1, fontSize: 12, fontFamily: "Inter_500Medium", color: colors.mutedForeground },
     prepProgressBar: { height: 4, flex: 1, borderRadius: 2, backgroundColor: colors.border, overflow: "hidden" },
     prepProgressFill: { height: 4, borderRadius: 2 },
-    sectionDividerLabel: { fontSize: 10, fontFamily: "Inter_700Bold", color: colors.mutedForeground, textTransform: "uppercase", letterSpacing: 1, marginHorizontal: 20, marginBottom: 8, marginTop: 4 },
+    sectionDividerLabel: { fontSize: 10, fontFamily: "Inter_700Bold", color: '#484F58', textTransform: 'uppercase', letterSpacing: 1.5, marginHorizontal: 20, marginBottom: 8, marginTop: 20 },
+    timelineBg: { height: 4, borderRadius: 2, position: "relative", overflow: "hidden", backgroundColor: '#21262D' },
+    shiftBar: { position: "absolute", height: 4, borderRadius: 2 },
+    statusBadgeOnShift: { backgroundColor: 'rgba(34,197,94,0.12)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(34,197,94,0.2)' },
+    statusBadgeOnShiftText: { color: '#22C55E', fontSize: 11 },
+    statusBadgeSick: { backgroundColor: 'rgba(239,68,68,0.12)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(239,68,68,0.2)' },
+    statusBadgeSickText: { color: '#EF4444', fontSize: 11 },
+    addStaffBtn: { backgroundColor: '#F97316', borderRadius: 12, paddingVertical: 14, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 },
+    addStaffBtnText: { fontFamily: 'Inter_700Bold', color: '#FFFFFF', fontSize: 15 },
+    sickAlertBanner: { backgroundColor: 'rgba(239,68,68,0.08)', borderColor: 'rgba(239,68,68,0.3)', borderWidth: 1, borderRadius: 12, padding: 12, marginHorizontal: 20, marginBottom: 16, flexDirection: 'row', alignItems: 'center', gap: 10 },
+    headerSickBadge: { backgroundColor: 'rgba(239,68,68,0.12)', borderColor: 'rgba(239,68,68,0.2)', borderWidth: 1, borderRadius: 20, paddingHorizontal: 8, paddingVertical: 3 },
+    headerSickBadgeText: { color: '#EF4444', fontSize: 11, fontFamily: 'Inter_700Bold' },
     bottomPad: { height: Platform.OS === "web" ? 34 : insets.bottom + 80 },
   });
 
@@ -298,9 +308,16 @@ export default function RosterScreen() {
       <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         <View style={s.header}>
           <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <View style={{ flex: 1 }}>
-              <Text style={s.title}>Roster</Text>
-              <Text style={s.subtitle}>{staff.length} staff today · {functions.length} functions</Text>
+            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <View>
+                <Text style={s.title}>Roster</Text>
+                <Text style={s.subtitle}>{staff.length} staff today · {functions.length} functions</Text>
+              </View>
+              {sickCount > 0 && (
+                <View style={s.headerSickBadge}>
+                  <Text style={s.headerSickBadgeText}>{sickCount} SICK</Text>
+                </View>
+              )}
             </View>
             <View style={{ flexDirection: "row", gap: 8 }}>
               {(isManager || staff.length === 0) && (
@@ -345,18 +362,28 @@ export default function RosterScreen() {
 
         {/* Stats */}
         {search.length === 0 && (
-          <View style={s.statsRow}>
-            <View style={s.statCard}>
-              <Text style={s.statNum}>{staff.length}</Text>
-              <Text style={s.statLabel}>Total</Text>
-            </View>
-            <View style={[s.statCard, sickCount > 0 && { borderColor: "#EF444450", backgroundColor: "#EF444410" }]}>
-              <Text style={[s.statNum, { color: sickCount > 0 ? "#EF4444" : colors.foreground }]}>{sickCount}</Text>
-              <Text style={s.statLabel}>Sick today</Text>
-            </View>
-            <View style={s.statCard}>
-              <Text style={[s.statNum, { color: colors.warning }]}>{casualCount}</Text>
-              <Text style={s.statLabel}>Casuals</Text>
+          <View>
+            {sickCount > 0 && (
+              <View style={s.sickAlertBanner}>
+                <Ionicons name="warning" size={18} color="#EF4444" />
+                <Text style={{ flex: 1, fontSize: 13, fontFamily: "Inter_600SemiBold", color: "#EF4444" }}>
+                  {sickCount} staff call-in{sickCount > 1 ? 's' : ''} today. Adjust the roster as needed.
+                </Text>
+              </View>
+            )}
+            <View style={s.statsRow}>
+              <View style={s.statCard}>
+                <Text style={s.statNum}>{staff.length}</Text>
+                <Text style={s.statLabel}>Total</Text>
+              </View>
+              <View style={[s.statCard, sickCount > 0 && { borderColor: "#EF444450", backgroundColor: "#EF444410" }]}>
+                <Text style={[s.statNum, { color: sickCount > 0 ? "#EF4444" : colors.foreground }]}>{sickCount}</Text>
+                <Text style={s.statLabel}>Sick today</Text>
+              </View>
+              <View style={s.statCard}>
+                <Text style={[s.statNum, { color: colors.warning }]}>{casualCount}</Text>
+                <Text style={s.statLabel}>Casuals</Text>
+              </View>
             </View>
           </View>
         )}
@@ -562,25 +589,35 @@ export default function RosterScreen() {
                 s.rosterCard,
                 isTablet && { width: "50%", marginHorizontal: 0, paddingHorizontal: 4 },
                 {
-                  backgroundColor: isSick ? "#EF444408" : isMe ? rc + "10" : colors.card,
-                  borderColor: isSick ? "#EF444440" : isMe ? rc + "60" : colors.border,
-                  opacity: isSick ? 0.75 : 1,
+                  borderLeftColor: isSick ? "#EF4444" : rc,
                 },
               ]}
             >
-              <View style={[s.staffTopRow, { borderBottomColor: isSick ? "#EF444430" : isMe ? rc + "30" : colors.border }]}>
-                <View style={[s.avatar, { backgroundColor: isSick ? "#EF444420" : rc + "25" }]}>
-                  <Text style={[s.avatarText, { color: isSick ? "#EF4444" : rc }]}>
-                    {member.name.split(" ").map((n) => n[0]).join("")}
+              <View style={[s.staffTopRow, { borderBottomColor: 'rgba(255,255,255,0.05)' }]}>
+                <View style={[s.avatar, { backgroundColor: isSick ? "#EF444420" : rc }]}>
+                  <Text style={s.avatarText}>
+                    {member.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)}
                   </Text>
                 </View>
                 <View style={s.staffInfo}>
                   <Text style={[s.staffName, isSick && { textDecorationLine: "line-through", color: colors.mutedForeground }]}>
                     {member.name}
                   </Text>
-                  <Text style={[s.staffRoleText, { color: isSick ? "#EF4444" : rc }]}>
-                    {isSick ? "SICK — Called in" : member.role}
-                  </Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Text style={[s.staffRoleText, { color: isSick ? "#EF4444" : rc }]}>
+                      {isSick ? "SICK — Called in" : member.role}
+                    </Text>
+                    {isMe && (
+                      <View style={s.statusBadgeOnShift}>
+                        <Text style={s.statusBadgeOnShiftText}>On Shift</Text>
+                      </View>
+                    )}
+                    {isSick && (
+                      <View style={s.statusBadgeSick}>
+                        <Text style={s.statusBadgeSickText}>Sick</Text>
+                      </View>
+                    )}
+                  </View>
                   <Text style={s.staffNumText}>{member.staffNumber}</Text>
                   <View style={s.badgesRow}>
                     {member.section && (
@@ -716,11 +753,11 @@ export default function RosterScreen() {
               {isManager ? 'Tap "Add" to add your first team member, or load sample data from settings.' : "A manager can add staff from this screen."}
             </Text>
             <Pressable
-              style={{ marginTop: 8, flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 20, paddingVertical: 12, borderRadius: 12, backgroundColor: colors.accent }}
+              style={s.addStaffBtn}
               onPress={() => router.push("/staff/new")}
             >
               <Feather name="user-plus" size={16} color="#fff" />
-              <Text style={{ fontSize: 14, fontFamily: "Inter_700Bold", color: "#fff" }}>Add first staff member</Text>
+              <Text style={s.addStaffBtnText}>Add first staff member</Text>
             </Pressable>
           </View>
         )}

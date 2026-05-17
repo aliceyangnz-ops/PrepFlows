@@ -1,0 +1,163 @@
+Excellent direction.
+
+The new SaaS screens finally feel like a real hospitality operations platform instead of a generic kitchen app.
+
+Next step:
+Graduate ALL THREE premium screens directly into the real production app architecture.
+
+PRIORITY:
+Focus on turning the UI into a fully interactive operational workflow system.
+
+PHASE 1 — CORE APP FOUNDATION
+
+Convert the following screens into fully functional production screens:
+
+1. Today — Command Center
+2. Function Detail — Production Brief
+3. Roster — Team Operations
+
+Requirements:
+- Real data structure
+- Reusable components
+- Mobile-first performance
+- Native iOS interactions
+- Smooth transitions
+- Real-time state updates
+
+-----------------------------------
+NOW BUILD THESE NEXT SCREENS
+-----------------------------------
+
+1. PREP LIST SCREEN
+Purpose:
+Operational execution for kitchen production.
+
+Include:
+- Section grouping (Hot / Cold / Pastry / Banquet)
+- Drag-to-complete tasks
+- Priority indicators
+- Due time countdown
+- Assigned staff
+- Progress percentages
+- Swipe gestures
+- Critical prep alerts
+- Collapsible production sections
+
+Design style:
+Linear + Notion + Apple Reminders.
+
+-----------------------------------
+
+2. LIVE SERVICE MODE
+Purpose:
+Real-time banquet service coordination.
+
+Include:
+- Large countdown timers
+- Live course firing
+- Pass status
+- Delayed section alerts
+- Expo communication panel
+- Real-time updates
+- Visual urgency states
+- Big readable kitchen-safe interface
+
+This screen should feel like:
+Mission control for banquet execution.
+
+-----------------------------------
+
+3. ADD FUNCTION FLOW
+Purpose:
+Fast event creation workflow.
+
+Include:
+- Multi-step modern onboarding style flow
+- Covers
+- Event type
+- Dietary requirements
+- Run sheet generation
+- Staff assignment
+- Timeline auto-generation
+
+Use:
+Minimal Stripe-style form design.
+
+-----------------------------------
+
+4. ANALYTICS DASHBOARD
+Purpose:
+Management visibility.
+
+Include:
+- Labor cost overview
+- Function performance
+- Completion rates
+- Dietary incident tracking
+- Staffing gaps
+- Productivity metrics
+- Weekly operational insights
+
+Design:
+Executive SaaS analytics style.
+
+-----------------------------------
+
+5. SETTINGS + USER MANAGEMENT
+Include:
+- Role permissions
+- Department access
+- Notification settings
+- Theme switching
+- Profile management
+- Organization settings
+
+-----------------------------------
+TECHNICAL REQUIREMENTS
+-----------------------------------
+
+Implement:
+- Expo Router architecture
+- Zustand store structure
+- Supabase integration layer
+- Mock production data
+- Reusable card system
+- Reusable status badge system
+- Reusable timeline components
+
+Create proper:
+- folder structure
+- scalable components
+- production naming conventions
+- loading states
+- empty states
+- optimistic UI updates
+
+-----------------------------------
+APPLE APP STORE PREPARATION
+-----------------------------------
+
+Now begin preparing the app for TestFlight deployment.
+
+Add:
+- App icon placeholders
+- Splash screen
+- Native loading transitions
+- Production app naming
+- iOS safe area optimization
+- Gesture handling
+- Haptic feedback
+- Dark mode polish
+
+The app should now feel like:
+A premium enterprise hospitality operating system.
+
+Target quality level:
+Linear
+Stripe
+Slack
+Notion
+Apple native apps
+
+FINAL GOAL:
+Investor-quality operational SaaS app for hospitality teams that is ready for Expo EAS build and Apple App Store submission.

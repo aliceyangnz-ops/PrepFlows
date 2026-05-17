@@ -136,6 +136,22 @@ export default function FunctionDetailScreen() {
   const tc = getFunctionTypeColor(editing ? draft.functionType : fn.functionType);
   const topPad = Platform.OS === "web" ? 67 : insets.top;
 
+  // Determine status
+  const now = new Date();
+  const startTimeStr = fn.startTime; // e.g. "18:00"
+  const endTimeStr = fn.endTime; // e.g. "22:00"
+  const [startH, startM] = startTimeStr.split(":").map(Number);
+  const [endH, endM] = endTimeStr.split(":").map(Number);
+  
+  const startDate = new Date(); startDate.setHours(startH, startM, 0);
+  const endDate = new Date(); endDate.setHours(endH, endM, 0);
+  
+  let status: "Upcoming" | "LIVE" | "Done" = "Upcoming";
+  if (now > endDate) status = "Done";
+  else if (now >= startDate) status = "LIVE";
+
+  const statusColor = status === "LIVE" ? "#F97316" : status === "Done" ? "#22C55E" : "#3B82F6";
+
   const dietaryReqs = fn.dietaryRequirements ?? [];
   const totalDietary = dietaryReqs.reduce((sum, d) => sum + d.count, 0);
 
@@ -314,8 +330,12 @@ export default function FunctionDetailScreen() {
 
   const s = StyleSheet.create({
     root: { flex: 1, backgroundColor: colors.background },
-    toolbar: { position: "absolute", top: topPad + 8, left: 0, right: 0, zIndex: 10, flexDirection: "row", alignItems: "center", paddingHorizontal: 16, gap: 8 },
-    backBtn: { width: 38, height: 38, borderRadius: 19, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, alignItems: "center", justifyContent: "center" },
+    toolbar: { position: "absolute", top: topPad + 8, left: 0, right: 0, zIndex: 10, flexDirection: "row", alignItems: "center", paddingHorizontal: 16, gap: 12 },
+    backBtn: { width: 32, height: 32, alignItems: "center", justifyContent: "center" },
+    headerTitleContainer: { flex: 1, flexDirection: "row", alignItems: "center", gap: 8 },
+    headerTitle: { fontSize: 16, fontFamily: "Inter_700Bold", color: colors.foreground },
+    statusBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12, borderWidth: 1 },
+    statusBadgeText: { fontSize: 11, fontFamily: "Inter_700Bold", letterSpacing: 0.8, textTransform: "uppercase" },
     toolbarSpacer: { flex: 1 },
     editBtn: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10, borderWidth: 1 },
     editBtnText: { fontSize: 13, fontFamily: "Inter_700Bold" },
@@ -323,23 +343,23 @@ export default function FunctionDetailScreen() {
     saveBtnText: { fontSize: 13, fontFamily: "Inter_700Bold", color: "#fff" },
     cancelBtn: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, borderWidth: 1, borderColor: colors.border },
     cancelBtnText: { fontSize: 13, fontFamily: "Inter_600SemiBold", color: colors.mutedForeground },
-    hero: { paddingTop: topPad + 62, paddingHorizontal: 20, paddingBottom: 20, backgroundColor: colors.card, borderBottomWidth: 1, borderBottomColor: colors.border },
-    typePill: { alignSelf: "flex-start", paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, borderWidth: 1.5, marginBottom: 10 },
-    typeText: { fontSize: 13, fontFamily: "Inter_700Bold" },
-    eventName: { fontSize: 22, fontFamily: "Inter_700Bold", color: colors.foreground, marginBottom: 12, lineHeight: 28 },
-    roomRow: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 10 },
-    roomLabel: { fontSize: 13, fontFamily: "Inter_500Medium", color: colors.mutedForeground },
-    roomValue: { fontSize: 20, fontFamily: "Inter_700Bold", color: colors.foreground },
-    floorTag: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, backgroundColor: colors.secondary },
-    floorTagText: { fontSize: 12, fontFamily: "Inter_600SemiBold", color: colors.mutedForeground },
+    hero: { paddingTop: topPad + 62, paddingHorizontal: 20, paddingBottom: 24, backgroundColor: colors.card, borderBottomWidth: 1, borderBottomColor: colors.border },
+    typePill: { alignSelf: "flex-start", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12, borderWidth: 1, marginBottom: 12 },
+    typeText: { fontSize: 11, fontFamily: "Inter_700Bold", letterSpacing: 0.5 },
+    eventName: { fontSize: 22, fontFamily: "Inter_700Bold", color: colors.foreground, marginBottom: 4, lineHeight: 28 },
+    roomRow: { flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 20 },
+    roomLabel: { fontSize: 14, fontFamily: "Inter_400Regular", color: colors.mutedForeground },
+    roomValue: { fontSize: 14, fontFamily: "Inter_600SemiBold", color: colors.mutedForeground },
+    floorTag: { marginLeft: 4 },
+    floorTagText: { fontSize: 14, fontFamily: "Inter_400Regular", color: colors.mutedForeground },
     infoGrid: { flexDirection: "row", gap: 8, marginBottom: 8 },
-    infoBox: { flex: 1, backgroundColor: colors.secondary, borderRadius: 10, padding: 12, alignItems: "center" },
-    infoNum: { fontSize: 18, fontFamily: "Inter_700Bold" },
-    infoLabel: { fontSize: 10, fontFamily: "Inter_600SemiBold", color: colors.mutedForeground, textTransform: "uppercase", letterSpacing: 0.8, marginTop: 3 },
+    infoBox: { flex: 1, backgroundColor: "#161B22", borderRadius: 10, padding: 12, alignItems: "center", borderWidth: 1, borderColor: "rgba(255,255,255,0.08)" },
+    infoNum: { fontSize: 18, fontFamily: "Inter_700Bold", color: "#FFFFFF" },
+    infoLabel: { fontSize: 10, fontFamily: "Inter_600SemiBold", color: colors.mutedForeground, textTransform: "uppercase", letterSpacing: 0.8, marginTop: 4 },
     statsRow: { flexDirection: "row", gap: 8 },
-    statBox: { flex: 1, backgroundColor: colors.secondary, borderRadius: 10, padding: 12, alignItems: "center" },
-    statNum: { fontSize: 18, fontFamily: "Inter_700Bold" },
-    statLabel: { fontSize: 10, fontFamily: "Inter_600SemiBold", color: colors.mutedForeground, textTransform: "uppercase", letterSpacing: 0.7, marginTop: 3 },
+    statBox: { flex: 1, backgroundColor: "#161B22", borderRadius: 10, padding: 12, alignItems: "center", borderWidth: 1, borderColor: "rgba(255,255,255,0.08)" },
+    statNum: { fontSize: 18, fontFamily: "Inter_700Bold", color: "#FFFFFF" },
+    statLabel: { fontSize: 10, fontFamily: "Inter_600SemiBold", color: colors.mutedForeground, textTransform: "uppercase", letterSpacing: 0.7, marginTop: 4 },
     banner: { marginHorizontal: 20, marginTop: 8, padding: 10, borderRadius: 8, flexDirection: "row", alignItems: "center", gap: 8 },
     bannerText: { flex: 1, fontSize: 12, fontFamily: "Inter_600SemiBold" },
     courseCard: { marginHorizontal: 20, marginTop: 16, borderRadius: colors.radius, borderWidth: 1.5, overflow: "hidden" },
@@ -373,21 +393,17 @@ export default function FunctionDetailScreen() {
     sectionSub: { fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground, marginBottom: 14 },
     div: { height: 1, backgroundColor: colors.border, marginHorizontal: 20, marginTop: 16 },
     runSheetContainer: { paddingHorizontal: 12, paddingBottom: 12 },
-    runSheetItem: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 8 },
+    runSheetItem: { flexDirection: "row", alignItems: "center", gap: 0, marginBottom: 0 },
     runSheetLine: { width: 2, flex: 1, position: "absolute", left: 57, top: 0, bottom: 0 },
-    timeCol: { width: 48, alignItems: "flex-end", paddingTop: 10 },
-    timeText: { fontSize: 13, fontFamily: "Inter_700Bold" },
-    iconCol: { width: 28, alignItems: "center", paddingTop: 8, zIndex: 1 },
-    iconCircle: { width: 28, height: 28, borderRadius: 14, alignItems: "center", justifyContent: "center" },
-    bigCheck: { width: 44, height: 44, borderRadius: 22, borderWidth: 2.5, alignItems: "center", justifyContent: "center", flexShrink: 0 },
-    taskCard: { flex: 1, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, borderWidth: 1.5, marginBottom: 0 },
-    taskCardHeader: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 6 },
-    catBadge: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 7, paddingVertical: 3, borderRadius: 6 },
-    catBadgeText: { fontSize: 9, fontFamily: "Inter_700Bold", textTransform: "uppercase", letterSpacing: 0.8 },
-    categoryLabel: { fontSize: 9, fontFamily: "Inter_700Bold", textTransform: "uppercase", letterSpacing: 0.8 },
-    taskText: { fontSize: 13, fontFamily: "Inter_400Regular", lineHeight: 20 },
-    taskTextDone: { textDecorationLine: "line-through", opacity: 0.5 },
-    checkBtn: { width: 30, height: 30, borderRadius: 8, borderWidth: 2, alignItems: "center", justifyContent: "center", marginTop: 8 },
+    timeCol: { width: 60, alignItems: "flex-start", paddingLeft: 8, paddingVertical: 16 },
+    timeText: { fontSize: 12, fontFamily: Platform.OS === "ios" ? "Courier" : "monospace", color: "#484F58" },
+    iconCol: { width: 24, alignItems: "center", justifyContent: "center", zIndex: 1 },
+    iconDot: { width: 10, height: 10, borderRadius: 5 },
+    activeHighlight: { backgroundColor: "rgba(249,115,22,0.06)", borderLeftWidth: 2, borderLeftColor: "#F97316" },
+    taskCard: { flex: 1, paddingHorizontal: 12, paddingVertical: 16, flexDirection: "row", alignItems: "center", gap: 8 },
+    taskText: { fontSize: 13, fontFamily: "Inter_400Regular", flex: 1 },
+    catBadge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, backgroundColor: "rgba(0,0,0,0.05)" },
+    catBadgeText: { fontSize: 9, fontFamily: "Inter_700Bold", textTransform: "uppercase", letterSpacing: 0.5, color: colors.mutedForeground },
     // Menu
     menuItem: { paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.border },
     menuCourse: { fontSize: 10, fontFamily: "Inter_700Bold", textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 4 },
@@ -398,12 +414,14 @@ export default function FunctionDetailScreen() {
     menuTagText: { fontSize: 11, fontFamily: "Inter_600SemiBold" },
     // Staff
     memberRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: colors.border },
-    memberAvatar: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center" },
-    memberAvatarText: { fontSize: 14, fontFamily: "Inter_700Bold" },
+    memberAvatar: { width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center" },
+    memberAvatarText: { fontSize: 12, fontFamily: "Inter_700Bold" },
     memberName: { fontSize: 15, fontFamily: "Inter_600SemiBold", color: colors.foreground },
     memberRole: { fontSize: 12, fontFamily: "Inter_400Regular", marginTop: 1 },
     memberNum: { fontSize: 11, fontFamily: "Inter_500Medium", color: colors.mutedForeground, marginTop: 1 },
     memberShift: { fontSize: 13, fontFamily: "Inter_600SemiBold", color: colors.foreground },
+    overflowPill: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12, backgroundColor: colors.secondary },
+    overflowText: { fontSize: 11, fontFamily: "Inter_600SemiBold", color: colors.mutedForeground },
     // Edit mode
     editCard: { marginHorizontal: 20, marginTop: 14, borderRadius: colors.radius, borderWidth: 1.5, overflow: "hidden" },
     editCardHeader: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 14, paddingVertical: 12, borderBottomWidth: 1 },
@@ -443,6 +461,14 @@ export default function FunctionDetailScreen() {
         >
           <Feather name="arrow-left" size={18} color={colors.foreground} />
         </Pressable>
+        {!editing && (
+          <View style={s.headerTitleContainer}>
+            <Text style={s.headerTitle} numberOfLines={1}>{fn.name}</Text>
+            <View style={[s.statusBadge, { borderColor: statusColor + "40", backgroundColor: statusColor + "15" }]}>
+              <Text style={[s.statusBadgeText, { color: statusColor }]}>● {status}</Text>
+            </View>
+          </View>
+        )}
         <View style={s.toolbarSpacer} />
         {!editing && (
           <Pressable
@@ -478,44 +504,33 @@ export default function FunctionDetailScreen() {
       <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         {/* ── HERO ──────────────────────────────────────────────────────────── */}
         <View style={s.hero}>
-          <View style={[s.typePill, { backgroundColor: tc + "20", borderColor: tc + "60" }]}>
+          <View style={[s.typePill, { backgroundColor: tc + "15", borderColor: tc + "40" }]}>
             <Text style={[s.typeText, { color: tc }]}>{editing ? draft.functionType : fn.functionType}</Text>
           </View>
           <Text style={s.eventName}>{editing ? draft.name || fn.name : fn.name}</Text>
           <View style={s.roomRow}>
-            <MaterialCommunityIcons name="door" size={16} color={colors.mutedForeground} />
-            <Text style={s.roomLabel}>Room</Text>
+            <Text style={s.roomLabel}>Room </Text>
             <Text style={s.roomValue}>{editing ? draft.room || fn.room : fn.room}</Text>
             <View style={s.floorTag}>
-              <Text style={s.floorTagText}>{editing ? draft.floor || fn.floor : fn.floor}</Text>
+              <Text style={s.floorTagText}>· {editing ? draft.floor || fn.floor : fn.floor}</Text>
             </View>
           </View>
           <View style={s.infoGrid}>
             <View style={s.infoBox}>
-              <Text style={[s.infoNum, { color: colors.foreground }]}>{editing ? draft.guestCount : fn.guestCount}</Text>
+              <Text style={s.infoNum}>{editing ? draft.guestCount : fn.guestCount}</Text>
               <Text style={s.infoLabel}>Guests</Text>
             </View>
             <View style={s.infoBox}>
-              <Text style={[s.infoNum, { color: colors.info }]}>{editing ? draft.startTime : fn.startTime}</Text>
+              <Text style={s.infoNum}>{editing ? draft.startTime : fn.startTime}</Text>
               <Text style={s.infoLabel}>Start</Text>
             </View>
             <View style={s.infoBox}>
-              <Text style={[s.infoNum, { color: colors.mutedForeground }]}>{editing ? draft.endTime : fn.endTime}</Text>
+              <Text style={s.infoNum}>{editing ? draft.endTime : fn.endTime}</Text>
               <Text style={s.infoLabel}>Finish</Text>
             </View>
-          </View>
-          <View style={s.statsRow}>
-            <View style={s.statBox}>
-              <Text style={[s.statNum, { color: prepDone === fnPrep.length && fnPrep.length > 0 ? colors.accent : colors.warning }]}>{prepDone}/{fnPrep.length}</Text>
-              <Text style={s.statLabel}>Food ready</Text>
-            </View>
-            <View style={s.statBox}>
-              <Text style={[s.statNum, { color: stepsDone === fn.timeline.length && fn.timeline.length > 0 ? colors.accent : colors.primary }]}>{stepsDone}/{fn.timeline.length}</Text>
-              <Text style={s.statLabel}>Tasks done</Text>
-            </View>
-            <View style={[s.statBox, totalDietary > 0 && hasSevereAllergen && { backgroundColor: "#F59E0B15" }]}>
-              <Text style={[s.statNum, { color: hasSevereAllergen ? "#F59E0B" : totalDietary > 0 ? colors.info : colors.foreground }]}>{totalDietary}</Text>
-              <Text style={s.statLabel}>Dietary</Text>
+            <View style={s.infoBox}>
+              <Text style={s.infoNum}>{editing ? draft.functionType.split(" ")[0] : fn.functionType.split(" ")[0]}</Text>
+              <Text style={s.infoLabel}>Type</Text>
             </View>
           </View>
         </View>
@@ -877,37 +892,45 @@ export default function FunctionDetailScreen() {
                     <Text style={{ fontSize: 12, fontFamily: "Inter_700Bold", color: "#fff" }}>{totalDietary} guests</Text>
                   </View>
                 </View>
-                {hasSevereAllergen && (
-                  <View style={{ flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 14, paddingVertical: 9, backgroundColor: "#EF444410", borderBottomWidth: 1, borderBottomColor: "#EF444430" }}>
-                    <Ionicons name="alert-circle" size={14} color="#EF4444" />
-                    <Text style={{ flex: 1, fontSize: 12, fontFamily: "Inter_600SemiBold", color: "#EF4444" }}>Severe allergen present — dedicated prep area required. Epinephrine on site.</Text>
+                {dietaryReqs.some(d => d.name.toLowerCase().includes("nut")) && (
+                  <View style={{ paddingHorizontal: 14, paddingVertical: 8, backgroundColor: "rgba(239,68,68,0.05)" }}>
+                    <Text style={{ fontSize: 12, fontFamily: "Inter_700Bold", color: "#EF4444" }}>⚠ Confirm nut allergy with kitchen</Text>
                   </View>
                 )}
                 <View style={{ padding: 10, gap: 8 }}>
                   {dietaryReqs.map((req, idx) => {
-                    const dc = getDietaryColor(req.name);
-                    const isSevere = req.name.toLowerCase().includes("nut") || req.name.toLowerCase().includes("shellfish");
+                    let dc = getDietaryColor(req.name);
+                    let bg = dc + "12";
+                    let border = dc + "20";
+                    let isNut = req.name.toLowerCase().includes("nut");
+                    let isGF = req.name.toLowerCase().includes("gluten");
+                    let isVegan = req.name.toLowerCase().includes("vegan") || req.name.toLowerCase().includes("vegetarian");
+
+                    if (isNut) { dc = "#EF4444"; bg = "rgba(239,68,68,0.15)"; border = "rgba(239,68,68,0.3)"; }
+                    else if (isGF) { dc = "#EAB308"; bg = "rgba(234,179,8,0.12)"; border = "rgba(234,179,8,0.2)"; }
+                    else if (isVegan) { dc = "#22C55E"; bg = "rgba(34,197,94,0.12)"; border = "rgba(34,197,94,0.2)"; }
+
                     const isExpanded = expandedDietary === req.name + idx;
                     return (
-                      <View key={idx} style={{ borderRadius: 10, overflow: "hidden", borderWidth: 1, backgroundColor: dc + "12", borderColor: dc + "40" }}>
+                      <View key={idx} style={{ borderRadius: 10, overflow: "hidden", borderWidth: 1, backgroundColor: bg, borderColor: border }}>
                         <View style={{ flexDirection: "row", alignItems: "center", padding: 10, gap: 10 }}>
                           <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: dc + "25", alignItems: "center", justifyContent: "center" }}>
                             <Text style={{ fontSize: 18, fontFamily: "Inter_700Bold", color: dc }}>{req.count}</Text>
                           </View>
                           <View style={{ flex: 1 }}>
-                            <Text style={{ fontSize: 14, fontFamily: "Inter_700Bold", color: colors.foreground }}>{req.name}{isSevere ? " ⚠" : ""}</Text>
+                            <Text style={{ fontSize: 14, fontFamily: "Inter_700Bold", color: dc }}>{req.name.toUpperCase()}{isNut ? " ⚠" : ""}</Text>
                             {req.note ? (
                               <Pressable onPress={() => setExpandedDietary(isExpanded ? null : req.name + idx)}>
                                 <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: dc, marginTop: 2 }}>{isExpanded ? "▲ Hide details" : "▼ View special instructions"}</Text>
                               </Pressable>
                             ) : (
-                              <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground, marginTop: 2 }}>Chef's choice — standard {req.name} menu</Text>
+                              <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: dc, opacity: 0.7, marginTop: 2 }}>Standard {req.name} menu</Text>
                             )}
                           </View>
                         </View>
                         {isExpanded && req.note ? (
                           <View style={{ paddingHorizontal: 14, paddingBottom: 12 }}>
-                            <Text style={{ fontSize: 13, fontFamily: "Inter_400Regular", color: colors.mutedForeground, lineHeight: 19 }}>{req.note}</Text>
+                            <Text style={{ fontSize: 13, fontFamily: "Inter_400Regular", color: dc, lineHeight: 19 }}>{req.note}</Text>
                           </View>
                         ) : null}
                       </View>
@@ -921,8 +944,10 @@ export default function FunctionDetailScreen() {
 
             {/* ── Staff ───────────────────────────────────────────────────── */}
             <View style={s.section}>
-              <Text style={s.sectionTitle}>Staff Working This Event</Text>
-              <Text style={s.sectionSub}>{fnStaff.length > 0 ? `${fnStaff.length} people on this team` : "Team not yet assigned"}</Text>
+              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                <Text style={s.sectionTitle}>Team</Text>
+                {fnStaff.length > 0 && <Text style={{ fontSize: 13, color: colors.mutedForeground, fontWeight: "500" }}>{fnStaff.length} staff</Text>}
+              </View>
               {fnStaff.length === 0 && (
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingVertical: 10 }}>
                   <Feather name="info" size={14} color={colors.mutedForeground} />
@@ -931,25 +956,28 @@ export default function FunctionDetailScreen() {
                   </Text>
                 </View>
               )}
-              {fnStaff.map((member) => {
-                const rc = getRoleColor(member.role);
-                return (
-                  <View key={member.id} style={s.memberRow}>
-                    <View style={[s.memberAvatar, { backgroundColor: rc + "25" }]}>
-                      <Text style={[s.memberAvatarText, { color: rc }]}>{member.name.split(" ").map((n) => n[0]).join("")}</Text>
+              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+                {fnStaff.slice(0, 5).map((member) => {
+                  const rc = getRoleColor(member.role);
+                  return (
+                    <View key={member.id} style={{ alignItems: "center", width: 60 }}>
+                      <View style={[s.memberAvatar, { backgroundColor: rc }]}>
+                        <Text style={[s.memberAvatarText, { color: "#fff" }]}>
+                          {member.name.split(" ").map((n) => n[0]).join("").toUpperCase()}
+                        </Text>
+                      </View>
+                      <Text style={{ fontSize: 10, color: colors.mutedForeground, marginTop: 4, textAlign: "center" }} numberOfLines={1}>
+                        {member.name.split(" ")[0]}
+                      </Text>
                     </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={s.memberName}>{member.name}</Text>
-                      <Text style={[s.memberRole, { color: rc }]}>{member.role}</Text>
-                      <Text style={s.memberNum}>{member.staffNumber}</Text>
-                    </View>
-                    <View style={{ alignItems: "flex-end" }}>
-                      <Text style={{ fontSize: 10, fontFamily: "Inter_500Medium", color: colors.mutedForeground }}>Shift</Text>
-                      <Text style={s.memberShift}>{member.shiftStart}–{member.shiftEnd}</Text>
-                    </View>
+                  );
+                })}
+                {fnStaff.length > 5 && (
+                  <View style={s.overflowPill}>
+                    <Text style={s.overflowText}>+{fnStaff.length - 5} more</Text>
                   </View>
-                );
-              })}
+                )}
+              </View>
             </View>
           </>
         )}

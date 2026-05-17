@@ -184,10 +184,11 @@ export default function TodayScreen() {
     broadcastActions: { flexDirection: "row", borderTopWidth: 1 },
     broadcastBtn: { flex: 1, paddingVertical: 11, alignItems: "center" },
     broadcastBtnText: { fontSize: 13, fontFamily: "Inter_600SemiBold" },
-    countdownCard: { marginHorizontal: 20, marginBottom: 14, borderRadius: colors.radius, borderWidth: 2, overflow: "hidden" },
+    countdownCard: { marginHorizontal: 20, marginBottom: 14, borderRadius: colors.radius, borderWidth: 1, overflow: "hidden" },
     countdownHeader: { paddingHorizontal: 14, paddingVertical: 8, flexDirection: "row", alignItems: "center", gap: 6, borderBottomWidth: 1 },
     countdownHeaderText: { fontSize: 10, fontFamily: "Inter_700Bold", letterSpacing: 1.2, textTransform: "uppercase" },
-    countdownBody: { padding: 16 },
+    countdownBody: { padding: 16, paddingLeft: 19 },
+    countdownAccent: { position: "absolute", left: 0, top: 0, bottom: 0, width: 3 },
     countdownMinRow: { flexDirection: "row", alignItems: "baseline", gap: 4, marginBottom: 2 },
     countdownNum: { fontSize: 52, fontFamily: "Inter_700Bold", lineHeight: 56 },
     countdownUnit: { fontSize: 16, fontFamily: "Inter_600SemiBold" },
@@ -207,8 +208,8 @@ export default function TodayScreen() {
     myEventTime: { fontSize: 13, fontFamily: "Inter_700Bold" },
     myEventName: { flex: 1, fontSize: 13, fontFamily: "Inter_500Medium", color: colors.foreground },
     myEventSub: { fontSize: 11, fontFamily: "Inter_400Regular", color: colors.mutedForeground },
-    sectionLabel: { fontSize: 11, fontFamily: "Inter_700Bold", color: colors.mutedForeground, letterSpacing: 1.2, textTransform: "uppercase", marginHorizontal: 20, marginBottom: 10 },
-    fnCard: { marginHorizontal: 20, marginBottom: 10, backgroundColor: colors.card, borderRadius: colors.radius, borderWidth: 2, borderColor: colors.border, overflow: "hidden" },
+    sectionLabel: { fontSize: 11, fontFamily: "Inter_700Bold", color: "#484F58", letterSpacing: 1.2, textTransform: "uppercase", marginHorizontal: 20, marginBottom: 12 },
+    fnCard: { marginHorizontal: 20, marginBottom: 10, backgroundColor: "#161B22", borderRadius: colors.radius, borderWidth: 1, borderColor: "rgba(255,255,255,0.08)", overflow: "hidden" },
     fnCardTop: { flexDirection: "row", alignItems: "stretch" },
     fnTimeBadge: { width: 72, alignItems: "center", justifyContent: "center", paddingVertical: 14, paddingHorizontal: 6, borderRightWidth: 1 },
     fnTimeBadgeNum: { fontSize: 10, fontFamily: "Inter_700Bold", letterSpacing: 0.5, marginBottom: 2 },
@@ -225,12 +226,17 @@ export default function TodayScreen() {
     fnPaxBig: { fontSize: 15, fontFamily: "Inter_700Bold", color: colors.foreground },
     fnSectionRow: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 4 },
     fnSectionLabel: { fontSize: 10, fontFamily: "Inter_700Bold", width: 76, textTransform: "uppercase", letterSpacing: 0.4 },
-    fnSectionBar: { flex: 1, height: 6, borderRadius: 3, backgroundColor: colors.border, overflow: "hidden" },
-    fnSectionFill: { height: 6, borderRadius: 3 },
+    fnSectionBar: { flex: 1, height: 6, borderRadius: 4, backgroundColor: "#21262D", overflow: "hidden" },
+    fnSectionFill: { height: 6, borderRadius: 4 },
     fnSectionPct: { fontSize: 10, fontFamily: "Inter_700Bold", width: 30, textAlign: "right" },
     fnAlertRow: { flexDirection: "row", gap: 6, paddingHorizontal: 12, paddingBottom: 10, flexWrap: "wrap" },
     fnAlertBadge: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, borderWidth: 1 },
     fnAlertText: { fontSize: 11, fontFamily: "Inter_700Bold" },
+    fnCardLeftBar: { position: "absolute", left: 0, top: 0, bottom: 0, width: 4 },
+    liveBadge: { backgroundColor: "rgba(249,115,22,0.1)", borderColor: "rgba(249,115,22,0.2)", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, borderWidth: 1, flexDirection: "row", alignItems: "center", gap: 6 },
+    liveBadgeText: { fontSize: 11, fontFamily: "Inter_700Bold", color: "#F97316" },
+    statusBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12, borderWidth: 1 },
+    statusBadgeText: { fontSize: 10, fontFamily: "Inter_700Bold" },
     bottomPad: { height: Platform.OS === "web" ? 34 : insets.bottom + 80 },
     overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.6)", justifyContent: "flex-end" },
     sheet: { backgroundColor: colors.card, borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingBottom: Platform.OS === "ios" ? insets.bottom + 8 : 24, borderTopWidth: 1, borderColor: colors.border },
@@ -252,11 +258,13 @@ export default function TodayScreen() {
   function renderCountdown() {
     if (!nextFn || nextFnMins === null) return null;
     const urgentColor = nextFnMins <= 30 ? "#EF4444" : nextFnMins <= 60 ? AMBER : colors.primary;
+    const cardBorderColor = "rgba(249, 115, 22, 0.3)";
     return (
       <Pressable
-        style={({ pressed }) => [s.countdownCard, { borderColor: urgentColor, backgroundColor: urgentColor + "08", opacity: pressed ? 0.9 : 1 }]}
+        style={({ pressed }) => [s.countdownCard, { borderColor: cardBorderColor, backgroundColor: urgentColor + "08", opacity: pressed ? 0.9 : 1 }]}
         onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push(`/function/${nextFn.id}`); }}
       >
+        <View style={[s.countdownAccent, { backgroundColor: colors.primary }]} />
         <View style={[s.countdownHeader, { borderBottomColor: urgentColor + "30", backgroundColor: urgentColor + "12" }]}>
           <Ionicons name="timer-outline" size={14} color={urgentColor} />
           <Text style={[s.countdownHeaderText, { color: urgentColor }]}>{nextFnMins <= 0 ? "NOW" : "Next Event"}</Text>
@@ -331,9 +339,22 @@ export default function TodayScreen() {
   }
 
   function renderFunctionList() {
+    const activeFnsCount = sortedFunctions.filter(fn => {
+      const fnMins = timeToMinutes(fn.startTime) - nowMinutes;
+      return fnMins <= 0 && timeToMinutes(fn.endTime) > nowMinutes;
+    }).length;
+
     return (
       <>
-        <Text style={s.sectionLabel}>Today's Functions</Text>
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginHorizontal: 20, marginBottom: 12 }}>
+          <Text style={[s.sectionLabel, { marginHorizontal: 0, marginBottom: 0 }]}>Today's Functions</Text>
+          {activeFnsCount > 0 && (
+            <View style={s.liveBadge}>
+              <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: "#F97316" }} />
+              <Text style={s.liveBadgeText}>{activeFnsCount} LIVE</Text>
+            </View>
+          )}
+        </View>
         {sortedFunctions.length === 0 && (
           <View style={{ marginHorizontal: 20, padding: 24, borderRadius: colors.radius, borderWidth: 1, borderColor: colors.border, alignItems: "center", gap: 8 }}>
             <Feather name="calendar" size={28} color={colors.mutedForeground} />
@@ -367,20 +388,33 @@ export default function TodayScreen() {
             const fnMins = timeToMinutes(fn.startTime) - nowMinutes;
             const isUrgent = fnMins > 0 && fnMins <= 30;
             const isActive = fnMins <= 0 && timeToMinutes(fn.endTime) > nowMinutes;
-            const frameColor = isActive ? colors.accent : isUrgent ? "#EF4444" : meal.color;
+            const isDone = timeToMinutes(fn.endTime) <= nowMinutes;
+            const statusColor = isActive ? "#F97316" : isDone ? "#22C55E" : "#3B82F6";
+            const statusLabel = isActive ? "In Progress" : isDone ? "Done" : "Upcoming";
+            const statusStyle = isActive 
+              ? { backgroundColor: "rgba(249,115,22,0.12)", color: "#F97316", borderColor: "rgba(249,115,22,0.2)" }
+              : isDone 
+                ? { backgroundColor: "rgba(34,197,94,0.12)", color: "#22C55E", borderColor: "rgba(34,197,94,0.2)" }
+                : { backgroundColor: "rgba(59,130,246,0.12)", color: "#3B82F6", borderColor: "rgba(59,130,246,0.2)" };
+
             const fnAlerts = alertsByFunctionId.get(fn.id) ?? [];
             return (
-              <View key={fn.id} style={[s.fnCard, { borderColor: frameColor + "70" }]}>
+              <View key={fn.id} style={s.fnCard}>
+                <View style={[s.fnCardLeftBar, { backgroundColor: statusColor }]} />
                 <View style={s.fnCardTop}>
-                  <View style={[s.fnTimeBadge, { backgroundColor: frameColor + "18", borderRightColor: frameColor + "35" }]}>
-                    <Text style={[s.fnTimeBadgeNum, { color: frameColor }]}>#{idx + 1}</Text>
-                    <Text style={[s.fnTimeBadgeText, { color: frameColor }]}>{fn.startTime}</Text>
-                    <Text style={[s.fnTimeBadgeEnd, { color: frameColor + "90" }]}>{fn.endTime}</Text>
-                    <Text style={[s.fnTimeBadgeType, { color: frameColor }]} numberOfLines={2}>{abbreviateType(fn.functionType)}</Text>
-                    {isActive && <View style={{ marginTop: 5, paddingHorizontal: 4, paddingVertical: 1, backgroundColor: colors.accent, borderRadius: 4 }}><Text style={{ fontSize: 8, fontFamily: "Inter_700Bold", color: "#fff" }}>LIVE</Text></View>}
+                  <View style={[s.fnTimeBadge, { backgroundColor: statusColor + "10", borderRightColor: "rgba(255,255,255,0.05)" }]}>
+                    <Text style={[s.fnTimeBadgeNum, { color: statusColor }]}>#{idx + 1}</Text>
+                    <Text style={[s.fnTimeBadgeText, { color: statusColor }]}>{fn.startTime}</Text>
+                    <Text style={[s.fnTimeBadgeEnd, { color: statusColor + "90" }]}>{fn.endTime}</Text>
+                    <Text style={[s.fnTimeBadgeType, { color: statusColor }]} numberOfLines={2}>{abbreviateType(fn.functionType)}</Text>
                   </View>
                   <View style={s.fnBody}>
-                    <Text style={s.fnName} numberOfLines={1}>{fn.name}</Text>
+                    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 2 }}>
+                      <Text style={[s.fnName, { flex: 1, marginRight: 8 }]} numberOfLines={1}>{fn.name}</Text>
+                      <View style={[s.statusBadge, { backgroundColor: statusStyle.backgroundColor, borderColor: statusStyle.borderColor }]}>
+                        <Text style={[s.statusBadgeText, { color: statusStyle.color }]}>{statusLabel}</Text>
+                      </View>
+                    </View>
                     <View style={s.fnMetaRow}>
                       <View style={{ paddingHorizontal: 6, paddingVertical: 2, borderRadius: 5, backgroundColor: meal.color + "20", borderWidth: 1, borderColor: meal.color + "45" }}>
                         <Text style={{ fontSize: 10, fontFamily: "Inter_700Bold", color: meal.color }}>{meal.label}</Text>
@@ -400,8 +434,8 @@ export default function TodayScreen() {
                     })}
                     {nextCourse && (
                       <View style={{ flexDirection: "row", alignItems: "center", gap: 5, marginTop: 2 }}>
-                        <Feather name="clock" size={10} color={frameColor} />
-                        <Text style={{ fontSize: 10, fontFamily: "Inter_600SemiBold", color: frameColor }}>{nextCourse.label}: {nextCourse.time}</Text>
+                        <Feather name="clock" size={10} color={statusColor} />
+                        <Text style={{ fontSize: 10, fontFamily: "Inter_600SemiBold", color: statusColor }}>{nextCourse.label}: {nextCourse.time}</Text>
                       </View>
                     )}
                   </View>
@@ -436,22 +470,35 @@ export default function TodayScreen() {
             const isMyFn = myFunctions.some((f) => f.id === fn.id);
             const fnMins = timeToMinutes(fn.startTime) - nowMinutes;
             const isActive = fnMins <= 0 && timeToMinutes(fn.endTime) > nowMinutes;
+            const isDone = timeToMinutes(fn.endTime) <= nowMinutes;
+            const statusColor = isActive ? "#F97316" : isDone ? "#22C55E" : "#3B82F6";
+            const statusLabel = isActive ? "In Progress" : isDone ? "Done" : "Upcoming";
+            const statusStyle = isActive 
+              ? { backgroundColor: "rgba(249,115,22,0.12)", color: "#F97316", borderColor: "rgba(249,115,22,0.2)" }
+              : isDone 
+                ? { backgroundColor: "rgba(34,197,94,0.12)", color: "#22C55E", borderColor: "rgba(34,197,94,0.2)" }
+                : { backgroundColor: "rgba(59,130,246,0.12)", color: "#3B82F6", borderColor: "rgba(59,130,246,0.2)" };
+
             const dietaryReqs = fn.dietaryRequirements ?? [];
             const hasSevere = dietaryReqs.some((d) => d.name.toLowerCase().includes("nut") || d.name.toLowerCase().includes("shellfish"));
-            const frameColor = isActive ? colors.accent : meal.color;
             const fnAlerts = alertsByFunctionId.get(fn.id) ?? [];
             return (
-              <View key={fn.id} style={[s.fnCard, { borderColor: isMyFn ? frameColor + "90" : frameColor + "55" }]}>
+              <View key={fn.id} style={s.fnCard}>
+                <View style={[s.fnCardLeftBar, { backgroundColor: statusColor }]} />
                 <View style={s.fnCardTop}>
-                  <View style={[s.fnTimeBadge, { backgroundColor: frameColor + "18", borderRightColor: frameColor + "35" }]}>
-                    <Text style={[s.fnTimeBadgeNum, { color: frameColor }]}>#{idx + 1}</Text>
-                    <Text style={[s.fnTimeBadgeText, { color: frameColor }]}>{fn.startTime}</Text>
-                    <Text style={[s.fnTimeBadgeEnd, { color: frameColor + "90" }]}>{fn.endTime}</Text>
-                    <Text style={[s.fnTimeBadgeType, { color: frameColor }]} numberOfLines={2}>{abbreviateType(fn.functionType)}</Text>
-                    {isActive && <View style={{ marginTop: 5, paddingHorizontal: 4, paddingVertical: 1, backgroundColor: colors.accent, borderRadius: 4 }}><Text style={{ fontSize: 8, fontFamily: "Inter_700Bold", color: "#fff" }}>LIVE</Text></View>}
+                  <View style={[s.fnTimeBadge, { backgroundColor: statusColor + "10", borderRightColor: "rgba(255,255,255,0.05)" }]}>
+                    <Text style={[s.fnTimeBadgeNum, { color: statusColor }]}>#{idx + 1}</Text>
+                    <Text style={[s.fnTimeBadgeText, { color: statusColor }]}>{fn.startTime}</Text>
+                    <Text style={[s.fnTimeBadgeEnd, { color: statusColor + "90" }]}>{fn.endTime}</Text>
+                    <Text style={[s.fnTimeBadgeType, { color: statusColor }]} numberOfLines={2}>{abbreviateType(fn.functionType)}</Text>
                   </View>
                   <View style={s.fnBody}>
-                    <Text style={s.fnName} numberOfLines={1}>{fn.name}</Text>
+                    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 2 }}>
+                      <Text style={[s.fnName, { flex: 1, marginRight: 8 }]} numberOfLines={1}>{fn.name}</Text>
+                      <View style={[s.statusBadge, { backgroundColor: statusStyle.backgroundColor, borderColor: statusStyle.borderColor }]}>
+                        <Text style={[s.statusBadgeText, { color: statusStyle.color }]}>{statusLabel}</Text>
+                      </View>
+                    </View>
                     <View style={s.fnMetaRow}>
                       <View style={{ paddingHorizontal: 6, paddingVertical: 2, borderRadius: 5, backgroundColor: meal.color + "20", borderWidth: 1, borderColor: meal.color + "45" }}>
                         <Text style={{ fontSize: 10, fontFamily: "Inter_700Bold", color: meal.color }}>{meal.label}</Text>
@@ -459,7 +506,7 @@ export default function TodayScreen() {
                       <View style={s.fnMetaChip}><MaterialCommunityIcons name="door" size={10} color={colors.mutedForeground} /><Text style={s.fnMetaChipText}>{fn.room}</Text></View>
                       <View style={s.fnMetaChip}><Ionicons name="layers-outline" size={10} color={colors.mutedForeground} /><Text style={s.fnMetaChipText}>{fn.floor}</Text></View>
                       <View style={s.fnMetaChip}><Ionicons name="people" size={10} color={colors.mutedForeground} /><Text style={s.fnMetaChipText}>{fn.guestCount} pax</Text></View>
-                      {isMyFn && <View style={{ paddingHorizontal: 6, paddingVertical: 2, backgroundColor: frameColor + "22", borderRadius: 5 }}><Text style={{ fontSize: 10, fontFamily: "Inter_700Bold", color: frameColor }}>Your function</Text></View>}
+                      {isMyFn && <View style={{ paddingHorizontal: 6, paddingVertical: 2, backgroundColor: statusColor + "22", borderRadius: 5 }}><Text style={{ fontSize: 10, fontFamily: "Inter_700Bold", color: statusColor }}>Your function</Text></View>}
                     </View>
                     {hasSevere && <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 2 }}><Ionicons name="alert-circle" size={11} color="#EF4444" /><Text style={{ fontSize: 10, fontFamily: "Inter_600SemiBold", color: "#EF4444" }}>Severe allergen</Text></View>}
                     {fnAlerts.filter((a) => a.severity !== "info" && a.category !== "dietary").slice(0, 1).map((a) => {
@@ -519,8 +566,8 @@ export default function TodayScreen() {
                     {team.replace(" Kitchen", "").replace(" Larder", "").replace(" Team", "")}
                   </Text>
                   <Text style={{ fontSize: 11, fontFamily: "Inter_700Bold", color: pct >= 1 ? colors.accent : tc }}>{done}/{total}</Text>
-                  <View style={{ width: 60, height: 5, borderRadius: 3, backgroundColor: colors.border, overflow: "hidden" }}>
-                    <View style={{ height: 5, borderRadius: 3, backgroundColor: pct >= 1 ? colors.accent : tc, width: `${pct * 100}%` }} />
+                  <View style={{ width: 60, height: 6, borderRadius: 4, backgroundColor: "#21262D", overflow: "hidden" }}>
+                    <View style={{ height: 6, borderRadius: 4, backgroundColor: pct >= 1 ? colors.accent : colors.primary, width: `${pct * 100}%` }} />
                   </View>
                 </View>
               );
@@ -792,6 +839,12 @@ function AlertsPanel({
   const primaryColor =
     criticalCount > 0 ? "#EF4444" : warningCount > 0 ? "#F59E0B" : "#3B82F6";
 
+  const panelStyles = criticalCount > 0 
+    ? { borderColor: 'rgba(239,68,68,0.3)', backgroundColor: 'rgba(239,68,68,0.08)' }
+    : warningCount > 0
+      ? { borderColor: 'rgba(234,179,8,0.3)', backgroundColor: 'rgba(234,179,8,0.08)' }
+      : { borderColor: primaryColor + "45", backgroundColor: colors.card };
+
   return (
     <View
       style={[
@@ -800,8 +853,8 @@ function AlertsPanel({
           marginHorizontal: 20,
           marginBottom: 14,
           borderRadius: colors.radius,
-          borderColor: primaryColor + "45",
-          backgroundColor: colors.card,
+          borderColor: panelStyles.borderColor,
+          backgroundColor: panelStyles.backgroundColor,
         },
       ]}
     >

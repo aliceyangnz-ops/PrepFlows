@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "Events Kitchen",
-    "slug": "eventskitchen",
+    "name": "KitchenCommand",
+    "slug": "kitchencommand",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "eventskitchen",
+    "scheme": "kitchencommand",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "splash": {
@@ -15,10 +15,19 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.eventskitchen.app"
+      "bundleIdentifier": "com.kitchencommand.app",
+      "requireFullScreen": true,
+      "infoPlist": {
+        "UIStatusBarStyle": "UIStatusBarStyleLightContent",
+        "UIViewControllerBasedStatusBarAppearance": false
+      }
     },
     "android": {
-      "package": "com.eventskitchen.app"
+      "package": "com.kitchencommand.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/icon.png",
+        "backgroundColor": "#0D1117"
+      }
     },
     "web": {
       "favicon": "./assets/images/icon.png",
@@ -40,6 +49,11 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "kitchencommand-app"
+      }
     }
   }
 }
