@@ -17,7 +17,13 @@ const QRCode = require("qrcode");
 
 const STATIC_ROOT = path.resolve(__dirname, "..", "static-build");
 const TEMPLATE_PATH = path.resolve(__dirname, "templates", "landing-page.html");
+const TEMPLATE_ANDROID_PATH = path.resolve(__dirname, "templates", "landing-page-android.html");
 const basePath = (process.env.BASE_PATH || "/").replace(/\/+$/, "");
+
+function isAndroidUA(req) {
+  const ua = req.headers["user-agent"] || "";
+  return /Android/i.test(ua);
+}
 
 const MIME_TYPES = {
   ".html": "text/html; charset=utf-8",
@@ -75,13 +81,15 @@ function serveManifest(platform, res) {
   res.end(manifest);
 }
 
-async function serveLandingPage(req, res, landingPageTemplate, appName) {
+async function serveLandingPage(req, res, templates, appName) {
   const forwardedProto = req.headers["x-forwarded-proto"];
   const protocol = forwardedProto || "https";
   const host = req.headers["x-forwarded-host"] || req.headers["host"];
   const baseUrl = `${protocol}://${host}`;
-  const expsUrl = `${host}`;
-  const deepLink = `exps://${expsUrl}`;
+  const deepLink = `exps://${host}`;
+
+  // Pick the right template based on User-Agent
+  const template = isAndroidUA(req) ? templates.android : templates.default;
 
   // Generate QR code as inline SVG — no external CDN dependency
   let qrSvg = "";
@@ -97,7 +105,7 @@ async function serveLandingPage(req, res, landingPageTemplate, appName) {
     qrSvg = `<svg viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg"><rect width="10" height="10" fill="#eee"/></svg>`;
   }
 
-  const html = landingPageTemplate
+  const html = template
     .replace(/BASE_URL_PLACEHOLDER/g, baseUrl)
     .replace(/DEEP_LINK_PLACEHOLDER/g, deepLink)
     .replace(/QR_CODE_SVG_PLACEHOLDER/g, qrSvg)
@@ -109,6 +117,8 @@ async function serveLandingPage(req, res, landingPageTemplate, appName) {
     "x-robots-tag": "index, follow",
     "x-content-type-options": "nosniff",
     "referrer-policy": "strict-origin-when-cross-origin",
+    // Vary by UA so CDNs/caches don't serve the wrong version
+    "vary": "User-Agent",
   });
   res.end(html);
 }
@@ -191,7 +201,10 @@ function serveStaticFile(urlPath, res) {
   res.end(content);
 }
 
-const landingPageTemplate = fs.readFileSync(TEMPLATE_PATH, "utf-8");
+const templates = {
+  default: fs.readFileSync(TEMPLATE_PATH, "utf-8"),
+  android: fs.readFileSync(TEMPLATE_ANDROID_PATH, "utf-8"),
+};
 const appName = getAppName();
 
 const server = http.createServer((req, res) => {
@@ -213,7 +226,7 @@ const server = http.createServer((req, res) => {
     }
     if (pathname === "/") {
       // serveLandingPage is async (generates QR code); catch any errors gracefully
-      serveLandingPage(req, res, landingPageTemplate, appName).catch((err) => {
+      serveLandingPage(req, res, templates, appName).catch((err) => {
         console.error("Landing page error:", err);
         if (!res.headersSent) {
           res.writeHead(500, { "content-type": "text/plain" });
