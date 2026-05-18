@@ -163,10 +163,17 @@ function serveStaticFile(urlPath, res) {
   const contentType = MIME_TYPES[ext] || "application/octet-stream";
   const content = fs.readFileSync(filePath);
 
+  const extraHeaders = {};
+  // HTML files must be indexable — prevent crawlers seeing noindex
+  if (ext === ".html") {
+    extraHeaders["x-robots-tag"] = "index, follow";
+  }
+
   res.writeHead(200, {
     "content-type": contentType,
     "cache-control": getCacheControl(ext),
     "x-content-type-options": "nosniff",
+    ...extraHeaders,
   });
   res.end(content);
 }
