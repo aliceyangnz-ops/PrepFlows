@@ -8,13 +8,12 @@
  * - GET / without expo-platform → landing page HTML (with SEO headers)
  * Everything else falls through to static file serving from ./static-build/
  * with long-lived cache headers for hashed assets.
- *
- * Zero external dependencies — uses only Node.js built-ins (http, fs, path).
  */
 
 const http = require("http");
 const fs = require("fs");
 const path = require("path");
+const QRCode = require("qrcode");
 
 const STATIC_ROOT = path.resolve(__dirname, "..", "static-build");
 const TEMPLATE_PATH = path.resolve(__dirname, "templates", "landing-page.html");
@@ -76,24 +75,38 @@ function serveManifest(platform, res) {
   res.end(manifest);
 }
 
-function serveLandingPage(req, res, landingPageTemplate, appName) {
+async function serveLandingPage(req, res, landingPageTemplate, appName) {
   const forwardedProto = req.headers["x-forwarded-proto"];
   const protocol = forwardedProto || "https";
   const host = req.headers["x-forwarded-host"] || req.headers["host"];
   const baseUrl = `${protocol}://${host}`;
   const expsUrl = `${host}`;
+  const deepLink = `exps://${expsUrl}`;
+
+  // Generate QR code as inline SVG — no external CDN dependency
+  let qrSvg = "";
+  try {
+    qrSvg = await QRCode.toString(deepLink, {
+      type: "svg",
+      width: 200,
+      margin: 1,
+      color: { dark: "#1a1a2e", light: "#ffffff" },
+      errorCorrectionLevel: "H",
+    });
+  } catch {
+    qrSvg = `<svg viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg"><rect width="10" height="10" fill="#eee"/></svg>`;
+  }
 
   const html = landingPageTemplate
     .replace(/BASE_URL_PLACEHOLDER/g, baseUrl)
-    .replace(/EXPS_URL_PLACEHOLDER/g, expsUrl)
+    .replace(/DEEP_LINK_PLACEHOLDER/g, deepLink)
+    .replace(/QR_CODE_SVG_PLACEHOLDER/g, qrSvg)
     .replace(/APP_NAME_PLACEHOLDER/g, appName);
 
   res.writeHead(200, {
     "content-type": "text/html; charset=utf-8",
     "cache-control": "public, max-age=0, must-revalidate",
-    // Allow search engines to index this page
     "x-robots-tag": "index, follow",
-    // Security headers
     "x-content-type-options": "nosniff",
     "referrer-policy": "strict-origin-when-cross-origin",
   });
@@ -199,7 +212,15 @@ const server = http.createServer((req, res) => {
       return serveManifest(platform, res);
     }
     if (pathname === "/") {
-      return serveLandingPage(req, res, landingPageTemplate, appName);
+      // serveLandingPage is async (generates QR code); catch any errors gracefully
+      serveLandingPage(req, res, landingPageTemplate, appName).catch((err) => {
+        console.error("Landing page error:", err);
+        if (!res.headersSent) {
+          res.writeHead(500, { "content-type": "text/plain" });
+          res.end("Internal Server Error");
+        }
+      });
+      return;
     }
   }
 
