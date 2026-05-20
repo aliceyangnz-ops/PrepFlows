@@ -16,18 +16,34 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.kitchencommand.app",
+      "buildNumber": "1",
       "requireFullScreen": true,
       "infoPlist": {
         "UIStatusBarStyle": "UIStatusBarStyleLightContent",
-        "UIViewControllerBasedStatusBarAppearance": false
+        "UIViewControllerBasedStatusBarAppearance": false,
+        "NSUserNotificationsUsageDescription": "KitchenCommand sends shift reminders and service alerts to keep your kitchen team informed.",
+        "UIApplicationCategoryType": "UIApplicationCategoryBusinessFoodAndDrink"
+      },
+      "privacyManifests": {
+        "NSPrivacyAccessedAPITypes": [
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryUserDefaults",
+            "NSPrivacyAccessedAPITypeReasons": ["CA92.1"]
+          }
+        ]
       }
     },
     "android": {
       "package": "com.kitchencommand.app",
+      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#0D1117"
-      }
+      },
+      "permissions": [
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.VIBRATE"
+      ]
     },
     "web": {
       "favicon": "./assets/images/icon.png",
@@ -44,7 +60,14 @@
         }
       ],
       "expo-font",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/icon.png",
+          "color": "#F97316"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
