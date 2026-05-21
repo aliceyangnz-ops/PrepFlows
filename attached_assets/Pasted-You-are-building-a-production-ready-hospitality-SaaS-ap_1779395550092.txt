@@ -1,0 +1,339 @@
+You are building a production-ready hospitality SaaS application called “PrepFlows”.
+
+The app must be designed to pass Apple App Store review, support Stripe subscription billing externally, and operate as a scalable enterprise kitchen operations platform.
+
+==================================================
+CORE PRODUCT POSITIONING
+==================================================
+
+PrepFlows is NOT a recipe app.
+
+PrepFlows is:
+“Hospitality Operations Platform”
+focused on:
+- Kitchen production
+- Prep management
+- Recipe costing
+- Team workflow
+- Food safety
+- Inventory
+- Multi-location operations
+
+The design language must feel:
+- Enterprise SaaS
+- Modern
+- Minimal
+- Premium
+- Operational
+- Fast
+- Dark mode optimized
+
+Visual theme:
+- Dark UI
+- Yellow accent color
+- White chef hat branding
+- Premium dashboard style similar to:
+  - Toast
+  - 7shifts
+  - Notion
+  - Linear
+
+==================================================
+CRITICAL APP STORE COMPLIANCE
+==================================================
+
+This app MUST comply with Apple App Store SaaS policies.
+
+VERY IMPORTANT:
+
+DO NOT implement Apple In-App Purchase.
+
+The app MUST use:
+- External SaaS billing
+- Stripe subscriptions via website
+
+The iOS app MUST NOT:
+- Process payments directly
+- Mention Apple Pay
+- Show “Buy Now”
+- Show “Subscribe in App”
+- Ask for card payment inside the app
+
+Allowed:
+- Login
+- Free trial
+- Workspace access
+- Account status
+- Current plan display
+
+Required wording:
+
+“Your organization subscription is managed externally.
+Please visit prepflows.com or contact your administrator.”
+
+==================================================
+TECH STACK
+==================================================
+
+Frontend:
+- Expo React Native
+- TypeScript
+
+Backend:
+- Supabase
+
+Authentication:
+- Supabase Auth
+
+Database:
+- PostgreSQL via Supabase
+
+Payments:
+- Stripe Checkout
+- Stripe Customer Portal
+- Stripe Webhooks
+
+Hosting:
+- Vercel or Replit deployment
+
+App builds:
+- Expo EAS Build
+
+==================================================
+REQUIRED APP STRUCTURE
+==================================================
+
+Build a scalable modular SaaS architecture.
+
+Required screens:
+
+1. Authentication
+- Login
+- Register
+- Forgot password
+
+2. Dashboard
+- KPI cards
+- Production overview
+- Daily prep status
+- Staff tasks
+- Waste analytics
+
+3. Production Sheets
+- Create prep sheets
+- Assign staff
+- Quantities
+- Due times
+- Completion tracking
+
+4. Recipe Costing
+- Ingredient costing
+- Yield calculations
+- Portion costing
+- Food cost %
+
+5. Inventory
+- Ingredient tracking
+- Low stock alerts
+- Usage analytics
+
+6. Team Management
+- Staff roles
+- Permissions
+- Shift assignments
+
+7. HACCP / Food Safety
+- Temperature logs
+- Cleaning checklists
+- Compliance records
+
+8. Analytics
+- Production trends
+- Waste trends
+- Labor efficiency
+
+9. Settings
+- Workspace settings
+- User profile
+- Subscription status
+
+==================================================
+MULTI-TENANT SAAS ARCHITECTURE
+==================================================
+
+Implement:
+- Workspace-based architecture
+- Multi-organization support
+- Role-based permissions
+
+Roles:
+- Owner
+- Admin
+- Chef
+- Staff
+
+Users must only access their organization data.
+
+==================================================
+STRIPE BILLING SYSTEM
+==================================================
+
+Implement external Stripe billing.
+
+Required:
+
+1. Stripe Checkout
+2. Subscription plans:
+   - Free
+   - Pro
+   - Enterprise
+
+3. Stripe webhook handling
+4. Subscription status sync with Supabase
+5. Trial period support
+6. Customer portal management
+
+Billing must happen ONLY on:
+https://prepflows.com
+
+The mobile app must NEVER directly process payments.
+
+==================================================
+WEBSITE REQUIREMENTS
+==================================================
+
+Build a premium SaaS landing page.
+
+Sections:
+- Hero section
+- Features
+- Screenshots
+- Pricing
+- Testimonials
+- Contact
+- CTA buttons
+
+Tone:
+- Enterprise
+- Professional
+- Hospitality-focused
+
+Hero headline example:
+“Modern Kitchen Operations for Hospitality Teams”
+
+CTA:
+“Start Free Trial”
+
+==================================================
+APPLE APP STORE REQUIREMENTS
+==================================================
+
+Prepare app for App Store submission.
+
+Generate:
+- App icon
+- Splash screen
+- Privacy policy page
+- Terms of service page
+- Support page
+
+App Store metadata:
+- App name
+- Subtitle
+- Keywords
+- Description
+- Screenshots
+
+The app must appear:
+- Stable
+- Professional
+- Enterprise-ready
+
+==================================================
+DESIGN SYSTEM
+==================================================
+
+Create reusable:
+- Typography system
+- Color tokens
+- Spacing system
+- Card components
+- Data tables
+- KPI widgets
+- Sidebar navigation
+- Mobile responsive layouts
+
+Style:
+- Minimal
+- High contrast
+- Premium SaaS
+
+==================================================
+DATABASE REQUIREMENTS
+==================================================
+
+Create Supabase schema for:
+
+- users
+- organizations
+- workspaces
+- recipes
+- ingredients
+- inventory
+- production_sheets
+- production_items
+- tasks
+- haccp_logs
+- analytics
+- subscriptions
+
+Implement:
+- RLS policies
+- Secure auth
+- Multi-tenant isolation
+
+==================================================
+SECURITY REQUIREMENTS
+==================================================
+
+Implement:
+- Secure authentication
+- Protected routes
+- JWT validation
+- Environment variable protection
+- Supabase RLS
+- Stripe webhook signature validation
+
+==================================================
+DEPLOYMENT REQUIREMENTS
+==================================================
+
+Prepare for:
+- Expo EAS build
+- Apple App Store deployment
+- Google Play deployment
+
+Generate:
+- app.json
+- eas.json
+- environment configuration
+- production build setup
+
+==================================================
+FINAL GOAL
+==================================================
+
+Build an investor-quality hospitality SaaS platform that:
+- Can pass Apple App Store review
+- Uses external Stripe SaaS billing
+- Scales to enterprise hospitality clients
+- Looks premium and modern
+- Is production-ready
+- Supports long-term recurring subscription revenue
+
+Focus on:
+- Clean architecture
+- Scalable backend
+- Professional UI/UX
+- Enterprise SaaS standards
+- Real hospitality operational workflows
