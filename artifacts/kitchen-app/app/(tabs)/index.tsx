@@ -233,8 +233,8 @@ export default function TodayScreen() {
     fnAlertBadge: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, borderWidth: 1 },
     fnAlertText: { fontSize: 11, fontFamily: "Inter_700Bold" },
     fnCardLeftBar: { position: "absolute", left: 0, top: 0, bottom: 0, width: 4 },
-    liveBadge: { backgroundColor: "rgba(249,115,22,0.1)", borderColor: "rgba(249,115,22,0.2)", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, borderWidth: 1, flexDirection: "row", alignItems: "center", gap: 6 },
-    liveBadgeText: { fontSize: 11, fontFamily: "Inter_700Bold", color: "#F97316" },
+    liveBadge: { backgroundColor: "rgba(234,179,8,0.1)", borderColor: "rgba(234,179,8,0.2)", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, borderWidth: 1, flexDirection: "row", alignItems: "center", gap: 6 },
+    liveBadgeText: { fontSize: 11, fontFamily: "Inter_700Bold", color: "#EAB308" },
     statusBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12, borderWidth: 1 },
     statusBadgeText: { fontSize: 10, fontFamily: "Inter_700Bold" },
     bottomPad: { height: Platform.OS === "web" ? 34 : insets.bottom + 80 },
@@ -350,7 +350,7 @@ export default function TodayScreen() {
           <Text style={[s.sectionLabel, { marginHorizontal: 0, marginBottom: 0 }]}>Today's Functions</Text>
           {activeFnsCount > 0 && (
             <View style={s.liveBadge}>
-              <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: "#F97316" }} />
+              <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: "#EAB308" }} />
               <Text style={s.liveBadgeText}>{activeFnsCount} LIVE</Text>
             </View>
           )}
@@ -389,10 +389,10 @@ export default function TodayScreen() {
             const isUrgent = fnMins > 0 && fnMins <= 30;
             const isActive = fnMins <= 0 && timeToMinutes(fn.endTime) > nowMinutes;
             const isDone = timeToMinutes(fn.endTime) <= nowMinutes;
-            const statusColor = isActive ? "#F97316" : isDone ? "#22C55E" : "#3B82F6";
+            const statusColor = isActive ? "#EAB308" : isDone ? "#22C55E" : "#3B82F6";
             const statusLabel = isActive ? "In Progress" : isDone ? "Done" : "Upcoming";
             const statusStyle = isActive 
-              ? { backgroundColor: "rgba(249,115,22,0.12)", color: "#F97316", borderColor: "rgba(249,115,22,0.2)" }
+              ? { backgroundColor: "rgba(234,179,8,0.12)", color: "#EAB308", borderColor: "rgba(234,179,8,0.2)" }
               : isDone 
                 ? { backgroundColor: "rgba(34,197,94,0.12)", color: "#22C55E", borderColor: "rgba(34,197,94,0.2)" }
                 : { backgroundColor: "rgba(59,130,246,0.12)", color: "#3B82F6", borderColor: "rgba(59,130,246,0.2)" };
@@ -471,10 +471,10 @@ export default function TodayScreen() {
             const fnMins = timeToMinutes(fn.startTime) - nowMinutes;
             const isActive = fnMins <= 0 && timeToMinutes(fn.endTime) > nowMinutes;
             const isDone = timeToMinutes(fn.endTime) <= nowMinutes;
-            const statusColor = isActive ? "#F97316" : isDone ? "#22C55E" : "#3B82F6";
+            const statusColor = isActive ? "#EAB308" : isDone ? "#22C55E" : "#3B82F6";
             const statusLabel = isActive ? "In Progress" : isDone ? "Done" : "Upcoming";
             const statusStyle = isActive 
-              ? { backgroundColor: "rgba(249,115,22,0.12)", color: "#F97316", borderColor: "rgba(249,115,22,0.2)" }
+              ? { backgroundColor: "rgba(234,179,8,0.12)", color: "#EAB308", borderColor: "rgba(234,179,8,0.2)" }
               : isDone 
                 ? { backgroundColor: "rgba(34,197,94,0.12)", color: "#22C55E", borderColor: "rgba(34,197,94,0.2)" }
                 : { backgroundColor: "rgba(59,130,246,0.12)", color: "#3B82F6", borderColor: "rgba(59,130,246,0.2)" };

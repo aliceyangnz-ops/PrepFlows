@@ -75,7 +75,7 @@ function getConfidenceConfig(method: ColumnMappingDetail["method"]) {
     case "exact":    return { label: "Exact",   color: "#22C55E", icon: "check-circle" as const };
     case "override": return { label: "Custom",  color: "#22C55E", icon: "edit-2" as const };
     case "alias":    return { label: "Matched", color: "#22C55E", icon: "check" as const };
-    case "smart":    return { label: "AI",      color: "#F97316", icon: "cpu" as const };
+    case "smart":    return { label: "AI",      color: "#EAB308", icon: "cpu" as const };
     case "fuzzy":    return { label: "Fuzzy",   color: "#F59E0B", icon: "zap" as const };
     default:         return { label: "—",       color: "#6B7280", icon: "minus" as const };
   }
@@ -142,7 +142,7 @@ function ColumnMappingEditor({
         {(
           [
             { label: "Exact match", color: "#22C55E" },
-            { label: "AI matched",  color: "#F97316" },
+            { label: "AI matched",  color: "#EAB308" },
             { label: "Fuzzy",       color: "#F59E0B" },
             { label: "Not found",   color: "#6B7280" },
           ] as const
@@ -345,7 +345,7 @@ function StatusBadge({ status }: { status: string }) {
   const colors = useColors();
   const config: Record<string, { bg: string; text: string; label: string }> = {
     completed:  { bg: "#22C55E20", text: "#22C55E", label: "Completed" },
-    processing: { bg: "#F97316" + "20", text: "#F97316", label: "Processing" },
+    processing: { bg: "#EAB308" + "20", text: "#EAB308", label: "Processing" },
     pending:    { bg: "#F59E0B20", text: "#F59E0B", label: "Pending" },
     failed:     { bg: colors.destructive + "20", text: colors.destructive, label: "Failed" },
   };

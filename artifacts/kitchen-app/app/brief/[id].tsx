@@ -29,13 +29,13 @@ export default function BriefScreen() {
     header:        { backgroundColor: "#0D1117", paddingTop: insets.top + (Platform.OS === "web" ? 24 : 16), paddingBottom: 0, paddingHorizontal: 0 },
     backRow:       { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 16, paddingHorizontal: 20 },
     backBtn:       { width: 36, height: 36, borderRadius: 18, backgroundColor: "#ffffff18", alignItems: "center", justifyContent: "center" },
-    typeBadge:     { alignSelf: "flex-start", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, backgroundColor: "#F9731620", borderWidth: 1.5, borderColor: "#F97316", marginBottom: 10, marginHorizontal: 20 },
-    typeBadgeText: { fontSize: 12, fontFamily: "Inter_700Bold", color: "#F97316" },
+    typeBadge:     { alignSelf: "flex-start", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, backgroundColor: "#EAB30820", borderWidth: 1.5, borderColor: "#EAB308", marginBottom: 10, marginHorizontal: 20 },
+    typeBadgeText: { fontSize: 12, fontFamily: "Inter_700Bold", color: "#EAB308" },
     fnName:        { fontSize: 26, fontFamily: "Inter_700Bold", color: "#FFFFFF", lineHeight: 32, paddingHorizontal: 20, marginBottom: 6 },
     fnSub:         { fontSize: 14, fontFamily: "Inter_400Regular", color: "#94A3B8", paddingHorizontal: 20, marginBottom: 20 },
     /* WHERE TO GO hero */
     whereHero:     { backgroundColor: "#161B27", borderTopWidth: 1, borderTopColor: "#242938", paddingVertical: 18, paddingHorizontal: 20 },
-    whereEyebrow:  { fontSize: 10, fontFamily: "Inter_700Bold", color: "#F97316", letterSpacing: 1.4, textTransform: "uppercase", marginBottom: 6 },
+    whereEyebrow:  { fontSize: 10, fontFamily: "Inter_700Bold", color: "#EAB308", letterSpacing: 1.4, textTransform: "uppercase", marginBottom: 6 },
     whereRoom:     { fontSize: 32, fontFamily: "Inter_700Bold", color: "#FFFFFF", lineHeight: 36, marginBottom: 4 },
     whereFloor:    { fontSize: 16, fontFamily: "Inter_600SemiBold", color: "#94A3B8" },
     whereTime:     { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: "#242938" },
@@ -73,7 +73,7 @@ export default function BriefScreen() {
     /* Run of day */
     runCard:       { borderRadius: 14, backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#E2E8F0", marginBottom: 12, overflow: "hidden" },
     runRow:        { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 16, paddingVertical: 13, borderBottomWidth: 1, borderBottomColor: "#F1F5F9" },
-    runTime:       { fontSize: 15, fontFamily: "Inter_700Bold", color: "#F97316", width: 56 },
+    runTime:       { fontSize: 15, fontFamily: "Inter_700Bold", color: "#EAB308", width: 56 },
     runLabel:      { fontSize: 14, fontFamily: "Inter_600SemiBold", color: "#1E293B", flex: 1 },
     runDone:       { width: 20, height: 20, borderRadius: 10, alignItems: "center", justifyContent: "center" },
     /* Menu */
@@ -82,7 +82,7 @@ export default function BriefScreen() {
     menuEmoji:     { fontSize: 20, lineHeight: 26 },
     menuCourse:    { fontSize: 12, fontFamily: "Inter_600SemiBold", color: "#94A3B8", textTransform: "uppercase", letterSpacing: 0.8 },
     menuDish:      { fontSize: 14, fontFamily: "Inter_500Medium", color: "#1E293B", marginTop: 2 },
-    menuTime:      { fontSize: 13, fontFamily: "Inter_700Bold", color: "#F97316" },
+    menuTime:      { fontSize: 13, fontFamily: "Inter_700Bold", color: "#EAB308" },
     /* Dietary */
     dietaryCard:   { borderRadius: 14, backgroundColor: "#FFFBEB", borderWidth: 1, borderColor: "#FCD34D", marginBottom: 12, overflow: "hidden" },
     dietaryHeader: { flexDirection: "row", alignItems: "center", gap: 8, padding: 12, borderBottomWidth: 1, borderBottomColor: "#FCD34D" },
@@ -333,7 +333,7 @@ export default function BriefScreen() {
         {/* ── Footer ───────────────────────────────────────────────── */}
         <View style={s.footer}>
           <Feather name="shield" size={20} color="#CBD5E1" />
-          <Text style={s.footerLogo}>KitchenCommand</Text>
+          <Text style={s.footerLogo}>PrepFlows</Text>
           <Text style={s.footerText}>
             Staff Brief · {fn.name}{"\n"}
             Questions? Find your team leader in the list above.

@@ -27,7 +27,7 @@ type ManageTab = "overview" | "functions" | "roster" | "access";
 
 const ACCESS_OPTIONS: AccessLevel[] = ["manager", "team_leader", "staff"];
 const ACCESS_COLORS: Record<AccessLevel, string> = {
-  manager:     "#F97316",
+  manager:     "#EAB308",
   team_leader: "#3B82F6",
   staff:       "#22C55E",
 };
@@ -75,7 +75,7 @@ export default function ManageScreen() {
     topSub:   { fontSize: 11, fontFamily: "Inter_400Regular", color: "#64748B" },
     managerBadge: {
       paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8,
-      backgroundColor: "#F97316", alignItems: "center",
+      backgroundColor: "#EAB308", alignItems: "center",
     },
     managerBadgeText: { fontSize: 11, fontFamily: "Inter_700Bold", color: "#FFFFFF" },
     /* Tab bar */
@@ -87,9 +87,9 @@ export default function ManageScreen() {
       flex: 1, alignItems: "center", paddingVertical: 10,
       borderBottomWidth: 2, borderBottomColor: "transparent",
     },
-    tabBtnActive: { borderBottomColor: "#F97316" },
+    tabBtnActive: { borderBottomColor: "#EAB308" },
     tabText: { fontSize: 12, fontFamily: "Inter_600SemiBold", color: "#64748B" },
-    tabTextActive: { color: "#F97316" },
+    tabTextActive: { color: "#EAB308" },
     /* Body */
     body: { flex: 1 },
     pad: { padding: 16 },
@@ -376,7 +376,7 @@ export default function ManageScreen() {
           <View style={{ flex: 1 }}>
             <Text style={{ fontSize: 13, fontFamily: "Inter_700Bold", color: colors.foreground, marginBottom: 4 }}>How access levels work</Text>
             <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground, lineHeight: 18 }}>
-              <Text style={{ fontFamily: "Inter_700Bold", color: "#F97316" }}>Management</Text> — full access: add/edit/delete functions, manage roster, adjust all settings.{"\n"}
+              <Text style={{ fontFamily: "Inter_700Bold", color: "#EAB308" }}>Management</Text> — full access: add/edit/delete functions, manage roster, adjust all settings.{"\n"}
               <Text style={{ fontFamily: "Inter_700Bold", color: "#3B82F6" }}>Team Leader</Text> — can edit service times, dietary notes, and run-sheet items.{"\n"}
               <Text style={{ fontFamily: "Inter_700Bold", color: "#22C55E" }}>Staff</Text> — view only. No changes to the app.
             </Text>

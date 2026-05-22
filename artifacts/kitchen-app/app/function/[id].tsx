@@ -150,7 +150,7 @@ export default function FunctionDetailScreen() {
   if (now > endDate) status = "Done";
   else if (now >= startDate) status = "LIVE";
 
-  const statusColor = status === "LIVE" ? "#F97316" : status === "Done" ? "#22C55E" : "#3B82F6";
+  const statusColor = status === "LIVE" ? "#EAB308" : status === "Done" ? "#22C55E" : "#3B82F6";
 
   const dietaryReqs = fn.dietaryRequirements ?? [];
   const totalDietary = dietaryReqs.reduce((sum, d) => sum + d.count, 0);
@@ -399,7 +399,7 @@ export default function FunctionDetailScreen() {
     timeText: { fontSize: 12, fontFamily: Platform.OS === "ios" ? "Courier" : "monospace", color: "#484F58" },
     iconCol: { width: 24, alignItems: "center", justifyContent: "center", zIndex: 1 },
     iconDot: { width: 10, height: 10, borderRadius: 5 },
-    activeHighlight: { backgroundColor: "rgba(249,115,22,0.06)", borderLeftWidth: 2, borderLeftColor: "#F97316" },
+    activeHighlight: { backgroundColor: "rgba(234,179,8,0.06)", borderLeftWidth: 2, borderLeftColor: "#EAB308" },
     taskCard: { flex: 1, paddingHorizontal: 12, paddingVertical: 16, flexDirection: "row", alignItems: "center", gap: 8 },
     taskText: { fontSize: 13, fontFamily: "Inter_400Regular", flex: 1 },
     catBadge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, backgroundColor: "rgba(0,0,0,0.05)" },

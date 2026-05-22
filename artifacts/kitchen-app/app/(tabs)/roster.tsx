@@ -290,7 +290,7 @@ export default function RosterScreen() {
     statusBadgeOnShiftText: { color: '#22C55E', fontSize: 11 },
     statusBadgeSick: { backgroundColor: 'rgba(239,68,68,0.12)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(239,68,68,0.2)' },
     statusBadgeSickText: { color: '#EF4444', fontSize: 11 },
-    addStaffBtn: { backgroundColor: '#F97316', borderRadius: 12, paddingVertical: 14, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 },
+    addStaffBtn: { backgroundColor: '#EAB308', borderRadius: 12, paddingVertical: 14, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 },
     addStaffBtnText: { fontFamily: 'Inter_700Bold', color: '#FFFFFF', fontSize: 15 },
     sickAlertBanner: { backgroundColor: 'rgba(239,68,68,0.08)', borderColor: 'rgba(239,68,68,0.3)', borderWidth: 1, borderRadius: 12, padding: 12, marginHorizontal: 20, marginBottom: 16, flexDirection: 'row', alignItems: 'center', gap: 10 },
     headerSickBadge: { backgroundColor: 'rgba(239,68,68,0.12)', borderColor: 'rgba(239,68,68,0.2)', borderWidth: 1, borderRadius: 20, paddingHorizontal: 8, paddingVertical: 3 },

@@ -136,7 +136,7 @@ export default function PrepPrintScreen() {
   async function handleShare() {
     const lines: string[] = [
       "══════════════════════════════════════",
-      "KITCHENCOMMAND — FULL FUNCTION SHEET",
+      "PREPFLOWS — FULL FUNCTION SHEET",
       "══════════════════════════════════════",
       fn!.name.toUpperCase(),
       `Room: ${fn!.room}  |  ${fn!.floor}`,
@@ -184,7 +184,7 @@ export default function PrepPrintScreen() {
       });
     }
 
-    lines.push("", "KitchenCommand");
+    lines.push("", "PrepFlows");
     try {
       await Share.share({ message: lines.join("\n"), title: `Function Sheet — ${fn!.name}` });
     } catch {}
@@ -196,7 +196,7 @@ export default function PrepPrintScreen() {
     toolbar:        { flexDirection: "row", alignItems: "center", paddingTop: topPad + 8, paddingHorizontal: 16, paddingBottom: 12, backgroundColor: "#1E293B", gap: 8 },
     backBtn:        { width: 34, height: 34, borderRadius: 17, backgroundColor: "rgba(255,255,255,0.1)", alignItems: "center", justifyContent: "center" },
     toolbarTitle:   { flex: 1, fontSize: 14, fontFamily: "Inter_600SemiBold", color: "#fff" },
-    shareBtn:       { flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: "#F97316", paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8 },
+    shareBtn:       { flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: "#EAB308", paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8 },
     shareBtnText:   { fontSize: 13, fontFamily: "Inter_700Bold", color: "#fff" },
 
     // Section toggle
@@ -533,7 +533,7 @@ export default function PrepPrintScreen() {
 
           {/* ── Document header ──────────────────────────────────────────── */}
           <View style={s.docHeader}>
-            <Text style={s.docKC}>KitchenCommand · Full Function Sheet</Text>
+            <Text style={s.docKC}>PrepFlows · Full Function Sheet</Text>
             <Text style={s.docName}>{fn.name}</Text>
             <View style={s.docChipsRow}>
               <View style={s.docChip}>
@@ -598,7 +598,7 @@ export default function PrepPrintScreen() {
           {/* ── Footer ───────────────────────────────────────────────────── */}
           <View style={s.footer}>
             <View style={s.footerLeft}>
-              <Text style={s.footerText}>KitchenCommand · {today}</Text>
+              <Text style={s.footerText}>PrepFlows · {today}</Text>
               <Text style={s.footerText}>{fn.name} · {fn.room} · {fn.guestCount} covers</Text>
               {totalDietary > 0 && (
                 <Text style={[s.footerText, { color: hasSevere ? "#DC2626" : "#D97706", fontFamily: "Inter_700Bold", marginTop: 3 }]}>

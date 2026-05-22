@@ -45,8 +45,6 @@ const MIME_TYPES = {
   ".xml":  "application/xml; charset=utf-8",
 };
 
-// Assets with content hashes in their filenames can be cached for 1 year.
-// Plain HTML should not be cached long-term.
 function getCacheControl(ext) {
   if ([".js", ".css", ".woff", ".woff2", ".ttf", ".otf", ".png", ".jpg", ".jpeg", ".gif", ".svg", ".ico"].includes(ext)) {
     return "public, max-age=31536000, immutable";
@@ -59,9 +57,9 @@ function getAppName() {
   try {
     const appJsonPath = path.resolve(__dirname, "..", "app.json");
     const appJson = JSON.parse(fs.readFileSync(appJsonPath, "utf-8"));
-    return appJson.expo?.name || "KitchenCommand";
+    return appJson.expo?.name || "PrepFlows";
   } catch {
-    return "KitchenCommand";
+    return "PrepFlows";
   }
 }
 
@@ -88,10 +86,8 @@ async function serveLandingPage(req, res, templates, appName) {
   const baseUrl = `${protocol}://${host}`;
   const deepLink = `exps://${host}`;
 
-  // Pick the right template based on User-Agent
   const template = isAndroidUA(req) ? templates.android : templates.default;
 
-  // Generate QR code as inline SVG — no external CDN dependency
   let qrSvg = "";
   try {
     qrSvg = await QRCode.toString(deepLink, {
@@ -117,7 +113,6 @@ async function serveLandingPage(req, res, templates, appName) {
     "x-robots-tag": "index, follow",
     "x-content-type-options": "nosniff",
     "referrer-policy": "strict-origin-when-cross-origin",
-    // Vary by UA so CDNs/caches don't serve the wrong version
     "vary": "User-Agent",
   });
   res.end(html);
@@ -138,7 +133,7 @@ function serveRobotsTxt(req, res) {
   res.writeHead(200, {
     "content-type": "text/plain; charset=utf-8",
     "cache-control": "public, max-age=86400",
-    "x-robots-tag": "noindex",  // robots.txt itself should not be indexed
+    "x-robots-tag": "noindex",
   });
   res.end(body);
 }
@@ -187,7 +182,6 @@ function serveStaticFile(urlPath, res) {
   const content = fs.readFileSync(filePath);
 
   const extraHeaders = {};
-  // HTML files must be indexable — prevent crawlers seeing noindex
   if (ext === ".html") {
     extraHeaders["x-robots-tag"] = "index, follow";
   }
@@ -215,7 +209,6 @@ const server = http.createServer((req, res) => {
     pathname = pathname.slice(basePath.length) || "/";
   }
 
-  // SEO utility routes
   if (pathname === "/robots.txt") return serveRobotsTxt(req, res);
   if (pathname === "/sitemap.xml") return serveSitemapXml(req, res);
 
@@ -225,7 +218,6 @@ const server = http.createServer((req, res) => {
       return serveManifest(platform, res);
     }
     if (pathname === "/") {
-      // serveLandingPage is async (generates QR code); catch any errors gracefully
       serveLandingPage(req, res, templates, appName).catch((err) => {
         console.error("Landing page error:", err);
         if (!res.headersSent) {

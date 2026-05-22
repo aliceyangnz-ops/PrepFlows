@@ -38,7 +38,7 @@ const PLANS = [
     tagline: "Full operational system for active kitchens",
     price: 49,
     priceLabel: "$49",
-    color: "#F97316",
+    color: "#EAB308",
     badge: "MOST POPULAR",
     features: [
       "Unlimited functions per day",
@@ -116,7 +116,7 @@ export default function SubscribeScreen() {
             text: "Book demo",
             onPress: () => {
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-              Linking.openURL("mailto:hello@kitchencommand.app?subject=Enterprise Demo Request");
+              Linking.openURL("mailto:hello@prepflows.app?subject=Enterprise Demo Request");
             },
           },
         ]
@@ -144,7 +144,7 @@ export default function SubscribeScreen() {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             Alert.alert(
               "You're in!",
-              `Your free month starts today. We'll contact you before month 2 to set up billing. Welcome to KitchenCommand ${plan.name}!`,
+              `Your free month starts today. We'll contact you before month 2 to set up billing. Welcome to PrepFlows ${plan.name}!`,
               [{ text: "Let's go", onPress: () => router.back() }]
             );
           },
@@ -155,7 +155,6 @@ export default function SubscribeScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      {/* Toolbar */}
       <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 20, paddingTop: topPad + 12, paddingBottom: 12 }}>
         <Pressable
           style={({ pressed }) => ({ width: 36, height: 36, borderRadius: 10, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.card, alignItems: "center", justifyContent: "center", opacity: pressed ? 0.7 : 1 })}
@@ -167,10 +166,9 @@ export default function SubscribeScreen() {
 
       <ScrollView showsVerticalScrollIndicator={false}>
 
-        {/* Hero */}
         <View style={{ paddingHorizontal: 24, paddingTop: 4, paddingBottom: 28 }}>
           <Text style={{ fontSize: 11, fontFamily: "Inter_700Bold", color: colors.primary, letterSpacing: 1.4, textTransform: "uppercase", marginBottom: 8 }}>
-            KitchenCommand Plans
+            PrepFlows Plans
           </Text>
           <Text style={{ fontSize: 30, fontFamily: "Inter_700Bold", color: colors.foreground, lineHeight: 36, marginBottom: 10 }}>
             Simple pricing.{"\n"}No surprises.
@@ -178,8 +176,6 @@ export default function SubscribeScreen() {
           <Text style={{ fontSize: 14, fontFamily: "Inter_400Regular", color: colors.mutedForeground, lineHeight: 21, marginBottom: 16 }}>
             No setup fees. No long-term contracts. Cancel any time.
           </Text>
-
-          {/* Limited-time free month banner */}
           <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 10, padding: 14, borderRadius: 12, backgroundColor: colors.accent + "15", borderWidth: 1.5, borderColor: colors.accent + "50" }}>
             <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: colors.accent, marginTop: 5 }} />
             <View style={{ flex: 1 }}>
@@ -193,29 +189,26 @@ export default function SubscribeScreen() {
           </View>
         </View>
 
-        {/* Plan cards */}
         {PLANS.map((plan) => {
           const isEnterprise = plan.enterprise;
+          const isPro = plan.id === "pro";
+          const ctaTextColor = isEnterprise ? plan.color : isPro ? "#0D1117" : "#fff";
           return (
             <View
               key={plan.id}
               style={{ marginHorizontal: 20, marginBottom: 14, borderRadius: 16, borderWidth: 2, borderColor: plan.color + "60", backgroundColor: colors.card, overflow: "hidden" }}
             >
-              {/* Card header */}
               <View style={{ padding: 20, backgroundColor: plan.color + "10", borderBottomWidth: 1, borderBottomColor: plan.color + "25" }}>
                 {plan.badge && (
                   <View style={{ alignSelf: "flex-start", backgroundColor: plan.color, paddingHorizontal: 9, paddingVertical: 4, borderRadius: 6, marginBottom: 12 }}>
-                    <Text style={{ fontSize: 10, fontFamily: "Inter_700Bold", color: "#fff", letterSpacing: 0.8 }}>{plan.badge}</Text>
+                    <Text style={{ fontSize: 10, fontFamily: "Inter_700Bold", color: isPro ? "#0D1117" : "#fff", letterSpacing: 0.8 }}>{plan.badge}</Text>
                   </View>
                 )}
-
                 <View style={{ flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
                   <View style={{ flex: 1 }}>
                     <Text style={{ fontSize: 22, fontFamily: "Inter_700Bold", color: colors.foreground, marginBottom: 4 }}>{plan.name}</Text>
                     <Text style={{ fontSize: 13, fontFamily: "Inter_400Regular", color: colors.mutedForeground, lineHeight: 19 }}>{plan.tagline}</Text>
                   </View>
-
-                  {/* Price */}
                   <View style={{ alignItems: "flex-end" }}>
                     <Text style={{ fontSize: isEnterprise ? 22 : 38, fontFamily: "Inter_700Bold", color: plan.color, lineHeight: isEnterprise ? 28 : 44 }}>
                       {plan.priceLabel}
@@ -228,7 +221,6 @@ export default function SubscribeScreen() {
                     )}
                   </View>
                 </View>
-
                 {plan.price && (
                   <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 12, paddingHorizontal: 10, paddingVertical: 7, borderRadius: 8, backgroundColor: colors.accent + "15", alignSelf: "flex-start" }}>
                     <Ionicons name="gift-outline" size={13} color={colors.accent} />
@@ -239,7 +231,6 @@ export default function SubscribeScreen() {
                 )}
               </View>
 
-              {/* Features */}
               <View style={{ paddingHorizontal: 20, paddingTop: 14, paddingBottom: 6 }}>
                 {plan.features.map((f, i) => (
                   <View key={i} style={{ flexDirection: "row", alignItems: "flex-start", gap: 10, paddingBottom: 10 }}>
@@ -249,7 +240,6 @@ export default function SubscribeScreen() {
                 ))}
               </View>
 
-              {/* CTA button */}
               <Pressable
                 style={({ pressed }) => ({
                   marginHorizontal: 16, marginBottom: 16, paddingVertical: 15, borderRadius: 12,
@@ -261,8 +251,8 @@ export default function SubscribeScreen() {
                 })}
                 onPress={() => handlePlanPress(plan.id)}
               >
-                <Feather name={plan.ctaIcon} size={16} color={isEnterprise ? plan.color : "#fff"} />
-                <Text style={{ fontSize: 15, fontFamily: "Inter_700Bold", color: isEnterprise ? plan.color : "#fff" }}>
+                <Feather name={plan.ctaIcon} size={16} color={ctaTextColor} />
+                <Text style={{ fontSize: 15, fontFamily: "Inter_700Bold", color: ctaTextColor }}>
                   {plan.cta}
                 </Text>
               </Pressable>
@@ -274,10 +264,8 @@ export default function SubscribeScreen() {
           Not sure which plan? Start with Starter — upgrade any time.
         </Text>
 
-        {/* Divider */}
         <View style={{ height: 1, backgroundColor: colors.border, marginHorizontal: 20, marginVertical: 24 }} />
 
-        {/* FAQ */}
         <Text style={{ fontSize: 16, fontFamily: "Inter_700Bold", color: colors.foreground, marginHorizontal: 20, marginBottom: 16 }}>
           Common questions
         </Text>

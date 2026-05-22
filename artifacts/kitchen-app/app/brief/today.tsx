@@ -68,7 +68,7 @@ export default function TodayBriefScreen() {
     header:        { backgroundColor: "#0D1117", paddingTop: insets.top + (Platform.OS === "web" ? 24 : 12), paddingBottom: 0 },
     backRow:       { flexDirection: "row", alignItems: "center", paddingHorizontal: 20, marginBottom: 14 },
     backBtn:       { width: 36, height: 36, borderRadius: 18, backgroundColor: "#ffffff18", alignItems: "center", justifyContent: "center", marginRight: 12 },
-    eyebrow:       { fontSize: 11, fontFamily: "Inter_700Bold", color: "#F97316", letterSpacing: 1.4, textTransform: "uppercase" },
+    eyebrow:       { fontSize: 11, fontFamily: "Inter_700Bold", color: "#EAB308", letterSpacing: 1.4, textTransform: "uppercase" },
     heroTitle:     { fontSize: 26, fontFamily: "Inter_700Bold", color: "#FFFFFF", lineHeight: 32, paddingHorizontal: 20, marginBottom: 4 },
     heroSub:       { fontSize: 13, fontFamily: "Inter_400Regular", color: "#94A3B8", paddingHorizontal: 20, marginBottom: 18 },
     statsStrip:    { flexDirection: "row", backgroundColor: "#0D1117" },
@@ -121,7 +121,7 @@ export default function TodayBriefScreen() {
   });
 
   const avatarColor = (name: string) => {
-    const colors = ["#F97316","#3B82F6","#8B5CF6","#22C55E","#EF4444","#F59E0B","#06B6D4","#EC4899"];
+    const colors = ["#EAB308","#3B82F6","#8B5CF6","#22C55E","#EF4444","#F59E0B","#06B6D4","#EC4899"];
     let h = 0;
     for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) % colors.length;
     return colors[h];
@@ -141,7 +141,7 @@ export default function TodayBriefScreen() {
         )}
         {Platform.OS === "web" && (
           <View style={{ paddingHorizontal: 20, marginBottom: 6 }}>
-            <Text style={s.eyebrow}>KitchenCommand · Daily Brief</Text>
+            <Text style={s.eyebrow}>PrepFlows · Daily Brief</Text>
           </View>
         )}
         <Text style={s.heroTitle}>Today's Service</Text>
@@ -335,7 +335,7 @@ export default function TodayBriefScreen() {
         <View style={s.footer}>
           <Feather name="shield" size={18} color="#CBD5E1" />
           <Text style={s.footerText}>
-            KitchenCommand · Daily Brief{"\n"}
+            PrepFlows · Daily Brief{"\n"}
             {dayLabel} · Questions? See your team leader.
           </Text>
         </View>

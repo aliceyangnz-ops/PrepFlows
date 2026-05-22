@@ -1,6 +1,6 @@
-# KitchenCommand
+# PrepFlows
 
-A commercial catering kitchen management app for back-of-house staff (iOS, Android, and web). Manages daily events/functions, service timetables, rosters, prep lists, and work plans. Designed for plain English readability, suitable for ESL staff. Built with Expo + React Native.
+A hospitality operations platform for back-of-house staff (iOS, Android, and web). Manages daily events/functions, service timetables, rosters, prep lists, and work plans. Designed for plain English readability, suitable for ESL staff. Built with Expo + React Native.
 
 ## Run & Operate
 
@@ -45,6 +45,14 @@ A commercial catering kitchen management app for back-of-house staff (iOS, Andro
 - **Staff add/edit**: Full form — name, number, phone, role, shift, section, team lead toggle, access level override
 - **Casual Staff Brief**: QR code on function detail → clean light-background page showing team, leader + phone, dietary summary
 
+## Branding
+
+- App name: **PrepFlows**
+- Bundle ID / Android package: `com.prepflows.app`
+- URL scheme: `prepflows://`
+- Primary accent: `#EAB308` (yellow)
+- Background: `#0D1117`, card: `#161B22`, accent green: `#22C55E`
+
 ## Storage keys
 
 - `@kitchen_functions_v3` — functions array
@@ -58,7 +66,7 @@ A commercial catering kitchen management app for back-of-house staff (iOS, Andro
 ## User preferences
 
 - Plain English language throughout, no jargon that would confuse ESL staff
-- Dark theme (`#0D1117` bg, `#161B27` card, `#F97316` primary orange, `#22C55E` accent green)
+- Dark theme (`#0D1117` bg, `#161B22` card, `#EAB308` primary yellow, `#22C55E` accent green)
 - Kitchen terminology: "function" not "event", "covers" not "customers", course names in proper French
 - All screens must work on phone — large tap targets, clear hierarchy
 
@@ -66,5 +74,6 @@ A commercial catering kitchen management app for back-of-house staff (iOS, Andro
 
 - `updateFunction` in context excludes `id` and `timeline` from partial updates — timeline items are updated via `toggleTimelineItem` only
 - `MANAGER_ROLES` is still exported for backward compat; prefer `getAccessLevel()` for new permission checks
-- On web, QR code brief URL uses `window.location.origin`; on native it uses `kitchencommand://brief/[id]`
+- On web, QR code brief URL uses `window.location.origin`; on native it uses `prepflows://brief/[id]`
 - Staff `functionIds` must be manually maintained — adding staff via the form sets `functionIds: []`; assign them to functions via the function detail screen's teamIds (not yet in UI, requires direct context update)
+- TEAM_COLORS in brief/today.tsx and brief/[id].tsx keep semantic section colours (Hot Kitchen = #F97316 red-orange, etc.) — these are team identity colours, not brand colours
