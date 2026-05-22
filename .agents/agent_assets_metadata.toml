@@ -4,13 +4,13 @@ uploads = []
 id = "Mbrlr1oWUS-mWgdoZZx_N"
 uri = "file://artifacts/kitchen-app/assets/images/icon.png"
 type = "image"
-title = "kitchencommand app icon"
+title = "PrepFlows app icon"
 
 [[generated]]
 id = "hZ6LZ3ffuEaC1IX11ZMns"
 uri = "file://artifacts/kitchen-app/assets/images/splash.png"
 type = "image"
-title = "kitchencommand splash clean"
+title = "PrepFlows splash screen"
 
 [[outputs]]
 id = "r7POdARTufhxKszBWx7G8"

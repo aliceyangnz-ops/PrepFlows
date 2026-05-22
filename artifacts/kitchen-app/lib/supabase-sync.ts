@@ -1,5 +1,5 @@
 /**
- * Supabase sync helpers for KitchenCommand.
+ * Supabase sync helpers for PrepFlows.
  *
  * Each write helper is fire-and-forget: it awaits the Supabase response,
  * checks the .error field (Supabase JS never throws), and warns on failure.

@@ -1,5 +1,5 @@
 /**
- * Supabase client for the KitchenCommand Expo app.
+ * Supabase client for the PrepFlows app.
  *
  * Credentials are injected at runtime via app.config.js → Constants.expoConfig.extra.
  * The client is null when credentials are not yet configured — all sync helpers

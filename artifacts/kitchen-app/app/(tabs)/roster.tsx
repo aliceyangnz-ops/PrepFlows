@@ -417,7 +417,7 @@ export default function RosterScreen() {
                     value={
                       Platform.OS === "web" && typeof window !== "undefined"
                         ? `${window.location.origin}/brief/today`
-                        : "kitchencommand://brief/today"
+                        : "prepflows://brief/today"
                     }
                     size={210}
                     color="#0D1117"
