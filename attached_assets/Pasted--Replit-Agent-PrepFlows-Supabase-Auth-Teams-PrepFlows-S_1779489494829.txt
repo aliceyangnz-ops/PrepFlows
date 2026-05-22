@@ -1,0 +1,320 @@
+把下面这整段直接发给 Replit Agent。
+这是针对你的 PrepFlows 项目设计的“生产级 Supabase Auth + Teams 架构指令”。
+
+⸻
+
+PrepFlows — Supabase Auth + Teams Implementation
+
+You are upgrading the existing Expo React Native app into a production-ready SaaS architecture using Supabase.
+
+The app name is now:
+
+PrepFlows
+
+The app theme is:
+
+* Yellow primary branding
+* Dark hospitality UI
+* Premium SaaS styling
+
+Implement the following architecture carefully and in order.
+
+⸻
+
+PHASE 1 — Install & Configure Supabase
+
+Install required packages:
+
+* @supabase/supabase-js
+* @react-native-async-storage/async-storage
+* react-native-url-polyfill
+
+Create:
+
+/src/lib/supabase.ts
+
+Requirements:
+
+* Use AsyncStorage session persistence
+* Auto refresh tokens
+* Persistent login
+* Secure env variable usage
+
+Use environment variables:
+
+EXPO_PUBLIC_SUPABASE_URL
+EXPO_PUBLIC_SUPABASE_ANON_KEY
+
+Never hardcode credentials.
+
+⸻
+
+PHASE 2 — Authentication System
+
+Create a complete auth flow.
+
+Required screens:
+
+/auth
+
+* LoginScreen
+* RegisterScreen
+* ForgotPasswordScreen
+* ResetPasswordScreen
+
+Features:
+
+* Email/password auth
+* Form validation
+* Password minimum rules
+* Error handling
+* Loading states
+* Success notifications
+
+Requirements:
+
+* Use Supabase Auth
+* Persist sessions
+* Auto login if session exists
+* Auto redirect after auth
+* Handle expired sessions
+
+Create:
+
+/src/context/AuthContext.tsx
+
+Auth context must expose:
+
+* user
+* session
+* signIn()
+* signUp()
+* signOut()
+* resetPassword()
+* loading
+
+⸻
+
+PHASE 3 — Protected Navigation
+
+Implement protected routing.
+
+Unauthenticated users:
+
+* Only access auth screens
+
+Authenticated users:
+
+* Access dashboard and workspace
+
+Add:
+
+* Session restoration on app boot
+* Splash loading while restoring session
+
+⸻
+
+PHASE 4 — Database Architecture
+
+Create production-ready Supabase schema.
+
+Tables required:
+
+profiles
+
+* id (uuid, linked to auth.users)
+* full_name
+* avatar_url
+* role
+* created_at
+
+teams
+
+* id
+* name
+* owner_id
+* created_at
+
+team_members
+
+* id
+* team_id
+* user_id
+* role
+* created_at
+
+invitations
+
+* id
+* team_id
+* email
+* role
+* invited_by
+* accepted
+* created_at
+
+Requirements:
+
+* UUID primary keys
+* Foreign keys
+* Cascading deletes
+* Indexed relationships
+
+Generate SQL migration files.
+
+⸻
+
+PHASE 5 — Row Level Security (CRITICAL)
+
+Enable RLS on ALL tables.
+
+Policies required:
+
+Profiles:
+
+* Users can read/update only their own profile
+
+Teams:
+
+* Members can view their teams
+* Owners can update/delete
+
+Team members:
+
+* Members can read
+* Owners/admins can manage
+
+Invitations:
+
+* Only team admins can create
+
+Never leave tables publicly accessible.
+
+⸻
+
+PHASE 6 — Team Workspace System
+
+Implement multi-tenant architecture.
+
+Requirements:
+
+* User can belong to multiple teams
+* Current active team stored globally
+* Team switcher component
+* Create team flow
+* Invite team member flow
+* Accept invitation flow
+
+Create:
+
+/src/context/TeamContext.tsx
+
+Expose:
+
+* currentTeam
+* teams
+* switchTeam()
+* createTeam()
+* inviteMember()
+
+⸻
+
+PHASE 7 — Cloud Sync Architecture
+
+Convert app from local-only storage to cloud-backed storage.
+
+Requirements:
+
+* Replace AsyncStorage business data
+* Save operational data into Supabase
+* Real-time sync capable architecture
+* Offline-first friendly structure
+
+Do NOT break existing data models.
+
+Create abstraction layer:
+
+/src/services
+
+Separate:
+
+* auth service
+* team service
+* storage service
+* sync service
+
+⸻
+
+PHASE 8 — SaaS Foundation
+
+Prepare architecture for future subscription billing.
+
+Add support for:
+
+* roles
+* permissions
+* feature gating
+* subscription tiers
+
+Roles:
+
+* owner
+* admin
+* manager
+* staff
+
+Do not implement Stripe yet.
+Only prepare architecture.
+
+⸻
+
+PHASE 9 — Production UX
+
+Add:
+
+* Skeleton loading states
+* Error boundaries
+* Empty states
+* Retry handling
+* Toast notifications
+* Network failure handling
+
+Must feel like a premium SaaS app.
+
+⸻
+
+PHASE 10 — Security & Production Readiness
+
+Requirements:
+
+* No secrets committed
+* Use .env
+* Clean TypeScript types
+* Strict typing
+* Modular architecture
+* Scalable folder structure
+
+Add:
+
+* Supabase types generation support
+* Secure auth persistence
+* Proper logout cleanup
+
+⸻
+
+FINAL DELIVERABLE
+
+When complete, provide:
+
+1. Full folder structure
+2. SQL schema
+3. RLS policies
+4. Auth flow summary
+5. Team architecture summary
+6. Environment variable setup instructions
+7. Expo compatibility verification
+8. Production readiness checklist
+
+Do NOT create placeholder implementations.
+
+Everything must be production-quality and App Store ready.
