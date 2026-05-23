@@ -1,6 +1,6 @@
 kind = "mobile"
 previewPath = "/"
-title = "KitchenCommand"
+title = "PrepFlows"
 version = "1.0.0"
 id = "artifacts/kitchen-app"
 router = "expo-domain"

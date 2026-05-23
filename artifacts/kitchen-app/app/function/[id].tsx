@@ -764,6 +764,38 @@ export default function FunctionDetailScreen() {
         {/* ── VIEW MODE ──────────────────────────────────────────────────────── */}
         {!editing && (
           <>
+            {/* Live Service button — shown to managers/team leaders when function is active or starting soon */}
+            {canLead && status !== "Done" && (
+              <Pressable
+                style={({ pressed }) => ({
+                  marginHorizontal: 20,
+                  marginTop: 16,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 10,
+                  paddingVertical: 16,
+                  borderRadius: colors.radius,
+                  backgroundColor: status === "LIVE" ? "#F97316" : "#F97316" + "20",
+                  borderWidth: status === "LIVE" ? 0 : 1.5,
+                  borderColor: "#F97316" + "60",
+                  opacity: pressed ? 0.85 : 1,
+                })}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+                  router.push(`/service/${fn.id}`);
+                }}
+              >
+                <Text style={{ fontSize: 18 }}>🔥</Text>
+                <Text style={{ fontSize: 16, fontFamily: "Inter_700Bold", color: status === "LIVE" ? "#fff" : "#F97316" }}>
+                  {status === "LIVE" ? "LIVE — Open Service Mode" : "Open Service Mode"}
+                </Text>
+                {status === "LIVE" && (
+                  <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: "#fff" }} />
+                )}
+              </Pressable>
+            )}
+
             {/* Chef in Charge banner */}
             {fn.chefInCharge ? (
               <View style={{ marginHorizontal: 20, marginTop: 12, flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 14, paddingVertical: 12, borderRadius: colors.radius, backgroundColor: colors.primary + "15", borderWidth: 1, borderColor: colors.primary + "40" }}>

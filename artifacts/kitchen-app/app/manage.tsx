@@ -220,11 +220,12 @@ export default function ManageScreen() {
           { icon: "plus-circle" as const, label: "Add new function", sub: "Schedule a new event or booking", onPress: () => router.push("/function/add") },
           { icon: "user-plus" as const, label: "Add staff member", sub: "Add to the roster", onPress: () => router.push("/staff/new") },
           { icon: "clipboard" as const, label: "View prep list", sub: "All teams, all functions", onPress: () => router.push("/(tabs)/prep") },
-          { icon: "dollar-sign" as const, label: "Plans & pricing", sub: "$99 or $299/month — first month free", onPress: () => router.push("/subscribe") },
+          { icon: "bar-chart-2" as const, label: "Analytics", sub: "Weekly completion rates and trends", onPress: () => router.push("/analytics") },
+          { icon: "dollar-sign" as const, label: "Plans & pricing", sub: "$49 or $199/month — first month free", onPress: () => router.push("/subscribe") },
         ].map(({ icon, label, sub, onPress }, idx) => (
           <Pressable
             key={idx}
-            style={({ pressed }) => [s.cardRow, idx === 3 && s.cardRowLast, pressed && { opacity: 0.7 }]}
+            style={({ pressed }) => [s.cardRow, idx === 4 && s.cardRowLast, pressed && { opacity: 0.7 }]}
             onPress={onPress}
           >
             <View style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: colors.primary + "15", alignItems: "center", justifyContent: "center" }}>
