@@ -1,16 +1,23 @@
 // Dynamic Expo config — extends app.json and injects server-side env vars
 // into the app bundle via Constants.expoConfig.extra.
 //
-// SUPABASE_URL and SUPABASE_ANON_KEY are read from Replit Secrets at dev/build
-// time and are never hardcoded here.  The anon key is intentionally public
-// (Supabase's security model relies on Row Level Security, not key secrecy).
-// The service role key is only used server-side and never exposed here.
+// Reads EXPO_PUBLIC_SUPABASE_URL / EXPO_PUBLIC_SUPABASE_ANON_KEY first,
+// then falls back to legacy SUPABASE_URL / SUPABASE_ANON_KEY names.
+// The anon key is intentionally public — Supabase security relies on RLS,
+// not key secrecy. The service role key is only used server-side.
 
 export default ({ config }) => ({
   ...config,
   extra: {
     ...(config.extra ?? {}),
-    supabaseUrl: process.env.SUPABASE_URL ?? "",
-    supabaseAnonKey: process.env.SUPABASE_ANON_KEY ?? "",
+    supabaseUrl: (
+      process.env.EXPO_PUBLIC_SUPABASE_URL ??
+      process.env.SUPABASE_URL ??
+      ""
+    ).replace(/\/$/, ""),
+    supabaseAnonKey:
+      process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ??
+      process.env.SUPABASE_ANON_KEY ??
+      "",
   },
 });

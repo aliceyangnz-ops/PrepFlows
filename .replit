@@ -65,3 +65,13 @@ externalPort = 3000
 [[ports]]
 localPort = 25161
 externalPort = 3002
+
+[nix]
+
+[userenv]
+
+[userenv.shared]
+EXPO_PUBLIC_SUPABASE_URL = "https://gucpdtrpfzmtrijqdlob.supabase.co/"
+EXPO_PUBLIC_SUPABASE_ANON_KEY = "sb_publishable_yuklFmmIogtQVno06Vvdbg_vMgzSXaQ"
+SUPABASE_SERVICE_ROLE_KEY = "Supabase → Project Settings → API → service_role"
+"SUPABASE_DB. _PASSWORD" = "Supabase → Project Settings → Database → Database password"
