@@ -138,6 +138,43 @@ function serveRobotsTxt(req, res) {
   res.end(body);
 }
 
+function servePwaManifest(req, res) {
+  const host = req.headers["x-forwarded-host"] || req.headers["host"];
+  const protocol = req.headers["x-forwarded-proto"] || "https";
+  const origin = `${protocol}://${host}`;
+  const appName = getAppName();
+
+  const manifest = {
+    name: appName,
+    short_name: appName,
+    description:
+      "Hospitality operations platform for back-of-house teams. Manage functions, prep lists, rosters and service timelines.",
+    start_url: `${basePath || ""}/`,
+    scope: `${basePath || ""}/`,
+    display: "standalone",
+    orientation: "portrait",
+    background_color: "#0D1117",
+    theme_color: "#EAB308",
+    lang: "en-AU",
+    categories: ["business", "food"],
+    icons: [
+      {
+        src: `${origin}${basePath || ""}/assets/images/icon.png`,
+        sizes: "1024x1024",
+        type: "image/png",
+        purpose: "any maskable",
+      },
+    ],
+  };
+
+  res.writeHead(200, {
+    "content-type": "application/manifest+json; charset=utf-8",
+    "cache-control": "public, max-age=86400",
+    "access-control-allow-origin": "*",
+  });
+  res.end(JSON.stringify(manifest, null, 2));
+}
+
 function serveSitemapXml(req, res) {
   const host = req.headers["x-forwarded-host"] || req.headers["host"];
   const protocol = req.headers["x-forwarded-proto"] || "https";
@@ -211,6 +248,7 @@ const server = http.createServer((req, res) => {
 
   if (pathname === "/robots.txt") return serveRobotsTxt(req, res);
   if (pathname === "/sitemap.xml") return serveSitemapXml(req, res);
+  if (pathname === "/manifest.json") return servePwaManifest(req, res);
 
   if (pathname === "/" || pathname === "/manifest") {
     const platform = req.headers["expo-platform"];
