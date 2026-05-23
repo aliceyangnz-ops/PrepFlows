@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
+import { usePageMeta } from "@/hooks/usePageMeta";
 
 const YELLOW = "#EAB308";
 const GREEN = "#22C55E";
@@ -105,6 +106,11 @@ const FAQ = [
 ];
 
 export default function Pricing() {
+  usePageMeta({
+    title: "Pricing — PrepFlows Kitchen Operations Software",
+    description: "Simple, honest pricing for PrepFlows. Start free, no credit card required. Upgrade to Pro for $49/month or Team for $199/month. All plans include iOS, Android & Web.",
+    canonical: "https://prepflows.com/pricing",
+  });
   const [annual, setAnnual] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [, navigate] = useLocation();

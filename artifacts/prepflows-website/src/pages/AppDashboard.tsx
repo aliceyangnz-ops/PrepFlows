@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
+import { usePageMeta } from "@/hooks/usePageMeta";
 
 const YELLOW = "#EAB308";
 const GREEN = "#22C55E";
@@ -376,6 +377,11 @@ function AuthForm() {
 }
 
 export default function AppPage() {
+  usePageMeta({
+    title: "Sign in — PrepFlows",
+    description: "Sign in to your PrepFlows account to manage your kitchen operations, prep lists, and team roster.",
+    canonical: "https://prepflows.com/app",
+  });
   const { user, loading, logout, checkout } = useAuth();
   const [location] = useLocation();
   const [, navigate] = useLocation();

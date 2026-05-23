@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, useInView, AnimatePresence } from "framer-motion";
 import { useLocation } from "wouter";
+import { usePageMeta } from "@/hooks/usePageMeta";
 
 // ── Design tokens (inline — isolated from the rest of the site) ───────────
 const C = {
@@ -521,6 +522,11 @@ function Footer() {
 
 // ── Page ──────────────────────────────────────────────────────────────────
 export default function Home() {
+  usePageMeta({
+    title: "PrepFlows — Kitchen Operations Software for Hospitality Teams",
+    description: "The operating system for professional kitchens. Manage functions, prep lists, rosters, and live service — all in one place. Free trial, no credit card required.",
+    canonical: "https://prepflows.com/",
+  });
   return (
     <div style={{ background: C.bg, color: C.text, fontFamily: "'Inter', system-ui, -apple-system, sans-serif", WebkitFontSmoothing: "antialiased", minHeight: "100vh" }}>
       <style>{`
