@@ -2,9 +2,20 @@ import { Router } from 'express';
 import { requireAuth } from '../middleware/auth.js';
 import { stripeStorage } from '../stripeStorage.js';
 import { stripeService } from '../stripeService.js';
+import { getStripePublishableKey } from '../stripeClient.js';
 import type { Request, Response } from 'express';
 
 const router = Router();
+
+// Public — returns the publishable key so the browser can initialise Stripe.js
+router.get('/stripe/config', async (_req: Request, res: Response) => {
+  try {
+    const publishableKey = await getStripePublishableKey();
+    res.json({ publishableKey });
+  } catch (err: any) {
+    res.status(503).json({ error: err.message });
+  }
+});
 
 router.get('/stripe/products', async (_req: Request, res: Response) => {
   try {
