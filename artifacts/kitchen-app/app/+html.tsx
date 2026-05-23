@@ -118,21 +118,31 @@ body{margin:0;padding:0;height:100%;background:#0D1117;-webkit-font-smoothing:an
       <body>
         {/* Splash screen — visible immediately, dismissed once React mounts */}
         <div id="pf-splash" aria-hidden="true">
+          {/*
+            Flat chef-hat icon matching the app icon asset.
+            Dark rounded square + white hat + golden band — no text on the badge.
+          */}
           <svg
             className="pf-icon"
             viewBox="0 0 100 100"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
             aria-hidden="true"
-            style={{ background: "#EAB308", borderRadius: 18 }}
           >
-            <rect x="20" y="64" width="60" height="11" rx="4" fill="#0D1117" opacity="0.85" />
-            <path
-              d="M32 64 C32 64 27 53 27 44 C27 32 36 24 46 24 C48 24 50 24.6 50 24.6 C50 24.6 52 24 54 24 C64 24 73 32 73 44 C73 53 68 64 68 64 Z"
-              fill="white"
-              opacity="0.95"
-            />
-            <ellipse cx="37" cy="37" rx="5" ry="8" fill="white" opacity="0.3" />
+            {/* Dark background tile */}
+            <rect width="100" height="100" rx="22" fill="#1C2128" />
+            {/* Hat brim / band — golden yellow */}
+            <rect x="26" y="66" width="48" height="10" rx="3" fill="#EAB308" />
+            {/* Cylindrical hat body */}
+            <rect x="32" y="52" width="36" height="16" rx="1" fill="white" />
+            {/* Left puff */}
+            <circle cx="34" cy="46" r="13" fill="white" />
+            {/* Centre puff */}
+            <circle cx="50" cy="40" r="15" fill="white" />
+            {/* Right puff */}
+            <circle cx="66" cy="46" r="13" fill="white" />
+            {/* Subtle shading on centre puff */}
+            <circle cx="56" cy="36" r="6" fill="white" opacity="0.35" />
           </svg>
           <p className="pf-name">PrepFlows</p>
           <p className="pf-sub">Hospitality Operations</p>

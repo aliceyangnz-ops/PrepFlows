@@ -3,6 +3,7 @@ import { router } from "expo-router";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
+  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -116,9 +117,12 @@ export default function RegisterScreen() {
 
           {/* Brand */}
           <View style={s.brand}>
-            <View style={s.logoMark}>
-              <Text style={s.logoEmoji}>👨‍🍳</Text>
-            </View>
+            <Image
+              source={require("../../assets/images/icon.png")}
+              style={s.logoMark}
+              resizeMode="cover"
+              accessibilityLabel="PrepFlows"
+            />
             <Text style={s.appName}>PrepFlows</Text>
           </View>
 
@@ -272,15 +276,12 @@ const styles = (topInset: number) =>
     backText: { fontSize: 14, fontFamily: "Inter_600SemiBold", color: "#EAB308" },
     brand: { alignItems: "center", marginBottom: 28 },
     logoMark: {
-      width: 60,
-      height: 60,
+      width: 68,
+      height: 68,
       borderRadius: 16,
-      backgroundColor: "#EAB308",
-      alignItems: "center",
-      justifyContent: "center",
       marginBottom: 12,
+      overflow: "hidden",
     },
-    logoEmoji: { fontSize: 30 },
     appName: {
       fontSize: 24,
       fontFamily: "Inter_700Bold",
