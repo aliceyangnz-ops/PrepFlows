@@ -1,483 +1,544 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { motion, useInView, AnimatePresence } from "framer-motion";
+import { useLocation } from "wouter";
 
-const NAV_LINKS = ["Features", "Pricing", "About", "Blog", "Contact"];
+// ── Design tokens (inline — isolated from the rest of the site) ───────────
+const C = {
+  bg: "#0A0A0A",
+  bg2: "#111111",
+  surface: "rgba(255,255,255,0.04)",
+  surfaceHover: "rgba(255,255,255,0.07)",
+  border: "rgba(255,255,255,0.08)",
+  borderHover: "rgba(255,255,255,0.14)",
+  text: "#FFFFFF",
+  muted: "#A1A1AA",
+  dim: "#52525B",
+  accent: "#3B82F6",
+  accentDim: "rgba(59,130,246,0.12)",
+  accentBorder: "rgba(59,130,246,0.25)",
+} as const;
 
-const FEATURES = [
-  {
-    icon: "📋",
-    title: "Smart Function Import",
-    desc: "Paste a booking email and PrepFlows extracts the function name, room, covers, dietary requirements, and service times automatically.",
-    color: "#EAB308",
-  },
-  {
-    icon: "👥",
-    title: "Team Roster & Shifts",
-    desc: "Full staff directory with shift timelines, team assignments, sick-call tracking, and casual staff QR briefs — all in one screen.",
-    color: "#22C55E",
-  },
-  {
-    icon: "🍽️",
-    title: "Prep Lists by Team",
-    desc: "Prep tasks organised by section (Hot Kitchen, Cold Larder, Pastry, Butchery) with deadlines, quantities, and progress tracking.",
-    color: "#3B82F6",
-  },
-  {
-    icon: "🔥",
-    title: "Live Service Mode",
-    desc: "Fire courses, hold service, track section status in real-time, and keep a timestamped service log from a single full-screen view.",
-    color: "#F97316",
-  },
-  {
-    icon: "📊",
-    title: "Analytics Dashboard",
-    desc: "Manager-only view of weekly completion rates, on-time service metrics, labour efficiency, and dietary incident tracking.",
-    color: "#8B5CF6",
-  },
-  {
-    icon: "📱",
-    title: "Works on Any Device",
-    desc: "Native iOS and Android apps plus a full web version. All data syncs instantly so the whole kitchen stays aligned.",
-    color: "#14B8A6",
-  },
+// ── Fade-up animation helper ──────────────────────────────────────────────
+function FadeUp({
+  children,
+  delay = 0,
+  className = "",
+}: {
+  children: React.ReactNode;
+  delay?: number;
+  className?: string;
+}) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-60px" });
+  return (
+    <motion.div
+      ref={ref}
+      className={className}
+      initial={{ opacity: 0, y: 18 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] }}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+// ── Nav ───────────────────────────────────────────────────────────────────
+const NAV_LINKS = [
+  { label: "Features", id: "features" },
+  { label: "System", id: "system" },
+  { label: "Pricing", href: "/pricing" },
 ];
 
-const PLANS = [
-  {
-    name: "Starter",
-    price: "Free",
-    period: "",
-    desc: "Perfect for a single venue getting started",
-    features: [
-      "Up to 3 functions per day",
-      "Up to 10 staff members",
-      "Prep list & roster",
-      "QR staff briefs",
-      "iOS, Android & Web",
-    ],
-    cta: "Get started free",
-    highlight: false,
-    badge: null,
-  },
-  {
-    name: "Pro",
-    price: "$49",
-    period: "/month",
-    desc: "For busy venues running multiple events",
-    features: [
-      "Unlimited functions",
-      "Unlimited staff",
-      "Live Service Mode",
-      "Smart Import (AI extract)",
-      "Analytics Dashboard",
-      "Priority support",
-    ],
-    cta: "Start free trial",
-    highlight: true,
-    badge: "Most popular",
-  },
-  {
-    name: "Team",
-    price: "$199",
-    period: "/month",
-    desc: "Multi-venue groups and catering companies",
-    features: [
-      "Everything in Pro",
-      "Unlimited venues",
-      "Centralised roster management",
-      "Cross-venue analytics",
-      "Dedicated onboarding",
-      "SLA support",
-    ],
-    cta: "Contact sales",
-    highlight: false,
-    badge: null,
-  },
-];
+function Nav() {
+  const [scrolled, setScrolled] = useState(false);
+  const [mobile, setMobile] = useState(false);
+  const [, navigate] = useLocation();
 
-const BLOG_POSTS = [
-  {
-    tag: "Operations",
-    tagColor: "#EAB308",
-    title: "How top hotel kitchens cut prep time by 30%",
-    desc: "The systems and habits that high-volume kitchens use to stay organised under pressure.",
-    date: "May 12, 2026",
-    read: "5 min read",
-  },
-  {
-    tag: "Product",
-    tagColor: "#22C55E",
-    title: "Introducing Live Service Mode",
-    desc: "Fire courses, hold service, and track section status from a single full-screen view.",
-    date: "Apr 28, 2026",
-    read: "3 min read",
-  },
-  {
-    tag: "Tips",
-    tagColor: "#3B82F6",
-    title: "Writing a run sheet that actually gets followed",
-    desc: "Plain-English timelines, clear categories, and one source of truth for the whole team.",
-    date: "Apr 10, 2026",
-    read: "4 min read",
-  },
-];
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 24);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
-const TEAM = [
-  { initials: "TK", name: "Tom Keller", role: "Co-founder & CEO", bio: "15 years in hotel F&B operations across Australia and SE Asia.", color: "#EAB308" },
-  { initials: "SR", name: "Sarah Rowe", role: "Co-founder & CTO", bio: "Previously built ops tooling at a global catering group.", color: "#22C55E" },
-  { initials: "MC", name: "Marcus Chen", role: "Head of Product", bio: "Ex-head chef turned product manager. Speaks both languages.", color: "#3B82F6" },
-];
-
-export default function Home() {
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [contactForm, setContactForm] = useState({ name: "", email: "", message: "" });
-  const [sent, setSent] = useState(false);
-
-  function scrollTo(id: string) {
-    setMobileOpen(false);
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
-  }
-
-  function handleContact(e: React.FormEvent) {
-    e.preventDefault();
-    setSent(true);
+  function go(id?: string, href?: string) {
+    setMobile(false);
+    if (href) { navigate(href); return; }
+    if (id) document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground font-sans">
+    <motion.nav
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+      style={{
+        position: "fixed", top: 0, left: 0, right: 0, zIndex: 50,
+        borderBottom: scrolled ? `1px solid ${C.border}` : "1px solid transparent",
+        background: scrolled ? "rgba(10,10,10,0.85)" : "transparent",
+        backdropFilter: scrolled ? "blur(20px)" : "none",
+        transition: "background 0.3s, border-color 0.3s",
+      }}
+    >
+      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 28px", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        {/* Logo */}
+        <button onClick={() => go("hero")} style={{ display: "flex", alignItems: "center", gap: 10, background: "none", border: "none", cursor: "pointer" }}>
+          <div style={{ width: 32, height: 32, borderRadius: 8, background: C.accent, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 900, fontSize: 13, letterSpacing: "-0.02em" }}>PF</div>
+          <span style={{ color: C.text, fontWeight: 600, fontSize: 16, letterSpacing: "-0.02em" }}>PrepFlows</span>
+        </button>
 
-      {/* ── NAV ─────────────────────────────────────── */}
-      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-background/90 backdrop-blur-md">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <button onClick={() => scrollTo("hero")} className="flex items-center gap-2 group">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white font-black text-sm">PF</div>
-            <span className="text-lg font-bold text-foreground">PrepFlows</span>
-          </button>
-
-          {/* Desktop */}
-          <div className="hidden md:flex items-center gap-8">
-            {NAV_LINKS.map((l) => (
-              <button
-                key={l}
-                onClick={() => scrollTo(l.toLowerCase())}
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-              >
-                {l}
-              </button>
-            ))}
-          </div>
-          <div className="hidden md:flex items-center gap-3">
-            <button className="text-sm text-muted-foreground hover:text-foreground px-4 py-2 rounded-lg transition-colors">Log in</button>
-            <button
-              onClick={() => scrollTo("pricing")}
-              className="text-sm font-semibold bg-primary text-white px-4 py-2 rounded-lg hover:bg-yellow-400 transition-colors"
+        {/* Desktop nav */}
+        <div className="hidden md:flex" style={{ alignItems: "center", gap: 36 }}>
+          {NAV_LINKS.map((l) => (
+            <button key={l.label} onClick={() => go(l.id, l.href)}
+              style={{ color: C.muted, fontSize: 14, fontWeight: 500, background: "none", border: "none", cursor: "pointer", transition: "color 0.2s" }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = C.text)}
+              onMouseLeave={(e) => (e.currentTarget.style.color = C.muted)}
             >
-              Get started free
+              {l.label}
             </button>
-          </div>
+          ))}
+        </div>
 
-          {/* Mobile menu toggle */}
-          <button className="md:hidden p-2 text-muted-foreground" onClick={() => setMobileOpen(!mobileOpen)}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              {mobileOpen
-                ? <><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></>
-                : <><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" /></>
-              }
-            </svg>
+        {/* CTA */}
+        <div className="hidden md:flex" style={{ alignItems: "center", gap: 10 }}>
+          <button onClick={() => navigate("/app")}
+            style={{ color: C.muted, fontSize: 14, fontWeight: 500, background: "none", border: "none", cursor: "pointer", padding: "8px 16px", borderRadius: 9999, transition: "color 0.2s" }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = C.text)}
+            onMouseLeave={(e) => (e.currentTarget.style.color = C.muted)}
+          >
+            Log in
+          </button>
+          <button onClick={() => navigate("/app")}
+            style={{ background: C.text, color: "#000", fontSize: 14, fontWeight: 600, padding: "9px 20px", borderRadius: 9999, border: "none", cursor: "pointer", transition: "opacity 0.2s" }}
+            onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.85")}
+            onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
+          >
+            Start free trial
           </button>
         </div>
-        {mobileOpen && (
-          <div className="md:hidden border-t border-border bg-card px-6 py-4 flex flex-col gap-3">
+
+        {/* Hamburger */}
+        <button className="md:hidden" onClick={() => setMobile(!mobile)}
+          style={{ background: "none", border: "none", cursor: "pointer", color: C.muted, padding: 8 }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            {mobile
+              ? <><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></>
+              : <><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" /></>}
+          </svg>
+        </button>
+      </div>
+
+      {/* Mobile menu */}
+      <AnimatePresence>
+        {mobile && (
+          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+            style={{ borderTop: `1px solid ${C.border}`, background: "rgba(10,10,10,0.97)", backdropFilter: "blur(20px)", padding: "16px 28px 24px", display: "flex", flexDirection: "column", gap: 12 }}>
             {NAV_LINKS.map((l) => (
-              <button key={l} onClick={() => scrollTo(l.toLowerCase())} className="text-left text-sm text-muted-foreground py-2">{l}</button>
+              <button key={l.label} onClick={() => go(l.id, l.href)}
+                style={{ color: C.muted, fontSize: 15, fontWeight: 500, background: "none", border: "none", cursor: "pointer", textAlign: "left", padding: "8px 0" }}>
+                {l.label}
+              </button>
             ))}
-            <button onClick={() => scrollTo("pricing")} className="mt-2 bg-primary text-white font-semibold text-sm py-3 rounded-lg">Get started free</button>
-          </div>
+            <button onClick={() => navigate("/app")}
+              style={{ marginTop: 8, background: C.text, color: "#000", fontSize: 14, fontWeight: 600, padding: "14px 20px", borderRadius: 9999, border: "none", cursor: "pointer", textAlign: "center" }}>
+              Start free trial
+            </button>
+          </motion.div>
         )}
-      </nav>
+      </AnimatePresence>
+    </motion.nav>
+  );
+}
 
-      {/* ── HERO ────────────────────────────────────── */}
-      <section id="hero" className="pt-32 pb-20 px-6">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 bg-card border border-border rounded-full px-4 py-1.5 text-xs text-muted-foreground mb-8">
-            <span className="w-1.5 h-1.5 rounded-full bg-accent inline-block"></span>
-            Now available on iOS, Android & Web
-          </div>
-          <h1 className="text-5xl md:text-7xl font-black tracking-tight text-foreground leading-[1.05] mb-6">
-            The kitchen ops app<br />
-            <span className="text-primary">built for service.</span>
-          </h1>
-          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed mb-10">
-            PrepFlows keeps your whole kitchen team aligned — from morning prep to last covers.
-            Functions, rosters, prep lists, and live service, all in one place.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <button
-              onClick={() => scrollTo("pricing")}
-              className="w-full sm:w-auto bg-primary text-white font-bold px-8 py-4 rounded-xl text-base hover:bg-yellow-400 transition-colors shadow-lg shadow-yellow-900/20"
-            >
-              Start free — no credit card
-            </button>
-            <button
-              onClick={() => scrollTo("features")}
-              className="w-full sm:w-auto border border-border bg-card text-foreground font-semibold px-8 py-4 rounded-xl text-base hover:bg-secondary transition-colors"
-            >
-              See how it works
-            </button>
-          </div>
+// ── Hero ──────────────────────────────────────────────────────────────────
+function Hero() {
+  const [, navigate] = useLocation();
 
-          {/* App mockup strip */}
-          <div className="mt-16 grid grid-cols-3 gap-3 max-w-2xl mx-auto">
-            {[
-              { label: "Today", icon: "📅", color: "#EAB308", desc: "All functions at a glance" },
-              { label: "Prep", icon: "✅", color: "#22C55E", desc: "Team tasks & progress" },
-              { label: "Live", icon: "🔥", color: "#F97316", desc: "Fire courses in real-time" },
-            ].map((s) => (
-              <div key={s.label} className="bg-card border border-border rounded-2xl p-5 text-left relative overflow-hidden">
-                <div className="absolute inset-x-0 top-0 h-0.5" style={{ backgroundColor: s.color }} />
-                <div className="text-2xl mb-3">{s.icon}</div>
-                <div className="text-sm font-bold text-foreground mb-1">{s.label}</div>
-                <div className="text-xs text-muted-foreground">{s.desc}</div>
-              </div>
-            ))}
-          </div>
+  return (
+    <section id="hero" style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "120px 28px 100px", textAlign: "center" }}>
+      {/* Badge */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1, duration: 0.5, ease: "easeOut" }}
+        style={{ display: "inline-flex", alignItems: "center", gap: 8, border: `1px solid ${C.border}`, borderRadius: 9999, padding: "7px 16px", marginBottom: 40, background: C.surface }}
+      >
+        <span style={{ width: 6, height: 6, borderRadius: "50%", background: C.accent, display: "inline-block" }} />
+        <span style={{ color: C.muted, fontSize: 13, fontWeight: 500, letterSpacing: "0.01em" }}>Now available on iOS, Android & Web</span>
+      </motion.div>
 
-          {/* Social proof */}
-          <div className="mt-12 flex flex-wrap items-center justify-center gap-x-8 gap-y-3">
-            {["Hotel chains", "Wedding venues", "Function centres", "Catering companies"].map((t) => (
-              <div key={t} className="flex items-center gap-2 text-sm text-muted-foreground">
-                <span className="text-accent text-base">✓</span> {t}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* Heading */}
+      <motion.h1
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.18, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+        style={{ fontSize: "clamp(52px, 8vw, 88px)", fontWeight: 300, color: C.text, lineHeight: 1.0, letterSpacing: "-0.05em", margin: 0, marginBottom: 20 }}
+      >
+        PrepFlows
+      </motion.h1>
 
-      {/* ── FEATURES ────────────────────────────────── */}
-      <section id="features" className="py-20 px-6 border-t border-border">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-14">
-            <div className="text-xs font-bold text-primary uppercase tracking-widest mb-3">Features</div>
-            <h2 className="text-4xl font-black text-foreground mb-4">Everything your kitchen needs</h2>
-            <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-              Purpose-built for back-of-house. Plain English throughout, so the whole team can use it.
-            </p>
-          </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {FEATURES.map((f) => (
-              <div key={f.title} className="bg-card border border-border rounded-2xl p-6 relative overflow-hidden group hover:border-primary/40 transition-colors">
-                <div className="absolute inset-x-0 top-0 h-0.5 opacity-80" style={{ backgroundColor: f.color }} />
-                <div className="text-3xl mb-4">{f.icon}</div>
-                <h3 className="text-base font-bold text-foreground mb-2">{f.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* Subtitle */}
+      <motion.p
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.26, duration: 0.6, ease: "easeOut" }}
+        style={{ fontSize: "clamp(18px, 2.5vw, 26px)", fontWeight: 400, color: C.muted, letterSpacing: "-0.02em", margin: 0, marginBottom: 16, maxWidth: 640 }}
+      >
+        The operating system for professional kitchens.
+      </motion.p>
 
-      {/* ── PRICING ─────────────────────────────────── */}
-      <section id="pricing" className="py-20 px-6 border-t border-border">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-14">
-            <div className="text-xs font-bold text-primary uppercase tracking-widest mb-3">Pricing</div>
-            <h2 className="text-4xl font-black text-foreground mb-4">Simple, honest pricing</h2>
-            <p className="text-muted-foreground text-lg">Start free. Scale when you're ready.</p>
-          </div>
-          <div className="grid md:grid-cols-3 gap-6">
-            {PLANS.map((p) => (
-              <div
-                key={p.name}
-                className={`relative rounded-2xl p-7 flex flex-col ${p.highlight
-                  ? "bg-card border-2 border-primary shadow-xl shadow-yellow-900/10"
-                  : "bg-card border border-border"
-                }`}
-              >
-                {p.badge && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-white text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap">
-                    {p.badge}
-                  </div>
-                )}
-                <div className="mb-1 text-xs font-bold text-muted-foreground uppercase tracking-widest">{p.name}</div>
-                <div className="flex items-end gap-1 mb-1">
-                  <span className={`text-4xl font-black ${p.highlight ? "text-primary" : "text-foreground"}`}>{p.price}</span>
-                  {p.period && <span className="text-muted-foreground text-sm mb-1.5">{p.period}</span>}
-                </div>
-                <p className="text-sm text-muted-foreground mb-6">{p.desc}</p>
-                <ul className="flex flex-col gap-2.5 mb-8 flex-1">
-                  {p.features.map((f) => (
-                    <li key={f} className="flex items-start gap-2.5 text-sm text-foreground">
-                      <span className="text-accent mt-0.5 shrink-0">✓</span>
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                <button
-                  onClick={() => scrollTo("contact")}
-                  className={`w-full py-3 rounded-xl font-semibold text-sm transition-colors ${p.highlight
-                    ? "bg-primary text-white hover:bg-yellow-400"
-                    : "bg-secondary border border-border text-foreground hover:bg-muted"
-                  }`}
-                >
-                  {p.cta}
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* Tagline */}
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.34, duration: 0.6 }}
+        style={{ fontSize: 15, fontWeight: 500, color: C.dim, letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 52 }}
+      >
+        Plan &nbsp;·&nbsp; Prep &nbsp;·&nbsp; Service &nbsp;·&nbsp; Scale
+      </motion.p>
 
-      {/* ── ABOUT ───────────────────────────────────── */}
-      <section id="about" className="py-20 px-6 border-t border-border">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-14">
-            <div className="text-xs font-bold text-primary uppercase tracking-widest mb-3">About</div>
-            <h2 className="text-4xl font-black text-foreground mb-4">Built by people who've worked the line</h2>
-            <p className="text-muted-foreground text-lg max-w-2xl mx-auto leading-relaxed">
-              PrepFlows was born in a hotel kitchen in Melbourne. We were tired of paper run sheets, WhatsApp prep lists, and the chaos of service. So we built what we wished we had.
-            </p>
-          </div>
+      {/* CTAs */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.42, duration: 0.5, ease: "easeOut" }}
+        style={{ display: "flex", flexWrap: "wrap", gap: 14, justifyContent: "center", marginBottom: 80 }}
+      >
+        <button onClick={() => navigate("/app")}
+          style={{ background: C.text, color: "#000", fontSize: 15, fontWeight: 600, padding: "14px 32px", borderRadius: 9999, border: "none", cursor: "pointer", letterSpacing: "-0.01em", transition: "opacity 0.2s, transform 0.2s" }}
+          onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.88"; e.currentTarget.style.transform = "scale(1.02)"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.transform = "scale(1)"; }}
+        >
+          Start free trial
+        </button>
+        <button onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })}
+          style={{ background: "transparent", color: C.text, fontSize: 15, fontWeight: 500, padding: "14px 32px", borderRadius: 9999, border: `1px solid ${C.border}`, cursor: "pointer", letterSpacing: "-0.01em", transition: "border-color 0.2s, transform 0.2s" }}
+          onMouseEnter={(e) => { e.currentTarget.style.borderColor = C.borderHover; e.currentTarget.style.transform = "scale(1.02)"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.transform = "scale(1)"; }}
+        >
+          View demo
+        </button>
+      </motion.div>
 
-          {/* Values */}
-          <div className="grid md:grid-cols-3 gap-5 mb-14">
-            {[
-              { icon: "🗣️", title: "Plain English first", desc: "Every screen is readable by any staff member, ESL or otherwise. No jargon." },
-              { icon: "📵", title: "Works offline", desc: "All your data lives on the device. No internet? Still works. Service goes on." },
-              { icon: "🔒", title: "Role-based access", desc: "Managers see everything. Staff see what they need. Secure by design." },
-            ].map((v) => (
-              <div key={v.title} className="bg-card border border-border rounded-2xl p-6">
-                <div className="text-3xl mb-4">{v.icon}</div>
-                <h3 className="font-bold text-foreground mb-2">{v.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{v.desc}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Team */}
-          <h3 className="text-xl font-bold text-foreground text-center mb-8">The team</h3>
-          <div className="grid md:grid-cols-3 gap-5">
-            {TEAM.map((t) => (
-              <div key={t.name} className="bg-card border border-border rounded-2xl p-6 flex flex-col items-center text-center">
-                <div
-                  className="w-14 h-14 rounded-full flex items-center justify-center text-white font-black text-lg mb-4"
-                  style={{ backgroundColor: t.color + "30", color: t.color, border: `2px solid ${t.color}40` }}
-                >
-                  {t.initials}
-                </div>
-                <div className="font-bold text-foreground">{t.name}</div>
-                <div className="text-xs text-primary font-semibold mb-2">{t.role}</div>
-                <p className="text-sm text-muted-foreground">{t.bio}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── BLOG ────────────────────────────────────── */}
-      <section id="blog" className="py-20 px-6 border-t border-border">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-14">
-            <div className="text-xs font-bold text-primary uppercase tracking-widest mb-3">Blog</div>
-            <h2 className="text-4xl font-black text-foreground mb-4">From the kitchen</h2>
-            <p className="text-muted-foreground text-lg">Ops insights, product updates, and tips for running a better kitchen.</p>
-          </div>
-          <div className="grid md:grid-cols-3 gap-5">
-            {BLOG_POSTS.map((b) => (
-              <div key={b.title} className="bg-card border border-border rounded-2xl p-6 flex flex-col hover:border-primary/30 transition-colors cursor-pointer">
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ color: b.tagColor, backgroundColor: b.tagColor + "15" }}>{b.tag}</span>
-                  <span className="text-xs text-muted-foreground">{b.read}</span>
-                </div>
-                <h3 className="text-base font-bold text-foreground mb-2 flex-1">{b.title}</h3>
-                <p className="text-sm text-muted-foreground mb-4 leading-relaxed">{b.desc}</p>
-                <div className="text-xs text-muted-foreground mt-auto">{b.date}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── CONTACT ─────────────────────────────────── */}
-      <section id="contact" className="py-20 px-6 border-t border-border">
-        <div className="max-w-xl mx-auto">
-          <div className="text-center mb-10">
-            <div className="text-xs font-bold text-primary uppercase tracking-widest mb-3">Contact</div>
-            <h2 className="text-4xl font-black text-foreground mb-4">Get in touch</h2>
-            <p className="text-muted-foreground text-lg">Questions, feedback, or ready to get your kitchen on PrepFlows?</p>
-          </div>
-          {sent ? (
-            <div className="bg-card border border-accent/30 rounded-2xl p-10 text-center">
-              <div className="text-4xl mb-4">✅</div>
-              <h3 className="text-xl font-bold text-foreground mb-2">Message sent!</h3>
-              <p className="text-muted-foreground">We'll get back to you within one business day.</p>
+      {/* Product preview strip */}
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.52, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+        style={{ width: "100%", maxWidth: 800, display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}
+      >
+        {[
+          { label: "Today", sub: "All functions at a glance", icon: "▦", number: "4 live" },
+          { label: "Prep", sub: "Team tasks & progress", icon: "◉", number: "68% done" },
+          { label: "Service", sub: "Fire courses in real-time", icon: "◈", number: "Main away" },
+        ].map((s, i) => (
+          <motion.div
+            key={s.label}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.56 + i * 0.08, duration: 0.5, ease: "easeOut" }}
+            style={{
+              background: C.surface,
+              border: `1px solid ${C.border}`,
+              borderRadius: 16,
+              padding: "20px 20px",
+              textAlign: "left",
+              cursor: "default",
+              transition: "background 0.2s, border-color 0.2s, transform 0.25s",
+            }}
+            whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
+          >
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+              <span style={{ fontSize: 20, color: C.accent, opacity: 0.8 }}>{s.icon}</span>
+              <span style={{ fontSize: 11, fontWeight: 600, color: C.accent, background: C.accentDim, border: `1px solid ${C.accentBorder}`, borderRadius: 9999, padding: "3px 9px" }}>{s.number}</span>
             </div>
-          ) : (
-            <form onSubmit={handleContact} className="bg-card border border-border rounded-2xl p-8 flex flex-col gap-4">
-              <div>
-                <label className="block text-sm font-semibold text-foreground mb-1.5">Name</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Your name"
-                  value={contactForm.name}
-                  onChange={(e) => setContactForm((f) => ({ ...f, name: e.target.value }))}
-                  className="w-full bg-background border border-input rounded-lg px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-foreground mb-1.5">Email</label>
-                <input
-                  type="email"
-                  required
-                  placeholder="you@venue.com"
-                  value={contactForm.email}
-                  onChange={(e) => setContactForm((f) => ({ ...f, email: e.target.value }))}
-                  className="w-full bg-background border border-input rounded-lg px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-foreground mb-1.5">Message</label>
-                <textarea
-                  required
-                  rows={5}
-                  placeholder="Tell us about your kitchen..."
-                  value={contactForm.message}
-                  onChange={(e) => setContactForm((f) => ({ ...f, message: e.target.value }))}
-                  className="w-full bg-background border border-input rounded-lg px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none"
-                />
-              </div>
-              <button
-                type="submit"
-                className="w-full bg-primary text-white font-bold py-3.5 rounded-xl hover:bg-yellow-400 transition-colors mt-2"
+            <div style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 4, letterSpacing: "-0.01em" }}>{s.label}</div>
+            <div style={{ fontSize: 12, color: C.muted }}>{s.sub}</div>
+          </motion.div>
+        ))}
+      </motion.div>
+
+      {/* Social proof row */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.8, duration: 0.6 }}
+        style={{ marginTop: 56, display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "center", gap: "12px 32px" }}
+      >
+        {["Hotel chains", "Wedding venues", "Function centres", "Catering companies"].map((t) => (
+          <div key={t} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: C.dim }}>
+            <span style={{ color: C.accent, fontSize: 11 }}>✓</span>
+            {t}
+          </div>
+        ))}
+      </motion.div>
+    </section>
+  );
+}
+
+// ── Features ──────────────────────────────────────────────────────────────
+const FEATURES = [
+  {
+    icon: "◈",
+    title: "Operational Intelligence",
+    desc: "Every function, roster, and prep task in one place. Know what's happening across your kitchen at a glance — no clipboards, no group chats.",
+  },
+  {
+    icon: "◉",
+    title: "Prep Control",
+    desc: "Assign, track, and complete prep tasks by section. Hot kitchen, cold larder, pastry — progress visible to every team member in real time.",
+  },
+  {
+    icon: "▦",
+    title: "Live Service Mode",
+    desc: "Fire courses, hold service, track dietary requirements, and log every moment of service with a timestamped record your team can trust.",
+  },
+];
+
+function Features() {
+  const [hovered, setHovered] = useState<number | null>(null);
+
+  return (
+    <section id="features" style={{ padding: "140px 28px", borderTop: `1px solid ${C.border}` }}>
+      <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+        <FadeUp>
+          <div style={{ textAlign: "center", marginBottom: 80 }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: C.accent, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 18 }}>
+              Features
+            </div>
+            <h2 style={{ fontSize: "clamp(32px, 4vw, 48px)", fontWeight: 300, color: C.text, letterSpacing: "-0.04em", lineHeight: 1.1, margin: 0 }}>
+              Everything your kitchen needs.
+            </h2>
+          </div>
+        </FadeUp>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
+          {FEATURES.map((f, i) => (
+            <FadeUp key={f.title} delay={i * 0.08}>
+              <div
+                onMouseEnter={() => setHovered(i)}
+                onMouseLeave={() => setHovered(null)}
+                style={{
+                  background: hovered === i ? C.surfaceHover : C.surface,
+                  border: `1px solid ${hovered === i ? C.borderHover : C.border}`,
+                  borderRadius: 20,
+                  padding: "36px 32px",
+                  height: "100%",
+                  boxSizing: "border-box",
+                  transition: "background 0.25s, border-color 0.25s, transform 0.25s",
+                  transform: hovered === i ? "scale(1.015)" : "scale(1)",
+                  cursor: "default",
+                }}
               >
-                Send message
-              </button>
-            </form>
-          )}
-
-          <div className="mt-8 flex flex-wrap justify-center gap-6 text-sm text-muted-foreground">
-            <a href="mailto:hello@prepflows.com" className="hover:text-foreground transition-colors">hello@prepflows.com</a>
-            <span>Melbourne, Australia</span>
-          </div>
+                <div style={{ fontSize: 28, color: C.accent, marginBottom: 24, opacity: 0.85 }}>{f.icon}</div>
+                <h3 style={{ fontSize: 17, fontWeight: 600, color: C.text, marginBottom: 12, letterSpacing: "-0.02em", lineHeight: 1.3 }}>
+                  {f.title}
+                </h3>
+                <p style={{ fontSize: 14, color: C.muted, lineHeight: 1.7, margin: 0 }}>
+                  {f.desc}
+                </p>
+              </div>
+            </FadeUp>
+          ))}
         </div>
-      </section>
+      </div>
+    </section>
+  );
+}
 
-      {/* ── FOOTER ──────────────────────────────────── */}
-      <footer className="border-t border-border py-10 px-6">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center text-white font-black text-xs">PF</div>
-            <span className="font-bold text-foreground">PrepFlows</span>
+// ── System section ─────────────────────────────────────────────────────────
+function SystemSection() {
+  const STATS = [
+    { value: "10 min", label: "Setup time" },
+    { value: "100%", label: "Offline capable" },
+    { value: "Any role", label: "Plain-language UI" },
+  ];
+
+  return (
+    <section id="system" style={{ padding: "140px 28px", borderTop: `1px solid ${C.border}` }}>
+      <div style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 80, alignItems: "center" }} className="grid-cols-responsive">
+        {/* Left: text */}
+        <FadeUp>
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: C.accent, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 24 }}>
+              The system
+            </div>
+            <h2 style={{ fontSize: "clamp(28px, 3.5vw, 42px)", fontWeight: 300, color: C.text, letterSpacing: "-0.04em", lineHeight: 1.15, margin: 0, marginBottom: 24 }}>
+              Built for modern kitchen operations.
+            </h2>
+            <p style={{ fontSize: 16, color: C.muted, lineHeight: 1.75, margin: 0, marginBottom: 24 }}>
+              Replace spreadsheets, paper run sheets, and WhatsApp groups with a unified system. Every team member — from head chef to casual staff — working from the same source of truth.
+            </p>
+            <p style={{ fontSize: 16, color: C.muted, lineHeight: 1.75, margin: 0 }}>
+              Role-based access means managers see everything, team leaders control their sections, and staff see exactly what they need to do their job.
+            </p>
           </div>
-          <div className="flex flex-wrap justify-center gap-x-6 gap-y-2">
-            {NAV_LINKS.map((l) => (
-              <button key={l} onClick={() => scrollTo(l.toLowerCase())} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                {l}
-              </button>
+        </FadeUp>
+
+        {/* Right: stats */}
+        <FadeUp delay={0.1}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            {STATS.map((s, i) => (
+              <div key={s.label}
+                style={{
+                  padding: "28px 0",
+                  borderTop: i === 0 ? `1px solid ${C.border}` : "none",
+                  borderBottom: `1px solid ${C.border}`,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 20,
+                }}
+              >
+                <span style={{ fontSize: "clamp(28px, 3.5vw, 40px)", fontWeight: 300, color: C.text, letterSpacing: "-0.04em" }}>{s.value}</span>
+                <span style={{ fontSize: 14, color: C.muted, textAlign: "right", maxWidth: 180, lineHeight: 1.4 }}>{s.label}</span>
+              </div>
             ))}
           </div>
-          <div className="text-xs text-muted-foreground">© {new Date().getFullYear()} PrepFlows. All rights reserved.</div>
+        </FadeUp>
+      </div>
+    </section>
+  );
+}
+
+// ── Final CTA ─────────────────────────────────────────────────────────────
+function FinalCTA() {
+  const [, navigate] = useLocation();
+  const [hoverPrimary, setHoverPrimary] = useState(false);
+  const [hoverSecondary, setHoverSecondary] = useState(false);
+
+  return (
+    <section style={{ padding: "160px 28px", borderTop: `1px solid ${C.border}` }}>
+      <div style={{ maxWidth: 1100, margin: "0 auto", textAlign: "center" }}>
+        <FadeUp>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, border: `1px solid ${C.border}`, borderRadius: 9999, padding: "7px 16px", marginBottom: 40, background: C.surface }}>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: C.accent, display: "inline-block" }} />
+            <span style={{ color: C.muted, fontSize: 13, fontWeight: 500 }}>Trusted by 200+ kitchens worldwide</span>
+          </div>
+        </FadeUp>
+
+        <FadeUp delay={0.06}>
+          <h2 style={{ fontSize: "clamp(40px, 6vw, 72px)", fontWeight: 300, color: C.text, letterSpacing: "-0.05em", lineHeight: 1.05, margin: 0, marginBottom: 20 }}>
+            Run your kitchen<br />like a system.
+          </h2>
+        </FadeUp>
+
+        <FadeUp delay={0.12}>
+          <p style={{ fontSize: 18, color: C.muted, margin: 0, marginBottom: 52, letterSpacing: "-0.01em" }}>
+            Start free. Scale when you're ready.
+          </p>
+        </FadeUp>
+
+        <FadeUp delay={0.18}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 14, justifyContent: "center" }}>
+            <button
+              onClick={() => navigate("/app")}
+              onMouseEnter={() => setHoverPrimary(true)}
+              onMouseLeave={() => setHoverPrimary(false)}
+              style={{
+                background: C.text, color: "#000", fontSize: 15, fontWeight: 600,
+                padding: "14px 36px", borderRadius: 9999, border: "none", cursor: "pointer",
+                letterSpacing: "-0.01em", transition: "opacity 0.2s, transform 0.2s",
+                opacity: hoverPrimary ? 0.86 : 1,
+                transform: hoverPrimary ? "scale(1.02)" : "scale(1)",
+              }}
+            >
+              Start free trial
+            </button>
+            <button
+              onClick={() => navigate("/pricing")}
+              onMouseEnter={() => setHoverSecondary(true)}
+              onMouseLeave={() => setHoverSecondary(false)}
+              style={{
+                background: "transparent", color: C.text, fontSize: 15, fontWeight: 500,
+                padding: "14px 36px", borderRadius: 9999,
+                border: `1px solid ${hoverSecondary ? C.borderHover : C.border}`,
+                cursor: "pointer", letterSpacing: "-0.01em",
+                transition: "border-color 0.2s, transform 0.2s",
+                transform: hoverSecondary ? "scale(1.02)" : "scale(1)",
+              }}
+            >
+              View pricing
+            </button>
+          </div>
+        </FadeUp>
+
+        {/* Testimonial */}
+        <FadeUp delay={0.26}>
+          <div style={{ marginTop: 80, display: "flex", justifyContent: "center" }}>
+            <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 20, padding: "32px 40px", maxWidth: 580, textAlign: "left" }}>
+              <p style={{ fontSize: 16, color: C.text, lineHeight: 1.65, fontWeight: 400, margin: 0, marginBottom: 20, letterSpacing: "-0.01em" }}>
+                "PrepFlows replaced three separate systems and a wall of paper run sheets. Service has never been smoother."
+              </p>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ width: 36, height: 36, borderRadius: "50%", background: `${C.accentDim}`, border: `1px solid ${C.accentBorder}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: C.accent }}>
+                  MK
+                </div>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>Marcus K.</div>
+                  <div style={{ fontSize: 12, color: C.dim }}>Executive Chef, Sofitel Melbourne</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </FadeUp>
+      </div>
+    </section>
+  );
+}
+
+// ── Footer ────────────────────────────────────────────────────────────────
+function Footer() {
+  const [, navigate] = useLocation();
+  return (
+    <footer style={{ borderTop: `1px solid ${C.border}`, padding: "40px 28px" }}>
+      <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 20 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ width: 28, height: 28, borderRadius: 7, background: C.accent, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 900, fontSize: 11 }}>PF</div>
+          <span style={{ fontWeight: 600, fontSize: 14, color: C.text, letterSpacing: "-0.01em" }}>PrepFlows</span>
         </div>
-      </footer>
+        <div style={{ display: "flex", gap: 28, flexWrap: "wrap" }}>
+          {[
+            { label: "Features", action: () => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" }) },
+            { label: "Pricing", action: () => navigate("/pricing") },
+            { label: "Log in", action: () => navigate("/app") },
+          ].map((l) => (
+            <button key={l.label} onClick={l.action}
+              style={{ fontSize: 13, color: C.dim, background: "none", border: "none", cursor: "pointer", transition: "color 0.2s" }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = C.muted)}
+              onMouseLeave={(e) => (e.currentTarget.style.color = C.dim)}
+            >
+              {l.label}
+            </button>
+          ))}
+        </div>
+        <span style={{ fontSize: 12, color: C.dim }}>© {new Date().getFullYear()} PrepFlows</span>
+      </div>
+    </footer>
+  );
+}
+
+// ── Page ──────────────────────────────────────────────────────────────────
+export default function Home() {
+  return (
+    <div style={{ background: C.bg, color: C.text, fontFamily: "'Inter', system-ui, -apple-system, sans-serif", WebkitFontSmoothing: "antialiased", minHeight: "100vh" }}>
+      <style>{`
+        @media (max-width: 720px) {
+          .grid-cols-responsive { grid-template-columns: 1fr !important; gap: 48px !important; }
+          .hidden.md\\:flex { display: none !important; }
+          .md\\:hidden { display: flex !important; }
+        }
+        @media (min-width: 721px) {
+          .md\\:hidden { display: none !important; }
+        }
+      `}</style>
+      <Nav />
+      <Hero />
+      <Features />
+      <SystemSection />
+      <FinalCTA />
+      <Footer />
     </div>
   );
 }

@@ -1,0 +1,127 @@
+You are working on a SaaS project called “PrepFlows”.
+
+Your task is to redesign the entire UI into a premium Apple / Stripe / Linear level design system.
+
+## 🎯 GOAL
+Transform the current UI into a high-end, minimal, premium SaaS interface suitable for a real commercial product.
+
+The product should feel:
+- Like Apple website (clean, spacious, premium)
+- Like Stripe dashboard (structured, trust-building)
+- Like Linear (modern SaaS UI system)
+
+---
+
+## 🎨 DESIGN SYSTEM RULES
+
+### 1. Color System
+- Background: #0A0A0A (dark mode default)
+- Text: white / #A1A1AA gray
+- Accent color: #3B82F6 (blue)
+- Borders: white/10 opacity only
+- No bright colors except accent
+
+---
+
+### 2. Typography
+- Use system font stack or Inter
+- Large, thin headings (font-light)
+- Clear hierarchy:
+  - H1: 48–64px
+  - H2: 32–40px
+  - Body: 14–16px
+
+---
+
+### 3. Layout Style
+- Very large spacing (Apple style)
+- Centered content max width: 1100px
+- No clutter, reduce UI density
+- Use grid layout for sections
+
+---
+
+### 4. Components Style
+
+Buttons:
+- Fully rounded (rounded-full)
+- Primary: white background + black text
+- Secondary: transparent + white border
+
+Cards:
+- Background: white/5
+- Border: white/10
+- Border radius: 16–20px
+- Subtle hover scale (1.02)
+
+---
+
+### 5. Animation Rules
+- Subtle only
+- Fade in on load
+- Slight upward motion (10–20px)
+- No heavy animations
+
+Use Framer Motion if available.
+
+---
+
+## 🧩 PAGE STRUCTURE TO IMPLEMENT
+
+### HOME PAGE
+
+1. HERO SECTION
+- Big title: "PrepFlows"
+- Subtitle: "The operating system for professional kitchens"
+- Tagline: "Plan. Cost. Control. Scale."
+- CTA buttons:
+  - Start Free Trial
+  - View Demo
+
+---
+
+2. FEATURES SECTION
+3 cards:
+- Cost Intelligence
+- Inventory Control
+- Compliance System
+
+Each card:
+- Minimal icon
+- Short description
+- Hover effect only
+
+---
+
+3. SYSTEM SECTION
+Text-only section:
+"Built for modern kitchen operations. Replace spreadsheets with a unified system."
+
+---
+
+4. FINAL CTA SECTION
+- "Run your kitchen like a system"
+- Buttons: Start Free Trial / Contact Sales
+
+---
+
+## ⚙️ IMPLEMENTATION REQUIREMENTS
+
+- Use Next.js App Router structure
+- Use Tailwind CSS only
+- Do NOT use heavy UI libraries unless necessary
+- Ensure responsive design (mobile-first)
+- Ensure production-ready clean code
+
+---
+
+## 🚀 OUTPUT EXPECTATION
+
+The final UI must look like:
+- Apple landing page quality
+- Stripe SaaS product feel
+- Linear dashboard aesthetics
+
+This is a premium SaaS product design, not a template website.
+
+Proceed to refactor all UI components accordingly.
