@@ -18,6 +18,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { KitchenProvider } from "@/context/KitchenContext";
 import { TeamProvider } from "@/context/TeamContext";
+import { SubscriptionProvider } from "@/context/SubscriptionContext";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -107,11 +108,13 @@ export default function RootLayout() {
           <GestureHandlerRootView style={{ flex: 1 }}>
             <KeyboardProvider>
               <AuthProvider>
-                <TeamProvider>
-                  <KitchenProvider>
-                    <AuthGate />
-                  </KitchenProvider>
-                </TeamProvider>
+                <SubscriptionProvider>
+                  <TeamProvider>
+                    <KitchenProvider>
+                      <AuthGate />
+                    </KitchenProvider>
+                  </TeamProvider>
+                </SubscriptionProvider>
               </AuthProvider>
             </KeyboardProvider>
           </GestureHandlerRootView>

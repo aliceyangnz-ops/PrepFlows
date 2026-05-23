@@ -21,14 +21,16 @@ export const workspacesTable = pgTable("workspaces", {
 });
 
 // ── profiles ─────────────────────────────────────────────────────────────────
-// Auth bridge: maps a future auth.users row to a staff member + workspace.
+// Auth bridge: maps a Supabase auth.users row to a staff member + workspace.
 // id is intentionally the same UUID as auth.users.id (enforced at app layer).
 
 export const profilesTable = pgTable("profiles", {
-  id:            uuid("id").primaryKey(),
-  staffMemberId: text("staff_member_id"),
-  workspaceId:   uuid("workspace_id"),
-  createdAt:     timestamp("created_at").notNull().defaultNow(),
+  id:                    uuid("id").primaryKey(),
+  staffMemberId:         text("staff_member_id"),
+  workspaceId:           uuid("workspace_id"),
+  stripeCustomerId:      text("stripe_customer_id"),
+  stripeSubscriptionId:  text("stripe_subscription_id"),
+  createdAt:             timestamp("created_at").notNull().defaultNow(),
 });
 
 // ── staff_members ─────────────────────────────────────────────────────────────
@@ -83,11 +85,9 @@ export const broadcastMessagesTable = pgTable("broadcast_messages", {
   text:        text("text").notNull(),
   senderName:  text("sender_name").notNull().default(""),
   senderRole:  text("sender_role").notNull().default(""),
-  /** Future auth link — maps to auth.users.id once auth is enabled */
   senderId:    uuid("sender_id"),
   sentAt:      text("sent_at").notNull().default(""),
   isActive:    boolean("is_active").notNull().default(true),
-  /** Array of staff IDs (from staff_members.id) who have dismissed this broadcast */
   dismissedBy: jsonb("dismissed_by").$type<string[]>().default([]),
   workspaceId: uuid("workspace_id"),
   createdAt:   timestamp("created_at").notNull().defaultNow(),
