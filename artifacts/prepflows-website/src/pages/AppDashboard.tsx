@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { usePageMeta } from "@/hooks/usePageMeta";
+import { Logo } from "@/components/Logo";
 
 const YELLOW = "#EAB308";
 const GREEN = "#22C55E";
@@ -56,8 +57,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
         className="sticky top-0 z-40">
         <div className="max-w-4xl mx-auto px-6 h-14 flex items-center justify-between">
           <button onClick={() => navigate("/")} className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center text-white font-black text-xs"
-              style={{ background: YELLOW }}>PF</div>
+            <Logo size={28} />
             <span className="font-bold text-sm">PrepFlows</span>
           </button>
           <div className="flex items-center gap-4">
@@ -271,8 +271,7 @@ function AuthForm() {
       style={{ background: "#0D1117", color: "#F0F6FC" }}>
       {/* Logo */}
       <button onClick={() => navigate("/")} className="flex items-center gap-2 mb-10">
-        <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-black"
-          style={{ background: YELLOW }}>PF</div>
+        <Logo size={40} />
         <span className="text-xl font-bold">PrepFlows</span>
       </button>
 
@@ -414,8 +413,7 @@ export default function AppPage() {
       <div className="flex items-center justify-center min-h-screen font-sans"
         style={{ background: "#0D1117" }}>
         <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center font-black text-sm"
-            style={{ background: YELLOW, color: "#0D1117" }}>PF</div>
+          <Logo size={32} />
           <p className="text-sm" style={{ color: "#8B949E" }}>Loading…</p>
         </div>
       </div>

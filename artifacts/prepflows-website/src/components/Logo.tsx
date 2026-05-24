@@ -1,0 +1,29 @@
+interface LogoProps {
+  size?: number;
+  className?: string;
+}
+
+/**
+ * PrepFlows logo mark — 3 narrowing bars inside a rounded square.
+ * Represents a prep list with forward flow/progress.
+ * Renders as inline SVG at any size.
+ */
+export function Logo({ size = 32, className = "" }: LogoProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 40 40"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      aria-label="PrepFlows logo"
+      role="img"
+    >
+      <rect width="40" height="40" rx="10" fill="#3B82F6" />
+      <rect x="9" y="11" width="22" height="4" rx="2" fill="white" />
+      <rect x="9" y="18" width="15" height="4" rx="2" fill="white" fillOpacity="0.72" />
+      <rect x="9" y="25" width="9" height="4" rx="2" fill="white" fillOpacity="0.4" />
+    </svg>
+  );
+}

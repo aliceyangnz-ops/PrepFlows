@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getAccessLevel, useKitchen } from "@/context/KitchenContext";
 import { useColors } from "@/hooks/useColors";
 import { SIDEBAR_WIDTH } from "@/hooks/useIsTablet";
+import { PrepFlowsLogo } from "@/components/PrepFlowsLogo";
 
 interface NavItem {
   name: string;
@@ -61,12 +62,10 @@ export function TabletSidebar() {
       {/* ── App brand ─────────────────────────────── */}
       <View style={{ paddingHorizontal: 16, paddingTop: 20, paddingBottom: 20, borderBottomWidth: 1, borderBottomColor: colors.border, marginBottom: 8 }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-          <View style={{ width: 38, height: 38, borderRadius: 11, backgroundColor: colors.primary, alignItems: "center", justifyContent: "center" }}>
-            <MaterialCommunityIcons name="silverware-fork-knife" size={18} color="#fff" />
-          </View>
+          <PrepFlowsLogo size={36} />
           <View>
-            <Text style={{ fontSize: 16, fontFamily: "Inter_700Bold", color: colors.foreground, lineHeight: 18 }}>Kitchen</Text>
-            <Text style={{ fontSize: 14, fontFamily: "Inter_700Bold", color: colors.primary, lineHeight: 18 }}>Command</Text>
+            <Text style={{ fontSize: 15, fontFamily: "Inter_700Bold", color: colors.foreground, lineHeight: 18, letterSpacing: -0.3 }}>PrepFlows</Text>
+            <Text style={{ fontSize: 11, fontFamily: "Inter_500Medium", color: colors.mutedForeground, lineHeight: 16 }}>Kitchen Operations</Text>
           </View>
         </View>
       </View>

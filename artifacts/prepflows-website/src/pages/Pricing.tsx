@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { usePageMeta } from "@/hooks/usePageMeta";
+import { Logo } from "@/components/Logo";
 
 const YELLOW = "#EAB308";
 const GREEN = "#22C55E";
@@ -134,8 +135,7 @@ export default function Pricing() {
         className="fixed top-0 left-0 right-0 z-50">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <button onClick={() => navigate("/")} className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-black text-sm"
-              style={{ background: YELLOW }}>PF</div>
+            <Logo size={32} />
             <span className="text-lg font-bold">PrepFlows</span>
           </button>
           <div className="flex items-center gap-4">
@@ -339,8 +339,7 @@ export default function Pricing() {
       <footer style={{ borderTop: "1px solid #21262D" }} className="py-10">
         <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-md flex items-center justify-center text-white font-black text-xs"
-              style={{ background: YELLOW }}>PF</div>
+            <Logo size={28} />
             <span className="font-bold">PrepFlows</span>
           </div>
           <p className="text-xs" style={{ color: "#484F58" }}>

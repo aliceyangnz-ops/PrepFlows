@@ -1,4 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
-  <rect width="32" height="32" rx="7" fill="#3B82F6"/>
-  <text x="5" y="23" font-family="system-ui, sans-serif" font-size="18" font-weight="900" fill="white">PF</text>
+<svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="40" height="40" rx="10" fill="#3B82F6"/>
+  <rect x="9" y="11" width="22" height="4" rx="2" fill="white"/>
+  <rect x="9" y="18" width="15" height="4" rx="2" fill="white" fill-opacity="0.72"/>
+  <rect x="9" y="25" width="9" height="4" rx="2" fill="white" fill-opacity="0.40"/>
 </svg>

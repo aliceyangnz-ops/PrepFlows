@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { motion, useInView, AnimatePresence } from "framer-motion";
 import { useLocation } from "wouter";
 import { usePageMeta } from "@/hooks/usePageMeta";
+import { Logo } from "@/components/Logo";
 
 // ── Design tokens (inline — isolated from the rest of the site) ───────────
 const C = {
@@ -84,7 +85,7 @@ function Nav() {
       <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 28px", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         {/* Logo */}
         <button onClick={() => go("hero")} style={{ display: "flex", alignItems: "center", gap: 10, background: "none", border: "none", cursor: "pointer" }}>
-          <div style={{ width: 32, height: 32, borderRadius: 8, background: C.accent, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 900, fontSize: 13, letterSpacing: "-0.02em" }}>PF</div>
+          <Logo size={32} />
           <span style={{ color: C.text, fontWeight: 600, fontSize: 16, letterSpacing: "-0.02em" }}>PrepFlows</span>
         </button>
 
@@ -496,7 +497,7 @@ function Footer() {
     <footer style={{ borderTop: `1px solid ${C.border}`, padding: "40px 28px" }}>
       <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 20 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ width: 28, height: 28, borderRadius: 7, background: C.accent, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 900, fontSize: 11 }}>PF</div>
+          <Logo size={28} />
           <span style={{ fontWeight: 600, fontSize: 14, color: C.text, letterSpacing: "-0.01em" }}>PrepFlows</span>
         </div>
         <div style={{ display: "flex", gap: 28, flexWrap: "wrap" }}>
