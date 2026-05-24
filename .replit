@@ -78,7 +78,7 @@ channel = "stable-25_05"
 [userenv]
 
 [userenv.shared]
-EXPO_PUBLIC_SUPABASE_URL = "https://gucpdtrpfzmtrijqdlob.supabase.co/"
+EXPO_PUBLIC_SUPABASE_URL = "https://ixfbzmcczngcmdqkidbm.supabase.co"
 EXPO_PUBLIC_SUPABASE_ANON_KEY = "sb_publishable_yuklFmmIogtQVno06Vvdbg_vMgzSXaQ"
 SUPABASE_SERVICE_ROLE_KEY = "Supabase → Project Settings → API → service_role"
 "SUPABASE_DB. _PASSWORD" = "postgresql://postgres:[YOUR-PASSWORD]@db.gucpdtrpfzmtrijqdlob.supabase.co:5432/postgres"

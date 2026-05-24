@@ -6,9 +6,17 @@ import type { Request, Response } from 'express';
 
 const router = Router();
 
+/** Strip any non-ASCII characters that can sneak in from copy-paste. */
+function sanitizeAscii(value: string): string {
+  // eslint-disable-next-line no-control-regex
+  return value.replace(/[^\x00-\x7F]/g, '').trim();
+}
+
 function getSupabaseAdmin() {
-  const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const rawUrl = process.env.EXPO_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL ?? '';
+  const rawKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? '';
+  const supabaseUrl = sanitizeAscii(rawUrl);
+  const serviceKey = sanitizeAscii(rawKey);
   if (!supabaseUrl || !serviceKey) {
     throw new Error('Supabase not configured');
   }
