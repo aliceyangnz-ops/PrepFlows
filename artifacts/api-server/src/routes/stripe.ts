@@ -65,25 +65,27 @@ router.get('/stripe/subscription', requireAuth, async (req: Request, res: Respon
 
 router.post('/stripe/checkout', requireAuth, async (req: Request, res: Response) => {
   try {
-    const { priceId, billing } = req.body as { priceId: string; billing?: string };
-    if (!priceId) {
-      res.status(400).json({ error: 'priceId is required' });
+    // Accept either a raw Stripe price ID or a plan alias + billing interval
+    const { priceId, plan, billing } = req.body as { priceId?: string; plan?: string; billing?: string };
+    const rawId = priceId ?? plan;
+    if (!rawId) {
+      res.status(400).json({ error: 'priceId or plan is required' });
       return;
     }
 
     // If caller sent a plan alias ("pro", "team") instead of a real Stripe price ID,
     // resolve it to the correct price using the synced stripe.products / stripe.prices tables.
-    let resolvedPriceId = priceId;
-    if (!priceId.startsWith('price_')) {
-      const interval = billing === 'annual' ? 'year' : 'month';
+    let resolvedPriceId = rawId;
+    if (!rawId.startsWith('price_')) {
+      const interval = billing === 'annual' || billing === 'yearly' ? 'year' : 'month';
       const rows = await stripeStorage.listProductsWithPrices();
       const match = (rows as any[]).find(
         (r) =>
-          r.product_metadata?.plan_id === priceId &&
+          r.product_metadata?.plan_id === rawId &&
           r.recurring?.interval === interval,
       );
       if (!match) {
-        res.status(400).json({ error: `No ${interval}ly price found for plan "${priceId}". Make sure Stripe products are seeded.` });
+        res.status(400).json({ error: `No ${interval}ly price found for plan "${rawId}". Make sure Stripe products are seeded.` });
         return;
       }
       resolvedPriceId = match.price_id as string;
