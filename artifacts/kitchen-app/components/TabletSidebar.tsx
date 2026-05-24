@@ -5,6 +5,7 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getAccessLevel, useKitchen } from "@/context/KitchenContext";
+import { LiquidGlassIcon } from "@/components/LiquidGlassIcon";
 import { useColors } from "@/hooks/useColors";
 import { SIDEBAR_WIDTH } from "@/hooks/useIsTablet";
 import { PrepFlowsLogo } from "@/components/PrepFlowsLogo";
@@ -79,18 +80,18 @@ export function TabletSidebar() {
               key={item.route}
               style={({ pressed }) => [{
                 flexDirection: "row", alignItems: "center", gap: 12,
-                paddingHorizontal: 12, paddingVertical: 14,
-                borderRadius: 10, marginBottom: 2,
-                backgroundColor: active
-                  ? colors.primary + "1A"
-                  : pressed ? colors.secondary : "transparent",
+                paddingHorizontal: 10, paddingVertical: 10,
+                borderRadius: 12, marginBottom: 2,
+                backgroundColor: pressed ? colors.secondary : "transparent",
               }]}
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 router.push(item.route as Parameters<typeof router.push>[0]);
               }}
             >
-              <NavIcon name={item.name} color={active ? colors.primary : colors.mutedForeground} />
+              <LiquidGlassIcon active={active} size={36} shape="circle">
+                <NavIcon name={item.name} color={active ? colors.primary : colors.mutedForeground} size={18} />
+              </LiquidGlassIcon>
               <Text style={{
                 flex: 1,
                 fontSize: 14,

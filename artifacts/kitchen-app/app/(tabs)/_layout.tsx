@@ -7,6 +7,7 @@ import { Feather, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import React from "react";
 import { Platform, StyleSheet, View, useColorScheme, useWindowDimensions } from "react-native";
 
+import { LiquidGlassIcon } from "@/components/LiquidGlassIcon";
 import { TabletSidebar } from "@/components/TabletSidebar";
 import { useColors } from "@/hooks/useColors";
 import { SIDEBAR_WIDTH } from "@/hooks/useIsTablet";
@@ -77,48 +78,52 @@ function ClassicTabLayout() {
           name="index"
           options={{
             title: "Today",
-            tabBarIcon: ({ color }) =>
-              isIOS ? (
-                <SymbolView name="calendar" tintColor={color} size={22} />
-              ) : (
-                <Feather name="calendar" size={21} color={color} />
-              ),
+            tabBarIcon: ({ color, focused }) => (
+              <LiquidGlassIcon active={focused} size={38} shape="pill">
+                {isIOS
+                  ? <SymbolView name="calendar" tintColor={focused ? "#EAB308" : color} size={20} />
+                  : <Feather name="calendar" size={19} color={focused ? "#EAB308" : color} />}
+              </LiquidGlassIcon>
+            ),
           }}
         />
         <Tabs.Screen
           name="functions"
           options={{
             title: "Functions",
-            tabBarIcon: ({ color }) =>
-              isIOS ? (
-                <SymbolView name="fork.knife" tintColor={color} size={22} />
-              ) : (
-                <MaterialCommunityIcons name="silverware-fork-knife" size={21} color={color} />
-              ),
+            tabBarIcon: ({ color, focused }) => (
+              <LiquidGlassIcon active={focused} size={38} shape="pill">
+                {isIOS
+                  ? <SymbolView name="fork.knife" tintColor={focused ? "#EAB308" : color} size={20} />
+                  : <MaterialCommunityIcons name="silverware-fork-knife" size={19} color={focused ? "#EAB308" : color} />}
+              </LiquidGlassIcon>
+            ),
           }}
         />
         <Tabs.Screen
           name="prep"
           options={{
             title: "Prep",
-            tabBarIcon: ({ color }) =>
-              isIOS ? (
-                <SymbolView name="checklist" tintColor={color} size={22} />
-              ) : (
-                <Feather name="check-square" size={21} color={color} />
-              ),
+            tabBarIcon: ({ color, focused }) => (
+              <LiquidGlassIcon active={focused} size={38} shape="pill">
+                {isIOS
+                  ? <SymbolView name="checklist" tintColor={focused ? "#EAB308" : color} size={20} />
+                  : <Feather name="check-square" size={19} color={focused ? "#EAB308" : color} />}
+              </LiquidGlassIcon>
+            ),
           }}
         />
         <Tabs.Screen
           name="roster"
           options={{
             title: "Roster",
-            tabBarIcon: ({ color }) =>
-              isIOS ? (
-                <SymbolView name="person.3" tintColor={color} size={22} />
-              ) : (
-                <Ionicons name="people-outline" size={22} color={color} />
-              ),
+            tabBarIcon: ({ color, focused }) => (
+              <LiquidGlassIcon active={focused} size={38} shape="pill">
+                {isIOS
+                  ? <SymbolView name="person.3" tintColor={focused ? "#EAB308" : color} size={20} />
+                  : <Ionicons name="people-outline" size={20} color={focused ? "#EAB308" : color} />}
+              </LiquidGlassIcon>
+            ),
           }}
         />
       </Tabs>
