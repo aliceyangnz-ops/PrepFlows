@@ -336,6 +336,8 @@ export default function RosterScreen() {
                 <Pressable
                   style={({ pressed }) => [s.headerBtn, { opacity: pressed ? 0.7 : 1 }]}
                   onPress={() => setShowSettings(true)}
+                  accessibilityLabel="Settings"
+                  accessibilityRole="button"
                 >
                   <Feather name="settings" size={15} color={colors.mutedForeground} />
                 </Pressable>
