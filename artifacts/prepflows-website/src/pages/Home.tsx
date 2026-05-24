@@ -179,7 +179,7 @@ function Hero() {
         >
           <div style={{ display: "flex", alignItems: "center", gap: 8, background: C.bg, borderRadius: 9999, padding: "6px 16px" }}>
             <span style={{ width: 6, height: 6, borderRadius: "50%", background: C.grad, display: "inline-block", flexShrink: 0 }} />
-            <span style={{ color: C.muted, fontSize: 13, fontWeight: 500, letterSpacing: "0.01em" }}>Highly compatible iOS, Android, Windows and More</span>
+            <span style={{ color: C.muted, fontSize: 13, fontWeight: 500, letterSpacing: "0.01em" }}>iOS, Android, Windows and More</span>
           </div>
         </motion.div>
 

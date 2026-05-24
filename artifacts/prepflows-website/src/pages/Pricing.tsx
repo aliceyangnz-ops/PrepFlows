@@ -22,7 +22,7 @@ const PLANS = [
       { text: "Up to 10 staff members", included: true },
       { text: "Prep list & roster", included: true },
       { text: "QR staff briefs", included: true },
-      { text: "iOS, Android & Web", included: true },
+      { text: "iOS, Android, Windows and More", included: true },
       { text: "Live Service Mode", included: false },
       { text: "Smart Import", included: false },
       { text: "Analytics Dashboard", included: false },
@@ -45,7 +45,7 @@ const PLANS = [
       { text: "Unlimited staff", included: true },
       { text: "Prep list & roster", included: true },
       { text: "QR staff briefs", included: true },
-      { text: "iOS, Android & Web", included: true },
+      { text: "iOS, Android, Windows and More", included: true },
       { text: "Live Service Mode", included: true },
       { text: "Smart Import (AI extract)", included: true },
       { text: "Analytics Dashboard", included: true },
@@ -228,7 +228,7 @@ function IconBuildings({ size = 40 }: { size?: number }) {
 }
 
 const ALL_PLAN_ITEMS = [
-  { icon: <IconDevice />,  label: "iOS, Android & Web" },
+  { icon: <IconDevice />,  label: "iOS, Android, Windows and More" },
   { icon: <IconShield />,  label: "End-to-end data security" },
   { icon: <IconGlobe />,   label: "Multi-language UI" },
   { icon: <IconRefresh />, label: "Free updates forever" },
