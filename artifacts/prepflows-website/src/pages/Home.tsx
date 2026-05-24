@@ -57,7 +57,7 @@ function Orb({ style }: { style: React.CSSProperties }) {
 const NAV_LINKS = [
   { label: "Features", id: "features" },
   { label: "System",   id: "system"   },
-  { label: "Pricing",  href: "/pricing" },
+  { label: "Plan",     href: "/pricing" },
 ];
 
 function Nav() {
@@ -179,7 +179,7 @@ function Hero() {
         >
           <div style={{ display: "flex", alignItems: "center", gap: 8, background: C.bg, borderRadius: 9999, padding: "6px 16px" }}>
             <span style={{ width: 6, height: 6, borderRadius: "50%", background: C.grad, display: "inline-block", flexShrink: 0 }} />
-            <span style={{ color: C.muted, fontSize: 13, fontWeight: 500, letterSpacing: "0.01em" }}>Now available on iOS, Android & Web</span>
+            <span style={{ color: C.muted, fontSize: 13, fontWeight: 500, letterSpacing: "0.01em" }}>Highly compatible iOS, Android, Windows and More</span>
           </div>
         </motion.div>
 
@@ -308,33 +308,79 @@ function Hero() {
 }
 
 // ── Tiny inline SVG icons for hero cards ─────────────────────────────────
+
+/** Today — calendar view with highlighted event bars */
 function DashIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-      <rect x="1" y="3" width="14" height="2" rx="1" fill="url(#di)" opacity="1" />
-      <rect x="1" y="7" width="10" height="2" rx="1" fill="url(#di)" opacity="0.75" />
-      <rect x="1" y="11" width="6"  height="2" rx="1" fill="url(#di)" opacity="0.45" />
-      <defs><linearGradient id="di" x1="0" y1="0" x2="15" y2="0" gradientUnits="userSpaceOnUse"><stop stopColor="#3B82F6"/><stop offset="1" stopColor="#06B6D4"/></linearGradient></defs>
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+      <defs>
+        <linearGradient id="di" x1="0" y1="0" x2="18" y2="18" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#60A5FA" />
+          <stop offset="1" stopColor="#22D3EE" />
+        </linearGradient>
+      </defs>
+      {/* Calendar outline */}
+      <rect x="2" y="2.5" width="14" height="13" rx="2.5" stroke="url(#di)" strokeWidth="1.4" />
+      {/* Calendar cap nubs */}
+      <line x1="6"  y1="1"   x2="6"  y2="4"   stroke="url(#di)" strokeWidth="1.4" strokeLinecap="round" />
+      <line x1="12" y1="1"   x2="12" y2="4"   stroke="url(#di)" strokeWidth="1.4" strokeLinecap="round" />
+      {/* Header divider */}
+      <line x1="2" y1="6.5" x2="16" y2="6.5" stroke="url(#di)" strokeWidth="0.9" opacity="0.4" />
+      {/* Event bars */}
+      <rect x="4" y="8.5"  width="10" height="1.8" rx="0.9" fill="url(#di)" />
+      <rect x="4" y="11.5" width="6.5" height="1.8" rx="0.9" fill="url(#di)" opacity="0.55" />
     </svg>
   );
 }
+
+/** Prep — circular progress ring with inner checkmark */
 function PrepIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-      <path d="M 2 4 L 5 7 L 9 2" stroke="url(#pi)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-      <rect x="6" y="4" width="8" height="1.5" rx="0.75" fill="url(#pi)" opacity="0.6" />
-      <path d="M 2 9 L 5 12 L 9 7" stroke="url(#pi)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-      <rect x="6" y="9" width="8" height="1.5" rx="0.75" fill="url(#pi)" opacity="0.6" />
-      <defs><linearGradient id="pi" x1="0" y1="0" x2="15" y2="0" gradientUnits="userSpaceOnUse"><stop stopColor="#3B82F6"/><stop offset="1" stopColor="#818CF8"/></linearGradient></defs>
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+      <defs>
+        <linearGradient id="pi" x1="0" y1="0" x2="18" y2="18" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#818CF8" />
+          <stop offset="1" stopColor="#22D3EE" />
+        </linearGradient>
+      </defs>
+      {/* Track ring */}
+      <circle cx="9" cy="9" r="6.5" stroke="rgba(129,140,248,0.18)" strokeWidth="2" />
+      {/* Progress arc — ~68% (circumference ≈40.84, offset for 68% ≈13.07) */}
+      <circle cx="9" cy="9" r="6.5"
+        stroke="url(#pi)" strokeWidth="2"
+        strokeDasharray="40.84" strokeDashoffset="13.07"
+        strokeLinecap="round"
+        transform="rotate(-90 9 9)"
+      />
+      {/* Checkmark */}
+      <path d="M 6 9 L 8 11.2 L 12.5 6.5"
+        stroke="url(#pi)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
+
+/** Service — clock face with precise hands (fire timing) */
 function ServiceIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-      <circle cx="8" cy="8" r="5" stroke="url(#si)" strokeWidth="1.6" />
-      <path d="M 8 5 L 8 8 L 10.5 10" stroke="url(#si)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-      <defs><linearGradient id="si" x1="0" y1="0" x2="16" y2="16" gradientUnits="userSpaceOnUse"><stop stopColor="#06B6D4"/><stop offset="1" stopColor="#818CF8"/></linearGradient></defs>
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+      <defs>
+        <linearGradient id="si" x1="0" y1="0" x2="18" y2="18" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#22D3EE" />
+          <stop offset="1" stopColor="#A78BFA" />
+        </linearGradient>
+      </defs>
+      {/* Clock face */}
+      <circle cx="9" cy="9" r="7" stroke="url(#si)" strokeWidth="1.4" />
+      {/* Minute markers — top, right, bottom, left */}
+      <line x1="9"  y1="3"  x2="9"  y2="4.2"  stroke="url(#si)" strokeWidth="1" strokeLinecap="round" opacity="0.6" />
+      <line x1="15" y1="9"  x2="13.8" y2="9"  stroke="url(#si)" strokeWidth="1" strokeLinecap="round" opacity="0.6" />
+      <line x1="9"  y1="15" x2="9"  y2="13.8" stroke="url(#si)" strokeWidth="1" strokeLinecap="round" opacity="0.6" />
+      {/* Hour hand (pointing ~10 o'clock) */}
+      <path d="M 9 9 L 6 5.8" stroke="url(#si)" strokeWidth="1.7" strokeLinecap="round" />
+      {/* Minute hand (pointing ~2 o'clock) */}
+      <path d="M 9 9 L 12 5.5" stroke="url(#si)" strokeWidth="1.4" strokeLinecap="round" />
+      {/* Centre dot */}
+      <circle cx="9" cy="9" r="1.2" fill="url(#si)" />
     </svg>
   );
 }
