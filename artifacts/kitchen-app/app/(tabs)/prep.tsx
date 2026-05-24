@@ -12,6 +12,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
 import { PrepTeam, getAccessLevel, useKitchen } from "@/context/KitchenContext";
 import { useColors } from "@/hooks/useColors";
 import { useIsTablet } from "@/hooks/useIsTablet";
@@ -313,11 +314,20 @@ export default function PrepScreen() {
               <Pressable
                 key={tab.key}
                 style={[s.dateTab, {
-                  backgroundColor: active ? colors.primary : colors.card,
-                  borderColor: active ? colors.primary : colors.border,
+                  backgroundColor: active ? "transparent" : colors.card,
+                  borderColor: active ? "#3B82F6" : colors.border,
+                  overflow: "hidden",
                 }]}
                 onPress={() => { Haptics.selectionAsync(); setSelectedDate(tab.key); }}
               >
+                {active && (
+                  <LinearGradient
+                    colors={["#3B82F6", "#06B6D4", "#818CF8"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+                  />
+                )}
                 <Text style={[s.dateTabLabel, { color: active ? "#fff" : colors.foreground }]}>
                   {tab.label}
                 </Text>
@@ -362,7 +372,10 @@ export default function PrepScreen() {
               <Text style={s.progressCount}>{completedItems} / {totalItems} done</Text>
             </View>
             <View style={s.progressBar}>
-              <View style={[s.progressFill, { width: `${percent * 100}%`, backgroundColor: percent === 1 ? colors.accent : colors.primary }]} />
+              {percent === 1
+                ? <View style={[s.progressFill, { width: "100%", backgroundColor: colors.accent }]} />
+                : <LinearGradient colors={["#3B82F6", "#06B6D4", "#818CF8"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[s.progressFill, { width: `${percent * 100}%` }]} />
+              }
             </View>
           </View>
         )}
@@ -378,10 +391,16 @@ export default function PrepScreen() {
         ) : (
           <>
             <View style={s.viewToggle}>
-              <Pressable style={[s.toggleBtn, viewMode === "by-team" && { backgroundColor: colors.primary }]} onPress={() => setViewMode("by-team")}>
+              <Pressable style={[s.toggleBtn, viewMode === "by-team" && { backgroundColor: "transparent", overflow: "hidden" }]} onPress={() => setViewMode("by-team")}>
+                {viewMode === "by-team" && (
+                  <LinearGradient colors={["#3B82F6", "#06B6D4", "#818CF8"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }} />
+                )}
                 <Text style={[s.toggleBtnText, { color: viewMode === "by-team" ? "#fff" : colors.mutedForeground }]}>By Team</Text>
               </Pressable>
-              <Pressable style={[s.toggleBtn, viewMode === "by-event" && { backgroundColor: colors.primary }]} onPress={() => setViewMode("by-event")}>
+              <Pressable style={[s.toggleBtn, viewMode === "by-event" && { backgroundColor: "transparent", overflow: "hidden" }]} onPress={() => setViewMode("by-event")}>
+                {viewMode === "by-event" && (
+                  <LinearGradient colors={["#3B82F6", "#06B6D4", "#818CF8"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }} />
+                )}
                 <Text style={[s.toggleBtnText, { color: viewMode === "by-event" ? "#fff" : colors.mutedForeground }]}>By Event</Text>
               </Pressable>
             </View>

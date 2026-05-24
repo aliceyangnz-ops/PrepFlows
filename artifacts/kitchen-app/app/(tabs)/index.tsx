@@ -20,6 +20,7 @@ import { BroadcastMessage, FunctionType, PrepTeam, getAccessLevel, useKitchen } 
 import { useAlerts, type KitchenAlert, type AlertCategory } from "@/hooks/useAlerts";
 import { useColors } from "@/hooks/useColors";
 import { useIsTablet } from "@/hooks/useIsTablet";
+import { LinearGradient } from "expo-linear-gradient";
 
 function timeToMinutes(t: string) {
   const [h, m] = t.split(":").map(Number);
@@ -264,7 +265,7 @@ export default function TodayScreen() {
         style={({ pressed }) => [s.countdownCard, { borderColor: cardBorderColor, backgroundColor: urgentColor + "08", opacity: pressed ? 0.9 : 1 }]}
         onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push(`/function/${nextFn.id}`); }}
       >
-        <View style={[s.countdownAccent, { backgroundColor: colors.primary }]} />
+        <LinearGradient colors={["#3B82F6", "#06B6D4", "#818CF8"]} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={s.countdownAccent} />
         <View style={[s.countdownHeader, { borderBottomColor: urgentColor + "30", backgroundColor: urgentColor + "12" }]}>
           <Ionicons name="timer-outline" size={14} color={urgentColor} />
           <Text style={[s.countdownHeaderText, { color: urgentColor }]}>{nextFnMins <= 0 ? "NOW" : "Next Event"}</Text>
@@ -400,7 +401,9 @@ export default function TodayScreen() {
             const fnAlerts = alertsByFunctionId.get(fn.id) ?? [];
             return (
               <View key={fn.id} style={s.fnCard}>
-                <View style={[s.fnCardLeftBar, { backgroundColor: statusColor }]} />
+                {statusColor === "#3B82F6"
+                  ? <LinearGradient colors={["#3B82F6", "#06B6D4", "#818CF8"]} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={s.fnCardLeftBar} />
+                  : <View style={[s.fnCardLeftBar, { backgroundColor: statusColor }]} />}
                 <View style={s.fnCardTop}>
                   <View style={[s.fnTimeBadge, { backgroundColor: statusColor + "10", borderRightColor: "rgba(255,255,255,0.05)" }]}>
                     <Text style={[s.fnTimeBadgeNum, { color: statusColor }]}>#{idx + 1}</Text>
@@ -484,7 +487,9 @@ export default function TodayScreen() {
             const fnAlerts = alertsByFunctionId.get(fn.id) ?? [];
             return (
               <View key={fn.id} style={s.fnCard}>
-                <View style={[s.fnCardLeftBar, { backgroundColor: statusColor }]} />
+                {statusColor === "#3B82F6"
+                  ? <LinearGradient colors={["#3B82F6", "#06B6D4", "#818CF8"]} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={s.fnCardLeftBar} />
+                  : <View style={[s.fnCardLeftBar, { backgroundColor: statusColor }]} />}
                 <View style={s.fnCardTop}>
                   <View style={[s.fnTimeBadge, { backgroundColor: statusColor + "10", borderRightColor: "rgba(255,255,255,0.05)" }]}>
                     <Text style={[s.fnTimeBadgeNum, { color: statusColor }]}>#{idx + 1}</Text>
@@ -555,7 +560,10 @@ export default function TodayScreen() {
           <View style={{ padding: 14 }}>
             {/* Overall bar */}
             <View style={{ height: 8, borderRadius: 4, backgroundColor: colors.border, marginBottom: 12, overflow: "hidden" }}>
-              <View style={{ height: 8, borderRadius: 4, backgroundColor: prepPercent >= 1 ? colors.accent : colors.primary, width: `${prepPercent * 100}%` }} />
+              {prepPercent >= 1
+                ? <View style={{ height: 8, borderRadius: 4, backgroundColor: colors.accent, width: "100%" }} />
+                : <LinearGradient colors={["#3B82F6", "#06B6D4", "#818CF8"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ height: 8, borderRadius: 4, width: `${prepPercent * 100}%` }} />
+              }
             </View>
             {teamStats.map(({ team, done, total, pct }) => {
               const tc = getTeamColor(team);
@@ -567,7 +575,10 @@ export default function TodayScreen() {
                   </Text>
                   <Text style={{ fontSize: 11, fontFamily: "Inter_700Bold", color: pct >= 1 ? colors.accent : tc }}>{done}/{total}</Text>
                   <View style={{ width: 60, height: 6, borderRadius: 4, backgroundColor: "#21262D", overflow: "hidden" }}>
-                    <View style={{ height: 6, borderRadius: 4, backgroundColor: pct >= 1 ? colors.accent : colors.primary, width: `${pct * 100}%` }} />
+                    {pct >= 1
+                      ? <View style={{ height: 6, borderRadius: 4, backgroundColor: colors.accent, width: "100%" }} />
+                      : <LinearGradient colors={["#3B82F6", "#06B6D4"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ height: 6, borderRadius: 4, width: `${pct * 100}%` }} />
+                    }
                   </View>
                 </View>
               );
@@ -767,6 +778,13 @@ export default function TodayScreen() {
 
   return (
     <View style={s.root}>
+      <LinearGradient
+        colors={["rgba(59,130,246,0.13)", "rgba(6,182,212,0.06)", "transparent"]}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        pointerEvents="none"
+        style={{ position: "absolute", top: 0, left: 0, right: 0, height: topPad + 160, zIndex: 0 }}
+      />
       <ScrollView style={s.scroll} showsVerticalScrollIndicator={false}>
         <View style={s.header}>
           <View style={s.headerLeft}>

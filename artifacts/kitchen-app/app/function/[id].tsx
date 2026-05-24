@@ -1,4 +1,5 @@
 import { Feather, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -504,6 +505,12 @@ export default function FunctionDetailScreen() {
       <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         {/* ── HERO ──────────────────────────────────────────────────────────── */}
         <View style={s.hero}>
+          <LinearGradient
+            colors={["#3B82F6", "#06B6D4", "#818CF8"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2 }}
+          />
           <View style={[s.typePill, { backgroundColor: tc + "15", borderColor: tc + "40" }]}>
             <Text style={[s.typeText, { color: tc }]}>{editing ? draft.functionType : fn.functionType}</Text>
           </View>
