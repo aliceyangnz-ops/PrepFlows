@@ -21,6 +21,7 @@ import { useAlerts, type KitchenAlert, type AlertCategory } from "@/hooks/useAle
 import { useColors } from "@/hooks/useColors";
 import { useIsTablet } from "@/hooks/useIsTablet";
 import { LinearGradient } from "expo-linear-gradient";
+import { PrepFlowsLogo } from "@/components/PrepFlowsLogo";
 
 function timeToMinutes(t: string) {
   const [h, m] = t.split(":").map(Number);
@@ -789,7 +790,10 @@ export default function TodayScreen() {
         <View style={s.header}>
           <View style={s.headerLeft}>
             <Text style={s.dateLabel}>{todayDate}</Text>
-            <Text style={s.headerTitle}>Today's Service</Text>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+              <PrepFlowsLogo size={30} />
+              <Text style={s.headerTitle}>Today's Service</Text>
+            </View>
           </View>
           {isManager && (
             <Pressable

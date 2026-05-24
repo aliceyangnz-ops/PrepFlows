@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FunctionType, PrepItem, PrepTeam, getAccessLevel, useKitchen } from "@/context/KitchenContext";
 import { useColors } from "@/hooks/useColors";
 import { useIsTablet } from "@/hooks/useIsTablet";
+import { PrepFlowsLogo } from "@/components/PrepFlowsLogo";
 
 function getFunctionTypeColor(type: FunctionType): string {
   switch (type) {
@@ -634,7 +635,10 @@ export default function FunctionsScreen() {
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={s.header}>
           <View style={{ flex: 1 }}>
-            <Text style={s.title}>Events</Text>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 2 }}>
+              <PrepFlowsLogo size={26} />
+              <Text style={s.title}>Events</Text>
+            </View>
             <Text style={s.subtitle}>{visibleFunctions.length} function{visibleFunctions.length !== 1 ? "s" : ""} showing</Text>
           </View>
           {isManager && (

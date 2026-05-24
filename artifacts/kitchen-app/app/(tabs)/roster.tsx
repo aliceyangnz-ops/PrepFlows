@@ -2,6 +2,7 @@ import { Feather, Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import React, { useMemo, useState } from "react";
+import { PrepFlowsLogo } from "@/components/PrepFlowsLogo";
 import {
   Alert,
   Modal,
@@ -290,7 +291,7 @@ export default function RosterScreen() {
     statusBadgeOnShiftText: { color: '#22C55E', fontSize: 11 },
     statusBadgeSick: { backgroundColor: 'rgba(239,68,68,0.12)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(239,68,68,0.2)' },
     statusBadgeSickText: { color: '#EF4444', fontSize: 11 },
-    addStaffBtn: { backgroundColor: '#EAB308', borderRadius: 12, paddingVertical: 14, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 },
+    addStaffBtn: { backgroundColor: '#3B82F6', borderRadius: 12, paddingVertical: 14, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 },
     addStaffBtnText: { fontFamily: 'Inter_700Bold', color: '#FFFFFF', fontSize: 15 },
     sickAlertBanner: { backgroundColor: 'rgba(239,68,68,0.08)', borderColor: 'rgba(239,68,68,0.3)', borderWidth: 1, borderRadius: 12, padding: 12, marginHorizontal: 20, marginBottom: 16, flexDirection: 'row', alignItems: 'center', gap: 10 },
     headerSickBadge: { backgroundColor: 'rgba(239,68,68,0.12)', borderColor: 'rgba(239,68,68,0.2)', borderWidth: 1, borderRadius: 20, paddingHorizontal: 8, paddingVertical: 3 },
@@ -309,6 +310,7 @@ export default function RosterScreen() {
         <View style={s.header}>
           <View style={{ flexDirection: "row", alignItems: "center" }}>
             <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <PrepFlowsLogo size={26} />
               <View>
                 <Text style={s.title}>Roster</Text>
                 <Text style={s.subtitle}>{staff.length} staff today · {functions.length} functions</Text>

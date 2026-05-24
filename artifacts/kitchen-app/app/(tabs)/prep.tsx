@@ -2,6 +2,7 @@ import { Feather, Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import React, { useMemo, useState } from "react";
+import { PrepFlowsLogo } from "@/components/PrepFlowsLogo";
 import {
   Alert,
   Platform,
@@ -292,7 +293,10 @@ export default function PrepScreen() {
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={s.header}>
           <View style={s.headerLeft}>
-            <Text style={s.title}>Prep List</Text>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 2 }}>
+              <PrepFlowsLogo size={26} />
+              <Text style={s.title}>Prep List</Text>
+            </View>
             <Text style={s.subtitle}>By team — with leader, tasks & deadlines</Text>
           </View>
           {printFnId && (

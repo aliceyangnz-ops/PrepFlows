@@ -1,4 +1,5 @@
 import * as Haptics from "expo-haptics";
+import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -49,18 +50,33 @@ export default function ForgotPasswordScreen() {
   if (sent) {
     return (
       <View style={[s.root, { justifyContent: "center", alignItems: "center", padding: 32 }]}>
+        <View style={s.orbTopRight} pointerEvents="none" />
         <View style={s.sentMark}>
-          <Feather name="mail" size={28} color="#0D1117" />
+          <LinearGradient
+            colors={["#3B82F6", "#06B6D4", "#818CF8"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={s.sentMarkGrad}
+          >
+            <Feather name="mail" size={28} color="#fff" />
+          </LinearGradient>
         </View>
         <Text style={s.sentTitle}>Reset link sent</Text>
         <Text style={s.sentSub}>
           Check {email} for a link to reset your password. The link expires in 1 hour.
         </Text>
         <Pressable
-          style={s.primaryBtn}
           onPress={() => router.replace("/auth/login")}
+          style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1, width: "100%" }]}
         >
-          <Text style={s.primaryBtnText}>Back to sign in</Text>
+          <LinearGradient
+            colors={["#3B82F6", "#06B6D4", "#818CF8"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={s.primaryBtn}
+          >
+            <Text style={s.primaryBtnText}>Back to sign in</Text>
+          </LinearGradient>
         </Pressable>
       </View>
     );
@@ -68,18 +84,21 @@ export default function ForgotPasswordScreen() {
 
   return (
     <View style={s.root}>
+      <View style={s.orbTopRight} pointerEvents="none" />
+      <View style={s.orbBottomLeft} pointerEvents="none" />
+
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <View style={s.inner}>
           <Pressable style={s.backLink} onPress={() => router.back()} hitSlop={12}>
-            <Feather name="arrow-left" size={18} color="#EAB308" />
+            <Feather name="arrow-left" size={18} color="#3B82F6" />
             <Text style={s.backText}>Back</Text>
           </Pressable>
 
           <View style={s.iconWrap}>
-            <Feather name="lock" size={28} color="#EAB308" />
+            <Feather name="lock" size={28} color="#3B82F6" />
           </View>
 
           <Text style={s.title}>Forgot your password?</Text>
@@ -98,7 +117,7 @@ export default function ForgotPasswordScreen() {
           <TextInput
             style={s.input}
             placeholder="you@example.com"
-            placeholderTextColor="#484F58"
+            placeholderTextColor="#3A4250"
             value={email}
             onChangeText={(t) => { setEmail(t); setError(null); }}
             keyboardType="email-address"
@@ -110,15 +129,22 @@ export default function ForgotPasswordScreen() {
           />
 
           <Pressable
-            style={[s.primaryBtn, loading && s.primaryBtnDisabled]}
             onPress={handleReset}
             disabled={loading}
+            style={({ pressed }) => [{ opacity: pressed || loading ? 0.7 : 1 }]}
           >
-            {loading ? (
-              <ActivityIndicator color="#0D1117" size="small" />
-            ) : (
-              <Text style={s.primaryBtnText}>Send reset link</Text>
-            )}
+            <LinearGradient
+              colors={["#3B82F6", "#06B6D4", "#818CF8"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={s.primaryBtn}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" size="small" />
+              ) : (
+                <Text style={s.primaryBtnText}>Send reset link</Text>
+              )}
+            </LinearGradient>
           </Pressable>
         </View>
       </KeyboardAvoidingView>
@@ -129,6 +155,26 @@ export default function ForgotPasswordScreen() {
 const styles = (topInset: number) =>
   StyleSheet.create({
     root: { flex: 1, backgroundColor: "#0D1117" },
+    orbTopRight: {
+      position: "absolute",
+      top: -80,
+      right: -80,
+      width: 240,
+      height: 240,
+      borderRadius: 120,
+      backgroundColor: "#1E3A5F",
+      opacity: 0.35,
+    },
+    orbBottomLeft: {
+      position: "absolute",
+      bottom: -100,
+      left: -100,
+      width: 280,
+      height: 280,
+      borderRadius: 140,
+      backgroundColor: "#1B2F4A",
+      opacity: 0.3,
+    },
     inner: {
       flex: 1,
       paddingTop: topInset + 16,
@@ -141,14 +187,14 @@ const styles = (topInset: number) =>
       marginBottom: 40,
       alignSelf: "flex-start",
     },
-    backText: { fontSize: 14, fontFamily: "Inter_600SemiBold", color: "#EAB308" },
+    backText: { fontSize: 14, fontFamily: "Inter_600SemiBold", color: "#3B82F6" },
     iconWrap: {
       width: 64,
       height: 64,
       borderRadius: 16,
-      backgroundColor: "rgba(234,179,8,0.12)",
+      backgroundColor: "rgba(59,130,246,0.12)",
       borderWidth: 1,
-      borderColor: "rgba(234,179,8,0.2)",
+      borderColor: "rgba(59,130,246,0.25)",
       alignItems: "center",
       justifyContent: "center",
       marginBottom: 20,
@@ -162,7 +208,7 @@ const styles = (topInset: number) =>
     sub: {
       fontSize: 15,
       fontFamily: "Inter_400Regular",
-      color: "#64748B",
+      color: "#4A5568",
       lineHeight: 22,
       marginBottom: 28,
     },
@@ -184,15 +230,17 @@ const styles = (topInset: number) =>
       color: "#EF4444",
     },
     label: {
-      fontSize: 13,
+      fontSize: 12,
       fontFamily: "Inter_600SemiBold",
-      color: "#94A3B8",
+      color: "#5A7A9A",
       marginBottom: 6,
+      letterSpacing: 0.5,
+      textTransform: "uppercase",
     },
     input: {
       backgroundColor: "#161B22",
       borderWidth: 1,
-      borderColor: "#21262D",
+      borderColor: "#1E2A3A",
       borderRadius: 10,
       paddingHorizontal: 14,
       paddingVertical: 13,
@@ -202,27 +250,29 @@ const styles = (topInset: number) =>
       marginBottom: 20,
     },
     primaryBtn: {
-      backgroundColor: "#EAB308",
       borderRadius: 12,
       paddingVertical: 15,
       alignItems: "center",
       justifyContent: "center",
       minHeight: 50,
     },
-    primaryBtnDisabled: { opacity: 0.6 },
     primaryBtnText: {
       fontSize: 16,
       fontFamily: "Inter_700Bold",
-      color: "#0D1117",
+      color: "#fff",
+      letterSpacing: 0.3,
     },
     sentMark: {
-      width: 72,
-      height: 72,
-      borderRadius: 36,
-      backgroundColor: "#EAB308",
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      overflow: "hidden",
+      marginBottom: 20,
+    },
+    sentMarkGrad: {
+      flex: 1,
       alignItems: "center",
       justifyContent: "center",
-      marginBottom: 20,
     },
     sentTitle: {
       fontSize: 24,
@@ -233,7 +283,7 @@ const styles = (topInset: number) =>
     sentSub: {
       fontSize: 15,
       fontFamily: "Inter_400Regular",
-      color: "#64748B",
+      color: "#4A5568",
       textAlign: "center",
       lineHeight: 22,
       marginBottom: 32,

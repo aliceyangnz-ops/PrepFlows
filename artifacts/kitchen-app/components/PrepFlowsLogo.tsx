@@ -1,36 +1,80 @@
 import React from "react";
-import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
+import Svg, {
+  Defs,
+  LinearGradient,
+  RadialGradient,
+  Rect,
+  Stop,
+  Path,
+} from "react-native-svg";
 
 interface Props {
   size?: number;
 }
 
 /**
- * PrepFlows gradient flow mark for React Native.
- * Mirrors the web logo: dark square + 3 narrowing gradient bars (blue→cyan→indigo).
- * Filter glow is omitted (react-native-svg limitation); gradient alone reads premium.
+ * PrepFlows mark — fluid gradient "P" letterform.
+ * Thick rounded stroke path on a deep dark square.
+ * Glow simulated with layered semi-transparent wide strokes.
  */
-export function PrepFlowsLogo({ size = 38 }: Props) {
+export function PrepFlowsLogo({ size = 40 }: Props) {
+  const P_PATH =
+    "M 30 82 L 30 18 Q 30 8 42 8 L 57 8 Q 73 8 73 28 L 73 40 Q 73 58 57 58 L 30 58";
+
   return (
-    <Svg width={size} height={size} viewBox="0 0 40 40">
+    <Svg width={size} height={size} viewBox="0 0 100 100">
       <Defs>
-        <LinearGradient id="pfGrad" x1="0" y1="0" x2="40" y2="0" gradientUnits="userSpaceOnUse">
-          <Stop offset="0"    stopColor="#3B82F6" />
-          <Stop offset="0.55" stopColor="#06B6D4" />
-          <Stop offset="1"    stopColor="#818CF8" />
+        <LinearGradient id="pfBg" x1="0" y1="0" x2="1" y2="1">
+          <Stop offset="0" stopColor="#0D1520" />
+          <Stop offset="1" stopColor="#060A10" />
         </LinearGradient>
+        <LinearGradient id="pfGrad" x1="0.1" y1="0" x2="0.9" y2="1">
+          <Stop offset="0" stopColor="#60A5FA" />
+          <Stop offset="0.45" stopColor="#22D3EE" />
+          <Stop offset="1" stopColor="#A78BFA" />
+        </LinearGradient>
+        <RadialGradient id="pfGlow" cx="52%" cy="38%" r="48%">
+          <Stop offset="0" stopColor="#3B82F6" stopOpacity="0.32" />
+          <Stop offset="1" stopColor="#3B82F6" stopOpacity="0" />
+        </RadialGradient>
       </Defs>
 
       {/* Background */}
-      <Rect width="40" height="40" rx="10" fill="#0A0A0A" />
+      <Rect width="100" height="100" rx="22" fill="url(#pfBg)" />
 
-      {/* Subtle ambient glow layer */}
-      <Rect x="7" y="9" width="24" height="22" rx="4" fill="url(#pfGrad)" opacity="0.08" />
+      {/* Ambient radial glow */}
+      <Rect width="100" height="100" rx="22" fill="url(#pfGlow)" />
 
-      {/* Flow bars */}
-      <Rect x="8" y="11"   width="22" height="3.5" rx="1.75" fill="url(#pfGrad)" />
-      <Rect x="8" y="18.5" width="15" height="3.5" rx="1.75" fill="url(#pfGrad)" opacity="0.78" />
-      <Rect x="8" y="26"   width="9"  height="3.5" rx="1.75" fill="url(#pfGrad)" opacity="0.48" />
+      {/* Outer glow halo */}
+      <Path
+        d={P_PATH}
+        stroke="#4FACFE"
+        strokeWidth="30"
+        fill="none"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        opacity={0.06}
+      />
+      {/* Mid glow */}
+      <Path
+        d={P_PATH}
+        stroke="#22D3EE"
+        strokeWidth="20"
+        fill="none"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        opacity={0.12}
+      />
+
+      {/* Main P letterform */}
+      <Path
+        d={P_PATH}
+        stroke="url(#pfGrad)"
+        strokeWidth="13"
+        fill="none"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </Svg>
   );
 }

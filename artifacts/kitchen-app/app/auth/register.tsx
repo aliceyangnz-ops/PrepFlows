@@ -1,9 +1,9 @@
 import * as Haptics from "expo-haptics";
+import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
-  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -16,6 +16,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { useAuth } from "@/context/AuthContext";
+import { PrepFlowsLogo } from "@/components/PrepFlowsLogo";
 
 function validate(
   fullName: string,
@@ -78,8 +79,17 @@ export default function RegisterScreen() {
   if (success) {
     return (
       <View style={[s.root, { justifyContent: "center", alignItems: "center", padding: 32 }]}>
+        {/* Ambient orbs */}
+        <View style={s.orbTopRight} pointerEvents="none" />
+        <View style={s.orbBottomLeft} pointerEvents="none" />
+
         <View style={s.successMark}>
-          <Feather name="check" size={32} color="#0D1117" />
+          <LinearGradient
+            colors={["#22C55E", "#16A34A"]}
+            style={s.successMarkGrad}
+          >
+            <Feather name="check" size={32} color="#fff" />
+          </LinearGradient>
         </View>
         <Text style={[s.cardTitle, { textAlign: "center", marginBottom: 8 }]}>
           Check your email
@@ -87,8 +97,18 @@ export default function RegisterScreen() {
         <Text style={[s.cardSub, { textAlign: "center", marginBottom: 32 }]}>
           We sent a confirmation link to {email}. Click it to activate your account.
         </Text>
-        <Pressable style={s.primaryBtn} onPress={() => router.replace("/auth/login")}>
-          <Text style={s.primaryBtnText}>Back to sign in</Text>
+        <Pressable
+          onPress={() => router.replace("/auth/login")}
+          style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1, width: "100%" }]}
+        >
+          <LinearGradient
+            colors={["#3B82F6", "#06B6D4", "#818CF8"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={s.primaryBtn}
+          >
+            <Text style={s.primaryBtnText}>Back to sign in</Text>
+          </LinearGradient>
         </Pressable>
       </View>
     );
@@ -96,6 +116,10 @@ export default function RegisterScreen() {
 
   return (
     <View style={s.root}>
+      {/* Ambient background orbs */}
+      <View style={s.orbTopRight} pointerEvents="none" />
+      <View style={s.orbBottomLeft} pointerEvents="none" />
+
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -111,135 +135,148 @@ export default function RegisterScreen() {
             onPress={() => router.back()}
             hitSlop={12}
           >
-            <Feather name="arrow-left" size={18} color="#EAB308" />
+            <Feather name="arrow-left" size={18} color="#3B82F6" />
             <Text style={s.backText}>Sign in</Text>
           </Pressable>
 
           {/* Brand */}
           <View style={s.brand}>
-            <Image
-              source={require("../../assets/images/icon.png")}
-              style={s.logoMark}
-              resizeMode="cover"
-              accessibilityLabel="PrepFlows"
-            />
+            <View style={s.logoWrap}>
+              <PrepFlowsLogo size={64} />
+            </View>
             <Text style={s.appName}>PrepFlows</Text>
           </View>
 
           {/* Form card */}
           <View style={s.card}>
-            <Text style={s.cardTitle}>Create your account</Text>
-            <Text style={s.cardSub}>Set up your PrepFlows workspace</Text>
+            <LinearGradient
+              colors={["#3B82F6", "#06B6D4", "#818CF8"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={s.cardAccentBar}
+            />
 
-            {error && (
-              <View style={s.errorBox}>
-                <Feather name="alert-circle" size={14} color="#EF4444" />
-                <Text style={s.errorText}>{error}</Text>
-              </View>
-            )}
+            <View style={s.cardInner}>
+              <Text style={s.cardTitle}>Create your account</Text>
+              <Text style={s.cardSub}>Set up your PrepFlows workspace</Text>
 
-            <View style={s.fieldGroup}>
-              <Text style={s.label}>Full name</Text>
-              <TextInput
-                style={s.input}
-                placeholder="Your name"
-                placeholderTextColor="#484F58"
-                value={fullName}
-                onChangeText={(t) => { setFullName(t); setError(null); }}
-                autoComplete="name"
-                autoCapitalize="words"
-                returnKeyType="next"
-              />
-            </View>
+              {error && (
+                <View style={s.errorBox}>
+                  <Feather name="alert-circle" size={14} color="#EF4444" />
+                  <Text style={s.errorText}>{error}</Text>
+                </View>
+              )}
 
-            <View style={s.fieldGroup}>
-              <Text style={s.label}>Email</Text>
-              <TextInput
-                style={s.input}
-                placeholder="you@example.com"
-                placeholderTextColor="#484F58"
-                value={email}
-                onChangeText={(t) => { setEmail(t); setError(null); }}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-                autoComplete="email"
-                returnKeyType="next"
-              />
-            </View>
-
-            <View style={s.fieldGroup}>
-              <Text style={s.label}>Password</Text>
-              <View style={s.passwordWrap}>
+              <View style={s.fieldGroup}>
+                <Text style={s.label}>Full name</Text>
                 <TextInput
-                  style={s.passwordInput}
-                  placeholder="Min 8 chars, 1 upper, 1 number"
-                  placeholderTextColor="#484F58"
-                  value={password}
-                  onChangeText={(t) => { setPassword(t); setError(null); }}
-                  secureTextEntry={!showPassword}
-                  autoComplete="new-password"
+                  style={s.input}
+                  placeholder="Your name"
+                  placeholderTextColor="#3A4250"
+                  value={fullName}
+                  onChangeText={(t) => { setFullName(t); setError(null); }}
+                  autoComplete="name"
+                  autoCapitalize="words"
                   returnKeyType="next"
                 />
-                <Pressable
-                  onPress={() => setShowPassword((v) => !v)}
-                  style={s.eyeBtn}
-                  hitSlop={8}
-                >
-                  <Feather
-                    name={showPassword ? "eye-off" : "eye"}
-                    size={18}
-                    color="#64748B"
-                  />
-                </Pressable>
               </View>
-            </View>
 
-            <View style={s.fieldGroup}>
-              <Text style={s.label}>Confirm password</Text>
-              <TextInput
-                style={s.input}
-                placeholder="Repeat your password"
-                placeholderTextColor="#484F58"
-                value={confirm}
-                onChangeText={(t) => { setConfirm(t); setError(null); }}
-                secureTextEntry={!showPassword}
-                autoComplete="new-password"
-                returnKeyType="go"
-                onSubmitEditing={handleRegister}
-              />
-            </View>
+              <View style={s.fieldGroup}>
+                <Text style={s.label}>Email</Text>
+                <TextInput
+                  style={s.input}
+                  placeholder="you@example.com"
+                  placeholderTextColor="#3A4250"
+                  value={email}
+                  onChangeText={(t) => { setEmail(t); setError(null); }}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  autoComplete="email"
+                  returnKeyType="next"
+                />
+              </View>
 
-            {/* Password requirements hint */}
-            <View style={s.hintRow}>
-              {[
-                { label: "8+ characters", met: password.length >= 8 },
-                { label: "Upper-case", met: /[A-Z]/.test(password) },
-                { label: "Number", met: /[0-9]/.test(password) },
-                { label: "Passwords match", met: confirm.length > 0 && password === confirm },
-              ].map((r) => (
-                <View key={r.label} style={s.hintItem}>
-                  <Feather
-                    name={r.met ? "check-circle" : "circle"}
-                    size={11}
-                    color={r.met ? "#22C55E" : "#484F58"}
+              <View style={s.fieldGroup}>
+                <Text style={s.label}>Password</Text>
+                <View style={s.passwordWrap}>
+                  <TextInput
+                    style={s.passwordInput}
+                    placeholder="Min 8 chars, 1 upper, 1 number"
+                    placeholderTextColor="#3A4250"
+                    value={password}
+                    onChangeText={(t) => { setPassword(t); setError(null); }}
+                    secureTextEntry={!showPassword}
+                    autoComplete="new-password"
+                    returnKeyType="next"
                   />
-                  <Text style={[s.hintText, r.met && s.hintTextMet]}>{r.label}</Text>
+                  <Pressable
+                    onPress={() => setShowPassword((v) => !v)}
+                    style={s.eyeBtn}
+                    hitSlop={8}
+                  >
+                    <Feather
+                      name={showPassword ? "eye-off" : "eye"}
+                      size={18}
+                      color="#4A5568"
+                    />
+                  </Pressable>
                 </View>
-              ))}
-            </View>
+              </View>
 
-            <Pressable
-              style={[s.primaryBtn, loading && s.primaryBtnDisabled]}
-              onPress={handleRegister}
-              disabled={loading}
-            >
-              {loading ? (
-                <ActivityIndicator color="#0D1117" size="small" />
-              ) : (
-                <Text style={s.primaryBtnText}>Create account</Text>
-              )}
-            </Pressable>
+              <View style={s.fieldGroup}>
+                <Text style={s.label}>Confirm password</Text>
+                <TextInput
+                  style={s.input}
+                  placeholder="Repeat your password"
+                  placeholderTextColor="#3A4250"
+                  value={confirm}
+                  onChangeText={(t) => { setConfirm(t); setError(null); }}
+                  secureTextEntry={!showPassword}
+                  autoComplete="new-password"
+                  returnKeyType="go"
+                  onSubmitEditing={handleRegister}
+                />
+              </View>
+
+              {/* Password requirements hint */}
+              <View style={s.hintRow}>
+                {[
+                  { label: "8+ characters", met: password.length >= 8 },
+                  { label: "Upper-case", met: /[A-Z]/.test(password) },
+                  { label: "Number", met: /[0-9]/.test(password) },
+                  { label: "Passwords match", met: confirm.length > 0 && password === confirm },
+                ].map((r) => (
+                  <View key={r.label} style={s.hintItem}>
+                    <Feather
+                      name={r.met ? "check-circle" : "circle"}
+                      size={11}
+                      color={r.met ? "#22C55E" : "#2A3444"}
+                    />
+                    <Text style={[s.hintText, r.met && s.hintTextMet]}>{r.label}</Text>
+                  </View>
+                ))}
+              </View>
+
+              <Pressable
+                onPress={handleRegister}
+                disabled={loading}
+                style={({ pressed }) => [{ opacity: pressed || loading ? 0.7 : 1 }]}
+              >
+                <LinearGradient
+                  colors={["#3B82F6", "#06B6D4", "#818CF8"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={s.primaryBtn}
+                >
+                  {loading ? (
+                    <ActivityIndicator color="#fff" size="small" />
+                  ) : (
+                    <Text style={s.primaryBtnText}>Create account</Text>
+                  )}
+                </LinearGradient>
+              </Pressable>
+            </View>
           </View>
 
           <Text style={s.footer}>
@@ -260,6 +297,26 @@ export default function RegisterScreen() {
 const styles = (topInset: number) =>
   StyleSheet.create({
     root: { flex: 1, backgroundColor: "#0D1117" },
+    orbTopRight: {
+      position: "absolute",
+      top: -80,
+      right: -80,
+      width: 260,
+      height: 260,
+      borderRadius: 130,
+      backgroundColor: "#1E3A5F",
+      opacity: 0.35,
+    },
+    orbBottomLeft: {
+      position: "absolute",
+      bottom: -100,
+      left: -100,
+      width: 300,
+      height: 300,
+      borderRadius: 150,
+      backgroundColor: "#1B2F4A",
+      opacity: 0.3,
+    },
     scroll: {
       flexGrow: 1,
       paddingTop: topInset + 16,
@@ -273,28 +330,32 @@ const styles = (topInset: number) =>
       marginBottom: 24,
       alignSelf: "flex-start",
     },
-    backText: { fontSize: 14, fontFamily: "Inter_600SemiBold", color: "#EAB308" },
+    backText: { fontSize: 14, fontFamily: "Inter_600SemiBold", color: "#3B82F6" },
     brand: { alignItems: "center", marginBottom: 28 },
-    logoMark: {
-      width: 68,
-      height: 68,
-      borderRadius: 16,
+    logoWrap: {
       marginBottom: 12,
-      overflow: "hidden",
+      shadowColor: "#3B82F6",
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: 0.5,
+      shadowRadius: 18,
+      elevation: 10,
     },
     appName: {
-      fontSize: 24,
+      fontSize: 26,
       fontFamily: "Inter_700Bold",
       color: "#F0F6FC",
+      letterSpacing: -0.6,
     },
     card: {
       backgroundColor: "#161B22",
-      borderRadius: 16,
+      borderRadius: 18,
       borderWidth: 1,
-      borderColor: "#21262D",
-      padding: 24,
+      borderColor: "#1E2A3A",
       marginBottom: 20,
+      overflow: "hidden",
     },
+    cardAccentBar: { height: 3, width: "100%" },
+    cardInner: { padding: 24 },
     cardTitle: {
       fontSize: 20,
       fontFamily: "Inter_700Bold",
@@ -304,8 +365,8 @@ const styles = (topInset: number) =>
     cardSub: {
       fontSize: 14,
       fontFamily: "Inter_400Regular",
-      color: "#64748B",
-      marginBottom: 20,
+      color: "#4A5568",
+      marginBottom: 22,
     },
     errorBox: {
       flexDirection: "row",
@@ -327,15 +388,17 @@ const styles = (topInset: number) =>
     },
     fieldGroup: { marginBottom: 14 },
     label: {
-      fontSize: 13,
+      fontSize: 12,
       fontFamily: "Inter_600SemiBold",
-      color: "#94A3B8",
+      color: "#5A7A9A",
       marginBottom: 6,
+      letterSpacing: 0.5,
+      textTransform: "uppercase",
     },
     input: {
       backgroundColor: "#0D1117",
       borderWidth: 1,
-      borderColor: "#21262D",
+      borderColor: "#1E2A3A",
       borderRadius: 10,
       paddingHorizontal: 14,
       paddingVertical: 13,
@@ -348,7 +411,7 @@ const styles = (topInset: number) =>
       alignItems: "center",
       backgroundColor: "#0D1117",
       borderWidth: 1,
-      borderColor: "#21262D",
+      borderColor: "#1E2A3A",
       borderRadius: 10,
     },
     passwordInput: {
@@ -375,40 +438,42 @@ const styles = (topInset: number) =>
     hintText: {
       fontSize: 11,
       fontFamily: "Inter_400Regular",
-      color: "#484F58",
+      color: "#2A3444",
     },
     hintTextMet: { color: "#22C55E" },
     primaryBtn: {
-      backgroundColor: "#EAB308",
       borderRadius: 12,
       paddingVertical: 15,
       alignItems: "center",
       justifyContent: "center",
       minHeight: 50,
     },
-    primaryBtnDisabled: { opacity: 0.6 },
     primaryBtnText: {
       fontSize: 16,
       fontFamily: "Inter_700Bold",
-      color: "#0D1117",
+      color: "#fff",
+      letterSpacing: 0.3,
     },
     successMark: {
-      width: 72,
-      height: 72,
-      borderRadius: 36,
-      backgroundColor: "#22C55E",
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      overflow: "hidden",
+      marginBottom: 20,
+    },
+    successMarkGrad: {
+      flex: 1,
       alignItems: "center",
       justifyContent: "center",
-      marginBottom: 20,
     },
     footer: {
       textAlign: "center",
       fontSize: 13,
       fontFamily: "Inter_400Regular",
-      color: "#64748B",
+      color: "#3A4A5C",
     },
     footerLink: {
       fontFamily: "Inter_600SemiBold",
-      color: "#EAB308",
+      color: "#3B82F6",
     },
   });
