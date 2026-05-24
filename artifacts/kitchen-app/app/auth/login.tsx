@@ -15,6 +15,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@/context/AuthContext";
 import { PrepFlowsLogo } from "@/components/PrepFlowsLogo";
 
@@ -29,7 +30,8 @@ function validate(email: string, password: string): string | null {
 
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
-  const { signIn } = useAuth();
+  const { signIn, enterGuestMode } = useAuth();
+  const [guestLoading, setGuestLoading] = useState(false);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -189,6 +191,32 @@ export default function LoginScreen() {
               >
                 <Text style={s.secondaryBtnText}>Create an account</Text>
               </Pressable>
+
+              {/* Demo / Guest mode */}
+              <View style={s.demoWrap}>
+                <View style={s.dividerLine} />
+              </View>
+              <Pressable
+                style={({ pressed }) => [s.demoBtn, { opacity: pressed || guestLoading ? 0.75 : 1 }]}
+                onPress={async () => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  setGuestLoading(true);
+                  await enterGuestMode();
+                }}
+                disabled={guestLoading}
+              >
+                {guestLoading ? (
+                  <ActivityIndicator color="#EAB308" size="small" />
+                ) : (
+                  <>
+                    <Ionicons name="flash-outline" size={17} color="#EAB308" />
+                    <Text style={s.demoBtnText}>Try Demo — no account needed</Text>
+                  </>
+                )}
+              </Pressable>
+              <Text style={s.demoNote}>
+                Explore with sample data · No sign-up required
+              </Text>
             </View>
           </View>
 
@@ -374,6 +402,35 @@ const styles = (topInset: number) =>
       fontSize: 15,
       fontFamily: "Inter_600SemiBold",
       color: "#60A5FA",
+    },
+    demoWrap: {
+      marginTop: 20,
+      marginBottom: 14,
+    },
+    demoBtn: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8,
+      borderWidth: 1.5,
+      borderColor: "#EAB308",
+      borderRadius: 12,
+      paddingVertical: 14,
+      backgroundColor: "rgba(234,179,8,0.07)",
+      minHeight: 50,
+    },
+    demoBtnText: {
+      fontSize: 15,
+      fontFamily: "Inter_700Bold",
+      color: "#EAB308",
+      letterSpacing: 0.2,
+    },
+    demoNote: {
+      textAlign: "center",
+      fontSize: 11,
+      fontFamily: "Inter_400Regular",
+      color: "#3A4250",
+      marginTop: 8,
     },
     footer: {
       textAlign: "center",

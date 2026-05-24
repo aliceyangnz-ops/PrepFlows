@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, {
   createContext,
   useCallback,
@@ -8,10 +9,13 @@ import React, {
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase";
 
+const GUEST_KEY = "@prepflows_guest_mode";
+
 export interface AuthContextValue {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  isGuest: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signUp: (
     email: string,
@@ -20,6 +24,8 @@ export interface AuthContextValue {
   ) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: string | null }>;
+  enterGuestMode: () => Promise<void>;
+  exitGuestMode: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -28,26 +34,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isGuest, setIsGuest] = useState(false);
 
   useEffect(() => {
-    if (!supabase) {
+    async function init() {
+      const guest = await AsyncStorage.getItem(GUEST_KEY);
+      if (guest === "true") {
+        setIsGuest(true);
+        setLoading(false);
+        return;
+      }
+
+      if (!supabase) {
+        setLoading(false);
+        return;
+      }
+
+      const { data: { session: s } } = await supabase.auth.getSession();
+      setSession(s);
+      setUser(s?.user ?? null);
       setLoading(false);
-      return;
     }
 
-    supabase.auth.getSession().then(({ data: { session: s } }) => {
-      setSession(s);
-      setUser(s?.user ?? null);
-      setLoading(false);
-    });
+    init();
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, s) => {
+    if (!supabase) return;
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
       setSession(s);
       setUser(s?.user ?? null);
     });
-
     return () => subscription.unsubscribe();
   }, []);
 
@@ -80,6 +95,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const signOut = useCallback(async () => {
+    await AsyncStorage.removeItem(GUEST_KEY);
+    setIsGuest(false);
     if (!supabase) return;
     await supabase.auth.signOut();
   }, []);
@@ -96,9 +113,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [],
   );
 
+  const enterGuestMode = useCallback(async () => {
+    await AsyncStorage.setItem(GUEST_KEY, "true");
+    setIsGuest(true);
+  }, []);
+
+  const exitGuestMode = useCallback(async () => {
+    await AsyncStorage.removeItem(GUEST_KEY);
+    setIsGuest(false);
+  }, []);
+
   return (
     <AuthContext.Provider
-      value={{ user, session, loading, signIn, signUp, signOut, resetPassword }}
+      value={{ user, session, loading, isGuest, signIn, signUp, signOut, resetPassword, enterGuestMode, exitGuestMode }}
     >
       {children}
     </AuthContext.Provider>

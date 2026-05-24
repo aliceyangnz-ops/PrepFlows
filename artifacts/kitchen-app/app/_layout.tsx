@@ -25,7 +25,7 @@ SplashScreen.preventAutoHideAsync();
 const queryClient = new QueryClient();
 
 function AuthGate() {
-  const { session, loading } = useAuth();
+  const { session, loading, isGuest } = useAuth();
   const segments = useSegments();
   const router = useRouter();
 
@@ -34,13 +34,14 @@ function AuthGate() {
 
     const inAuthGroup = segments[0] === "auth";
     const inBriefGroup = segments[0] === "brief";
+    const isLoggedIn = !!session || isGuest;
 
-    if (!session && !inAuthGroup && !inBriefGroup) {
+    if (!isLoggedIn && !inAuthGroup && !inBriefGroup) {
       router.replace("/auth/login");
-    } else if (session && inAuthGroup) {
+    } else if (isLoggedIn && inAuthGroup) {
       router.replace("/");
     }
-  }, [session, loading, segments[0]]);
+  }, [session, isGuest, loading, segments[0]]);
 
   if (loading) {
     return (
