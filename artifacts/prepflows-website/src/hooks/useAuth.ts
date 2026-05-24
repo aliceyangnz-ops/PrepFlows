@@ -136,14 +136,14 @@ export function useAuth() {
    * Start a Stripe Checkout session for the given priceId.
    * The server creates the session; we redirect to the returned URL.
    */
-  const checkout = useCallback(async (priceId: string) => {
+  const checkout = useCallback(async (priceId: string, billing = "monthly") => {
     const token = localStorage.getItem(TOKEN_KEY);
     if (!token) throw new Error("Not authenticated");
 
     const res = await fetch(`${API}/stripe/checkout`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ priceId }),
+      body: JSON.stringify({ priceId, billing }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error ?? "Checkout failed");

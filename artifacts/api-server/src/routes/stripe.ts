@@ -65,10 +65,28 @@ router.get('/stripe/subscription', requireAuth, async (req: Request, res: Respon
 
 router.post('/stripe/checkout', requireAuth, async (req: Request, res: Response) => {
   try {
-    const { priceId } = req.body as { priceId: string };
+    const { priceId, billing } = req.body as { priceId: string; billing?: string };
     if (!priceId) {
       res.status(400).json({ error: 'priceId is required' });
       return;
+    }
+
+    // If caller sent a plan alias ("pro", "team") instead of a real Stripe price ID,
+    // resolve it to the correct price using the synced stripe.products / stripe.prices tables.
+    let resolvedPriceId = priceId;
+    if (!priceId.startsWith('price_')) {
+      const interval = billing === 'annual' ? 'year' : 'month';
+      const rows = await stripeStorage.listProductsWithPrices();
+      const match = (rows as any[]).find(
+        (r) =>
+          r.product_metadata?.plan_id === priceId &&
+          r.recurring?.interval === interval,
+      );
+      if (!match) {
+        res.status(400).json({ error: `No ${interval}ly price found for plan "${priceId}". Make sure Stripe products are seeded.` });
+        return;
+      }
+      resolvedPriceId = match.price_id as string;
     }
 
     const customerId = await stripeService.getOrCreateCustomer(req.user!.id, req.user!.email);
@@ -76,9 +94,9 @@ router.post('/stripe/checkout', requireAuth, async (req: Request, res: Response)
     const baseUrl = `${req.protocol}://${req.get('host')}`;
     const session = await stripeService.createCheckoutSession(
       customerId,
-      priceId,
+      resolvedPriceId,
       `${baseUrl}/?subscribed=true`,
-      `${baseUrl}/subscribe`,
+      `${baseUrl}/prepflows-website/pricing`,
     );
 
     res.json({ url: session.url });

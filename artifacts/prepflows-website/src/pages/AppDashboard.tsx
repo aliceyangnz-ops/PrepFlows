@@ -389,18 +389,19 @@ export default function AppPage() {
     if (!loading && user) {
       const params = new URLSearchParams(location.split("?")[1] ?? "");
       const plan = params.get("plan");
+      const billing = params.get("billing") ?? "monthly";
       if (plan && plan !== "starter") {
-        handleCheckout(plan);
+        handleCheckout(plan, billing);
       }
     }
   }, [loading, user]);
 
-  async function handleCheckout(plan: string) {
+  async function handleCheckout(plan: string, billing = "monthly") {
     try {
-      const url = await checkout(plan === "pro" ? "pro" : plan);
+      const url = await checkout(plan, billing);
       window.location.href = url;
     } catch {
-      navigate("/pricing");
+      navigate("/prepflows-website/pricing");
     }
   }
 
