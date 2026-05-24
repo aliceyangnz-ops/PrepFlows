@@ -5,6 +5,7 @@ import React, { useMemo, useState } from "react";
 import { PrepFlowsLogo } from "@/components/PrepFlowsLogo";
 import {
   Alert,
+  Linking,
   Modal,
   Platform,
   Pressable,
@@ -882,6 +883,49 @@ export default function RosterScreen() {
               <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground }}>First month free · Starter, Pro $49, Team $199</Text>
             </View>
             <Feather name="chevron-right" size={16} color={colors.mutedForeground} />
+          </Pressable>
+
+          {/* View the Plan — opens PrepFlows website */}
+          <Pressable
+            style={({ pressed }) => ({
+              flexDirection: "row", alignItems: "center", gap: 14,
+              padding: 16, borderRadius: 12, marginBottom: 10, opacity: pressed ? 0.82 : 1,
+              overflow: "hidden",
+            })}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              setShowSettings(false);
+              const url = Platform.OS === "web"
+                ? `${window.location.origin}/prepflows-website/pricing`
+                : "https://prepflows.com/pricing";
+              Linking.openURL(url);
+            }}
+          >
+            {/* Gradient background via nested Views */}
+            <View style={{
+              position: "absolute", top: 0, left: 0, right: 0, bottom: 0, borderRadius: 12,
+              backgroundColor: "#3B82F6",
+              shadowColor: "#3B82F6", shadowOpacity: 0.35, shadowRadius: 12, shadowOffset: { width: 0, height: 4 },
+              elevation: 6,
+            }} />
+            {/* Cyan overlay for gradient feel */}
+            <View style={{
+              position: "absolute", top: 0, right: 0, bottom: 0, width: "55%", borderRadius: 12,
+              backgroundColor: "#06B6D4", opacity: 0.55,
+            }} />
+
+            <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: "rgba(255,255,255,0.18)", alignItems: "center", justifyContent: "center", zIndex: 1 }}>
+              <Ionicons name="open-outline" size={18} color="#FFFFFF" />
+            </View>
+            <View style={{ flex: 1, zIndex: 1 }}>
+              <Text style={{ fontSize: 15, fontFamily: "Inter_700Bold", color: "#FFFFFF" }}>View the Plan</Text>
+              <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.75)" }}>
+                Manage your plan, billing & settings on prepflows.com
+              </Text>
+            </View>
+            <View style={{ zIndex: 1 }}>
+              <Feather name="arrow-right" size={18} color="rgba(255,255,255,0.9)" />
+            </View>
           </Pressable>
 
           {/* Import Events */}
