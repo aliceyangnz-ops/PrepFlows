@@ -11,7 +11,7 @@ version = "1.0.0"
 
 [[services]]
 name = "web"
-paths = [ "/prepflows-website/" ]
+paths = [ "/" ]
 localPort = 26168
 
 [services.development]
@@ -28,4 +28,4 @@ to = "/index.html"
 
 [services.env]
 PORT = "26168"
-BASE_PATH = "/prepflows-website/"
+BASE_PATH = "/"
