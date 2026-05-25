@@ -19,6 +19,8 @@ import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { KitchenProvider } from "@/context/KitchenContext";
 import { TeamProvider } from "@/context/TeamContext";
 import { SubscriptionProvider } from "@/context/SubscriptionContext";
+import { ThemeProvider } from "@/context/ThemeContext";
+import { useColors } from "@/hooks/useColors";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -28,6 +30,7 @@ function AuthGate() {
   const { session, loading, isGuest } = useAuth();
   const segments = useSegments();
   const router = useRouter();
+  const colors = useColors();
 
   useEffect(() => {
     if (loading) return;
@@ -48,12 +51,12 @@ function AuthGate() {
       <View
         style={{
           flex: 1,
-          backgroundColor: "#0D1117",
+          backgroundColor: colors.background,
           alignItems: "center",
           justifyContent: "center",
         }}
       >
-        <ActivityIndicator size="large" color="#EAB308" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -107,6 +110,7 @@ export default function RootLayout() {
       <ErrorBoundary>
         <QueryClientProvider client={queryClient}>
           <GestureHandlerRootView style={{ flex: 1 }}>
+            <ThemeProvider>
             <KeyboardProvider>
               <AuthProvider>
                 <SubscriptionProvider>
@@ -118,6 +122,7 @@ export default function RootLayout() {
                 </SubscriptionProvider>
               </AuthProvider>
             </KeyboardProvider>
+            </ThemeProvider>
           </GestureHandlerRootView>
         </QueryClientProvider>
       </ErrorBoundary>

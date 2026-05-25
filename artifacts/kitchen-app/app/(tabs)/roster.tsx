@@ -21,6 +21,8 @@ import QRCode from "react-native-qrcode-svg";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { PrepTeam, MANAGER_ROLES, StaffMember, getAccessLevel, useKitchen } from "@/context/KitchenContext";
 import { useColors } from "@/hooks/useColors";
+import { useTheme } from "@/context/ThemeContext";
+import { type ThemeName } from "@/constants/colors";
 import { useIsTablet } from "@/hooks/useIsTablet";
 import {
   cancelAllNotifications,
@@ -31,6 +33,14 @@ import {
 const HOURS = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
 const TOTAL_HOURS = HOURS.length;
 const HOUR_WIDTH = 44;
+
+const THEME_OPTIONS: { name: ThemeName; label: string; bg: string; dot: string }[] = [
+  { name: "navy",     label: "Navy",   bg: "#050C1A", dot: "#4D7CFF" },
+  { name: "midnight", label: "Dark",   bg: "#0D1117", dot: "#3B82F6" },
+  { name: "violet",   label: "Violet", bg: "#0A0714", dot: "#A259FF" },
+  { name: "ocean",    label: "Ocean",  bg: "#030F18", dot: "#00E0FF" },
+  { name: "ember",    label: "Ember",  bg: "#120900", dot: "#FF9A3C" },
+];
 
 function timeToFloat(t: string): number {
   const [h, m] = t.split(":").map(Number);
@@ -98,6 +108,7 @@ function checkVerification(member: StaffMember, input: string): boolean {
 
 export default function RosterScreen() {
   const colors = useColors();
+  const { themeName, setThemeName } = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const isTablet = useIsTablet();
@@ -851,9 +862,45 @@ export default function RosterScreen() {
           {/* Handle */}
           <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: colors.border, alignSelf: "center", marginBottom: 16 }} />
           <Text style={{ fontSize: 18, fontFamily: "Inter_700Bold", color: colors.foreground, marginBottom: 4 }}>Settings & Data</Text>
-          <Text style={{ fontSize: 13, fontFamily: "Inter_400Regular", color: colors.mutedForeground, marginBottom: 12 }}>
+          <Text style={{ fontSize: 13, fontFamily: "Inter_400Regular", color: colors.mutedForeground, marginBottom: 16 }}>
             Manage staff, app data and reset options
           </Text>
+
+          {/* Theme picker */}
+          <View style={{ marginBottom: 18, padding: 14, borderRadius: 14, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }}>
+            <Text style={{ fontSize: 13, fontFamily: "Inter_600SemiBold", color: colors.foreground, marginBottom: 12 }}>App Theme</Text>
+            <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+              {THEME_OPTIONS.map(({ name, label, bg, dot }) => {
+                const active = themeName === name;
+                return (
+                  <Pressable
+                    key={name}
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      setThemeName(name);
+                    }}
+                    style={{ alignItems: "center", gap: 6 }}
+                  >
+                    <View style={{
+                      width: 46, height: 46, borderRadius: 12,
+                      backgroundColor: bg,
+                      borderWidth: active ? 2 : 1,
+                      borderColor: active ? "#FFFFFF" : bg + "60",
+                      alignItems: "center", justifyContent: "center",
+                    }}>
+                      <View style={{ width: 18, height: 18, borderRadius: 9, backgroundColor: dot }} />
+                    </View>
+                    <Text style={{
+                      fontSize: 10, fontFamily: active ? "Inter_600SemiBold" : "Inter_400Regular",
+                      color: active ? colors.foreground : colors.mutedForeground,
+                    }}>
+                      {label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
 
           {/* Watch notification info */}
           <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 10, padding: 12, borderRadius: 10, backgroundColor: colors.accent + "10", borderWidth: 1, borderColor: colors.accent + "30", marginBottom: 16 }}>

@@ -81,8 +81,8 @@ function ClassicTabLayout() {
             tabBarIcon: ({ color, focused }) => (
               <LiquidGlassIcon active={focused} size={38} shape="pill">
                 {isIOS
-                  ? <SymbolView name="calendar" tintColor={focused ? "#EAB308" : color} size={20} />
-                  : <Feather name="calendar" size={19} color={focused ? "#EAB308" : color} />}
+                  ? <SymbolView name="calendar" tintColor={focused ? colors.primary : color} size={20} />
+                  : <Feather name="calendar" size={19} color={focused ? colors.primary : color} />}
               </LiquidGlassIcon>
             ),
           }}
@@ -94,8 +94,8 @@ function ClassicTabLayout() {
             tabBarIcon: ({ color, focused }) => (
               <LiquidGlassIcon active={focused} size={38} shape="pill">
                 {isIOS
-                  ? <SymbolView name="fork.knife" tintColor={focused ? "#EAB308" : color} size={20} />
-                  : <MaterialCommunityIcons name="silverware-fork-knife" size={19} color={focused ? "#EAB308" : color} />}
+                  ? <SymbolView name="fork.knife" tintColor={focused ? colors.primary : color} size={20} />
+                  : <MaterialCommunityIcons name="silverware-fork-knife" size={19} color={focused ? colors.primary : color} />}
               </LiquidGlassIcon>
             ),
           }}
@@ -107,8 +107,8 @@ function ClassicTabLayout() {
             tabBarIcon: ({ color, focused }) => (
               <LiquidGlassIcon active={focused} size={38} shape="pill">
                 {isIOS
-                  ? <SymbolView name="checklist" tintColor={focused ? "#EAB308" : color} size={20} />
-                  : <Feather name="check-square" size={19} color={focused ? "#EAB308" : color} />}
+                  ? <SymbolView name="checklist" tintColor={focused ? colors.primary : color} size={20} />
+                  : <Feather name="check-square" size={19} color={focused ? colors.primary : color} />}
               </LiquidGlassIcon>
             ),
           }}
@@ -120,8 +120,8 @@ function ClassicTabLayout() {
             tabBarIcon: ({ color, focused }) => (
               <LiquidGlassIcon active={focused} size={38} shape="pill">
                 {isIOS
-                  ? <SymbolView name="person.3" tintColor={focused ? "#EAB308" : color} size={20} />
-                  : <Ionicons name="people-outline" size={20} color={focused ? "#EAB308" : color} />}
+                  ? <SymbolView name="person.3" tintColor={focused ? colors.primary : color} size={20} />
+                  : <Ionicons name="people-outline" size={20} color={focused ? colors.primary : color} />}
               </LiquidGlassIcon>
             ),
           }}
