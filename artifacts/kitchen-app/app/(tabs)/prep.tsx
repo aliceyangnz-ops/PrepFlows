@@ -71,7 +71,7 @@ export default function PrepScreen() {
 
   const currentMember = currentStaffId ? staff.find((s) => s.id === currentStaffId) ?? null : null;
   const accessLevel = currentMember ? getAccessLevel(currentMember) : null;
-  const canToggle = accessLevel === "manager" || accessLevel === "team_leader";
+  const canToggle = accessLevel === "manager";
 
   const dateISOs: Record<DateKey, string> = useMemo(() => ({
     "today":     isoOffset(0),
@@ -136,7 +136,7 @@ export default function PrepScreen() {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
       Alert.alert(
         "Access Restricted",
-        "Only Kitchen Managers, Head Chefs and Team Leaders can mark prep tasks as done.",
+        "Only Head Office and Managers can mark prep tasks as done.",
         [{ text: "OK" }]
       );
       return;

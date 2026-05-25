@@ -88,8 +88,8 @@ export default function FunctionDetailScreen() {
   const currentMember = staff.find((s) => s.id === currentStaffId) ?? null;
   const accessLevel  = currentMember ? getAccessLevel(currentMember) : "staff";
   const canManage    = accessLevel === "manager";
-  const canLead      = accessLevel === "manager" || accessLevel === "team_leader";
-  const canEdit      = canLead;
+  const canLead      = accessLevel === "manager";
+  const canEdit      = canManage;
 
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<DraftFunction | null>(null);
