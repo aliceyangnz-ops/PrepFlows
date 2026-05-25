@@ -7,15 +7,13 @@ interface LogoProps {
 
 /**
  * PrepFlows mark — fluid organic blob with liquid-glass shading.
- * Yellow-gold at the specular highlight, flowing to deep forest green
- * at the shadowed edges. White "P" letterform on top.
- * Web SVG with Gaussian glow filter on the "P" for extra polish.
+ * Transparent background so it sits flush with the navbar/page colour.
+ * Yellow-gold specular highlight → deep forest green. Web SVG with
+ * Gaussian glow filter on the "P" for polish.
  */
 export function Logo({ size = 32, className = "" }: LogoProps) {
   const uid = useId().replace(/:/g, "p");
-  const bgId = `${uid}bg`;
   const blobId = `${uid}blob`;
-  const glowId = `${uid}glow`;
   const filterId = `${uid}f`;
 
   const BLOB =
@@ -39,12 +37,6 @@ export function Logo({ size = 32, className = "" }: LogoProps) {
       role="img"
     >
       <defs>
-        <linearGradient id={bgId} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#0B0E14" />
-          <stop offset="100%" stopColor="#060809" />
-        </linearGradient>
-
-        {/* Blob: near-white highlight → brand yellow → amber → deep forest green */}
         <radialGradient id={blobId} cx="33%" cy="27%" r="75%">
           <stop offset="0%" stopColor="#FEFCE8" />
           <stop offset="12%" stopColor="#FDE047" />
@@ -52,11 +44,6 @@ export function Logo({ size = 32, className = "" }: LogoProps) {
           <stop offset="62%" stopColor="#CA8A04" />
           <stop offset="82%" stopColor="#14532D" />
           <stop offset="100%" stopColor="#052E16" />
-        </radialGradient>
-
-        <radialGradient id={glowId} cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#EAB308" stopOpacity="0.22" />
-          <stop offset="100%" stopColor="#EAB308" stopOpacity="0" />
         </radialGradient>
 
         {/* Glow filter for the "P" letterform */}
@@ -70,22 +57,16 @@ export function Logo({ size = 32, className = "" }: LogoProps) {
         </filter>
       </defs>
 
-      {/* Background */}
-      <rect width="100" height="100" rx="22" fill={`url(#${bgId})`} />
-
-      {/* Ambient yellow glow */}
-      <rect width="100" height="100" rx="22" fill={`url(#${glowId})`} />
-
-      {/* Main fluid blob */}
+      {/* Main fluid blob — sits directly on the page/navbar background */}
       <path d={BLOB} fill={`url(#${blobId})`} />
 
-      {/* Specular crescent — primary liquid-glass reflection */}
+      {/* Specular crescent — liquid-glass reflection */}
       <path d={SPEC} fill="white" opacity="0.48" />
 
-      {/* Micro inner highlight — brightest point */}
+      {/* Micro inner highlight */}
       <path d={SPEC2} fill="white" opacity="0.65" />
 
-      {/* "P" letterform — clean white with subtle glow */}
+      {/* "P" letterform with subtle glow */}
       <path
         d={P_PATH}
         stroke="white"
