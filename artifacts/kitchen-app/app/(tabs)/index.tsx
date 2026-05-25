@@ -22,6 +22,7 @@ import { useColors } from "@/hooks/useColors";
 import { useIsTablet } from "@/hooks/useIsTablet";
 import { LinearGradient } from "expo-linear-gradient";
 import { PrepFlowsLogo } from "@/components/PrepFlowsLogo";
+import { GlassCard } from "@/components/GlassCard";
 
 function timeToMinutes(t: string) {
   const [h, m] = t.split(":").map(Number);
@@ -262,8 +263,9 @@ export default function TodayScreen() {
     const urgentColor = nextFnMins <= 30 ? "#EF4444" : nextFnMins <= 60 ? AMBER : colors.primary;
     const cardBorderColor = "rgba(249, 115, 22, 0.3)";
     return (
+      <GlassCard style={s.countdownCard} accentColor={urgentColor}>
       <Pressable
-        style={({ pressed }) => [s.countdownCard, { borderColor: cardBorderColor, backgroundColor: urgentColor + "08", opacity: pressed ? 0.9 : 1 }]}
+        style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}
         onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push(`/function/${nextFn.id}`); }}
       >
         <LinearGradient colors={["#3B82F6", "#06B6D4", "#818CF8"]} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={s.countdownAccent} />
@@ -290,6 +292,7 @@ export default function TodayScreen() {
           <Text style={s.countdownMeta}>{nextFn.room} · {nextFn.floor} · {nextFn.guestCount} guests · {nextFn.startTime}–{nextFn.endTime}</Text>
         </View>
       </Pressable>
+      </GlassCard>
     );
   }
 
@@ -297,7 +300,7 @@ export default function TodayScreen() {
     if (!currentMember) return null;
     const rc = getRoleColor(currentMember.role, colors);
     return (
-      <View style={[s.myCard, { backgroundColor: rc + "10", borderColor: rc + "40" }]}>
+      <GlassCard style={s.myCard} accentColor={rc}>
         <View style={s.myCardHeader}>
           <View style={[s.myAvatar, { backgroundColor: rc + "30" }]}>
             <Text style={[s.myAvatarText, { color: rc }]}>{currentMember.name.split(" ").map((n) => n[0]).join("")}</Text>
@@ -336,7 +339,7 @@ export default function TodayScreen() {
             </View>
           </>
         )}
-      </View>
+      </GlassCard>
     );
   }
 
@@ -401,7 +404,7 @@ export default function TodayScreen() {
 
             const fnAlerts = alertsByFunctionId.get(fn.id) ?? [];
             return (
-              <View key={fn.id} style={s.fnCard}>
+              <GlassCard key={fn.id} style={s.fnCard} accentColor={statusColor}>
                 {statusColor === "#3B82F6"
                   ? <LinearGradient colors={["#3B82F6", "#06B6D4", "#818CF8"]} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={s.fnCardLeftBar} />
                   : <View style={[s.fnCardLeftBar, { backgroundColor: statusColor }]} />}
@@ -465,7 +468,7 @@ export default function TodayScreen() {
                     {dietaryReqs.length > 3 && <View style={[s.fnAlertBadge, { backgroundColor: colors.secondary, borderColor: colors.border }]}><Text style={[s.fnAlertText, { color: colors.mutedForeground }]}>+{dietaryReqs.length - 3} more</Text></View>}
                   </View>
                 )}
-              </View>
+              </GlassCard>
             );
           })
         ) : (
@@ -487,7 +490,7 @@ export default function TodayScreen() {
             const hasSevere = dietaryReqs.some((d) => d.name.toLowerCase().includes("nut") || d.name.toLowerCase().includes("shellfish"));
             const fnAlerts = alertsByFunctionId.get(fn.id) ?? [];
             return (
-              <View key={fn.id} style={s.fnCard}>
+              <GlassCard key={fn.id} style={s.fnCard} accentColor={statusColor}>
                 {statusColor === "#3B82F6"
                   ? <LinearGradient colors={["#3B82F6", "#06B6D4", "#818CF8"]} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={s.fnCardLeftBar} />
                   : <View style={[s.fnCardLeftBar, { backgroundColor: statusColor }]} />}
@@ -527,7 +530,7 @@ export default function TodayScreen() {
                     })}
                   </View>
                 </View>
-              </View>
+              </GlassCard>
             );
           })
         )}

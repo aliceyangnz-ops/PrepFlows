@@ -1,8 +1,10 @@
 import { Feather, Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React, { useMemo, useState } from "react";
 import { PrepFlowsLogo } from "@/components/PrepFlowsLogo";
+import { GlassCard } from "@/components/GlassCard";
 import {
   Alert,
   Linking,
@@ -377,18 +379,18 @@ export default function RosterScreen() {
               </View>
             )}
             <View style={s.statsRow}>
-              <View style={s.statCard}>
+              <GlassCard style={s.statCard}>
                 <Text style={s.statNum}>{staff.length}</Text>
                 <Text style={s.statLabel}>Total</Text>
-              </View>
-              <View style={[s.statCard, sickCount > 0 && { borderColor: "#EF444450", backgroundColor: "#EF444410" }]}>
+              </GlassCard>
+              <GlassCard style={s.statCard} accentColor={sickCount > 0 ? "#EF4444" : undefined}>
                 <Text style={[s.statNum, { color: sickCount > 0 ? "#EF4444" : colors.foreground }]}>{sickCount}</Text>
                 <Text style={s.statLabel}>Sick today</Text>
-              </View>
-              <View style={s.statCard}>
+              </GlassCard>
+              <GlassCard style={s.statCard} accentColor={colors.warning}>
                 <Text style={[s.statNum, { color: colors.warning }]}>{casualCount}</Text>
                 <Text style={s.statLabel}>Casuals</Text>
-              </View>
+              </GlassCard>
             </View>
           </View>
         )}
@@ -404,7 +406,7 @@ export default function RosterScreen() {
               <Text style={{ fontSize: 11, fontFamily: "Inter_400Regular", color: colors.mutedForeground }}>— one scan for everyone</Text>
             </View>
 
-            <View style={{ backgroundColor: colors.card, borderRadius: 16, borderWidth: 1.5, borderColor: colors.primary + "50", overflow: "hidden" }}>
+            <GlassCard style={{ borderRadius: 16, borderWidth: 1.5, borderColor: colors.primary + "50" }} accentColor={colors.primary}>
               {/* Info strip */}
               <View style={{ paddingHorizontal: 16, paddingTop: 14, paddingBottom: 14, borderBottomWidth: 1, borderBottomColor: colors.border }}>
                 <Text style={{ fontSize: 15, fontFamily: "Inter_700Bold", color: colors.foreground, marginBottom: 4 }}>
@@ -446,7 +448,7 @@ export default function RosterScreen() {
                 <Feather name="external-link" size={15} color={colors.primary} />
                 <Text style={{ fontSize: 14, fontFamily: "Inter_700Bold", color: colors.primary }}>Open daily brief</Text>
               </Pressable>
-            </View>
+            </GlassCard>
           </View>
         )}
 
@@ -454,7 +456,7 @@ export default function RosterScreen() {
         {myMember && search.length === 0 && (
           <>
             <Text style={s.sectionDividerLabel}>My shift today</Text>
-            <View style={[s.myTasksCard, { borderColor: myTeamColor + "60", backgroundColor: myTeamColor + "08" }]}>
+            <GlassCard style={s.myTasksCard} accentColor={myTeamColor}>
               <View style={[s.myTasksHeader, { borderBottomColor: myTeamColor + "30", backgroundColor: myTeamColor + "12" }]}>
                 <Ionicons name="person-circle" size={22} color={myTeamColor} />
                 <View style={{ flex: 1 }}>
@@ -552,7 +554,7 @@ export default function RosterScreen() {
                   <Text style={{ fontSize: 13, fontFamily: "Inter_400Regular", color: colors.mutedForeground }}>No functions assigned yet for today.</Text>
                 </View>
               )}
-            </View>
+            </GlassCard>
           </>
         )}
 
@@ -598,6 +600,23 @@ export default function RosterScreen() {
                 },
               ]}
             >
+              {/* Glass body */}
+              <LinearGradient
+                colors={["rgba(32,40,54,0.90)", "rgba(18,22,32,0.95)"]}
+                start={{ x: 0.5, y: 0 }}
+                end={{ x: 0.5, y: 1 }}
+                style={StyleSheet.absoluteFill}
+              />
+              {/* Specular highlight */}
+              <LinearGradient
+                colors={["rgba(255,255,255,0.13)", "rgba(255,255,255,0.04)", "rgba(255,255,255,0)"]}
+                locations={[0, 0.4, 1]}
+                start={{ x: 0.15, y: 0 }}
+                end={{ x: 0.85, y: 0.5 }}
+                style={[StyleSheet.absoluteFill, { bottom: "65%" }]}
+              />
+              {/* Accent tint from role color */}
+              <View style={[StyleSheet.absoluteFill, { backgroundColor: (isSick ? "#EF4444" : rc) + "10" }]} />
               <View style={[s.staffTopRow, { borderBottomColor: 'rgba(255,255,255,0.05)' }]}>
                 <View style={[s.avatar, { backgroundColor: isSick ? "#EF444420" : rc }]}>
                   <Text style={s.avatarText}>

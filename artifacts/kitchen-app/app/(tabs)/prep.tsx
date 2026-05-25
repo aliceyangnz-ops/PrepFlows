@@ -3,6 +3,7 @@ import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import React, { useMemo, useState } from "react";
 import { PrepFlowsLogo } from "@/components/PrepFlowsLogo";
+import { GlassCard } from "@/components/GlassCard";
 import {
   Alert,
   Platform,
@@ -422,7 +423,7 @@ export default function PrepScreen() {
 
               return (
                 <View key={team} style={[s.teamSection, isTablet && { width: "50%", paddingHorizontal: 4 }]}>
-                  <View style={[s.teamHeaderCard, { borderColor: tc + "40" }]}>
+                  <GlassCard style={[s.teamHeaderCard, { borderColor: tc + "40" }]} accentColor={tc}>
                     <View style={[s.teamCardTop, { backgroundColor: tc + "12" }]}>
                       <View style={[s.teamColorBlock, { backgroundColor: tc }]} />
                       <View style={s.teamCardInfo}>
@@ -460,7 +461,7 @@ export default function PrepScreen() {
                         ))}
                       </View>
                     )}
-                  </View>
+                  </GlassCard>
                   {items.map((item) => renderItem(item, activeFunctions.length > 1))}
                 </View>
               );

@@ -8,6 +8,7 @@ import { FunctionType, PrepItem, PrepTeam, getAccessLevel, useKitchen } from "@/
 import { useColors } from "@/hooks/useColors";
 import { useIsTablet } from "@/hooks/useIsTablet";
 import { PrepFlowsLogo } from "@/components/PrepFlowsLogo";
+import { GlassCard } from "@/components/GlassCard";
 
 function getFunctionTypeColor(type: FunctionType): string {
   switch (type) {
@@ -353,7 +354,7 @@ export default function FunctionsScreen() {
             const isSelected = isTablet && selectedFnId === fn.id;
 
             return (
-              <View key={fn.id} style={[cardStyle, isSelected && { borderColor: colors.primary, borderWidth: 2 }]}>
+              <GlassCard key={fn.id} style={cardStyle} accentColor={isSelected ? colors.primary : undefined}>
                 <Pressable
                   onPress={() => handleFnPress(fn.id)}
                   style={({ pressed }) => [{ paddingHorizontal: 14, paddingTop: 14, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: colors.border, opacity: pressed ? 0.85 : 1 }]}
@@ -498,7 +499,7 @@ export default function FunctionsScreen() {
                     </Pressable>
                   </>
                 )}
-              </View>
+              </GlassCard>
             );
           })
         ) : (
@@ -514,7 +515,7 @@ export default function FunctionsScreen() {
               const isSelected = isTablet && selectedFnId === fn.id;
 
               return (
-                <View key={fn.id} style={[cardStyle, isSelected && { borderColor: colors.primary, borderWidth: 2 }]}>
+                <GlassCard key={fn.id} style={cardStyle}>
                   <Pressable onPress={() => handleFnPress(fn.id)}
                     style={({ pressed }) => [s.cardTop, { borderBottomWidth: 0, paddingBottom: 0, opacity: pressed ? 0.85 : 1 }]}>
                     <View style={s.cardTopRow}>
@@ -555,7 +556,7 @@ export default function FunctionsScreen() {
                       </View>
                     )}
                   </View>
-                </View>
+                </GlassCard>
               );
             })}
 
