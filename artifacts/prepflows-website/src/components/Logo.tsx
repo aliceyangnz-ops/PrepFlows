@@ -7,8 +7,8 @@ interface LogoProps {
 
 /**
  * PrepFlows mark — fluid organic blob with liquid-glass shading.
- * Transparent background so it sits flush with the navbar/page colour.
- * Yellow-gold specular highlight → deep forest green. Web SVG with
+ * Transparent background — floats on the navbar/page colour.
+ * Bright blue at specular highlight → deep purple. Web SVG with
  * Gaussian glow filter on the "P" for polish.
  */
 export function Logo({ size = 32, className = "" }: LogoProps) {
@@ -37,13 +37,14 @@ export function Logo({ size = 32, className = "" }: LogoProps) {
       role="img"
     >
       <defs>
+        {/* Blob: near-white highlight → sky blue → royal blue → deep purple */}
         <radialGradient id={blobId} cx="33%" cy="27%" r="75%">
-          <stop offset="0%" stopColor="#FEFCE8" />
-          <stop offset="12%" stopColor="#FDE047" />
-          <stop offset="36%" stopColor="#EAB308" />
-          <stop offset="62%" stopColor="#CA8A04" />
-          <stop offset="82%" stopColor="#14532D" />
-          <stop offset="100%" stopColor="#052E16" />
+          <stop offset="0%" stopColor="#EFF6FF" />
+          <stop offset="12%" stopColor="#7DD3FC" />
+          <stop offset="36%" stopColor="#3B82F6" />
+          <stop offset="60%" stopColor="#6366F1" />
+          <stop offset="80%" stopColor="#7C3AED" />
+          <stop offset="100%" stopColor="#4C1D95" />
         </radialGradient>
 
         {/* Glow filter for the "P" letterform */}
@@ -57,7 +58,7 @@ export function Logo({ size = 32, className = "" }: LogoProps) {
         </filter>
       </defs>
 
-      {/* Main fluid blob — sits directly on the page/navbar background */}
+      {/* Main fluid blob */}
       <path d={BLOB} fill={`url(#${blobId})`} />
 
       {/* Specular crescent — liquid-glass reflection */}

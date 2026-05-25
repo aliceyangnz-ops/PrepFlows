@@ -313,7 +313,6 @@ export default function RosterScreen() {
         <View style={s.header}>
           <View style={{ flexDirection: "row", alignItems: "center" }}>
             <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <PrepFlowsLogo size={26} />
               <View>
                 <Text style={s.title}>Roster</Text>
                 <Text style={s.subtitle}>{staff.length} staff today · {functions.length} functions</Text>
@@ -345,6 +344,7 @@ export default function RosterScreen() {
                 </Pressable>
               )}
             </View>
+            <PrepFlowsLogo size={26} />
           </View>
         </View>
 

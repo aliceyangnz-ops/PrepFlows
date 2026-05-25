@@ -294,18 +294,18 @@ export default function PrepScreen() {
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={s.header}>
           <View style={s.headerLeft}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 2 }}>
-              <PrepFlowsLogo size={26} />
-              <Text style={s.title}>Prep List</Text>
-            </View>
+            <Text style={s.title}>Prep List</Text>
             <Text style={s.subtitle}>By team — with leader, tasks & deadlines</Text>
           </View>
-          {printFnId && (
-            <Pressable style={({ pressed }) => [s.printBtn, pressed && { opacity: 0.7 }]} onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push(`/prep-print/${printFnId}`); }}>
-              <Feather name="printer" size={13} color={colors.mutedForeground} />
-              <Text style={s.printBtnText}>Print</Text>
-            </Pressable>
-          )}
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            {printFnId && (
+              <Pressable style={({ pressed }) => [s.printBtn, pressed && { opacity: 0.7 }]} onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push(`/prep-print/${printFnId}`); }}>
+                <Feather name="printer" size={13} color={colors.mutedForeground} />
+                <Text style={s.printBtnText}>Print</Text>
+              </Pressable>
+            )}
+            <PrepFlowsLogo size={26} />
+          </View>
         </View>
 
         <View style={s.dateTabs}>

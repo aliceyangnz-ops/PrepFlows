@@ -12,8 +12,8 @@ interface Props {
 
 /**
  * PrepFlows mark — fluid organic blob with liquid-glass shading.
- * Transparent background so it sits flush with whatever page colour
- * it's placed on. Yellow-gold specular highlight → deep forest green.
+ * Transparent background — floats on whatever page colour it sits on.
+ * Bright blue at the specular highlight, flowing to deep violet/purple.
  */
 export function PrepFlowsLogo({ size = 40 }: Props) {
   const BLOB =
@@ -28,17 +28,18 @@ export function PrepFlowsLogo({ size = 40 }: Props) {
   return (
     <Svg width={size} height={size} viewBox="0 0 100 100">
       <Defs>
+        {/* Blob: near-white highlight → sky blue → royal blue → deep purple */}
         <RadialGradient id="pfBlob" cx="33%" cy="27%" r="75%">
-          <Stop offset="0%" stopColor="#FEFCE8" />
-          <Stop offset="12%" stopColor="#FDE047" />
-          <Stop offset="36%" stopColor="#EAB308" />
-          <Stop offset="62%" stopColor="#CA8A04" />
-          <Stop offset="82%" stopColor="#14532D" />
-          <Stop offset="100%" stopColor="#052E16" />
+          <Stop offset="0%" stopColor="#EFF6FF" />
+          <Stop offset="12%" stopColor="#7DD3FC" />
+          <Stop offset="36%" stopColor="#3B82F6" />
+          <Stop offset="60%" stopColor="#6366F1" />
+          <Stop offset="80%" stopColor="#7C3AED" />
+          <Stop offset="100%" stopColor="#4C1D95" />
         </RadialGradient>
       </Defs>
 
-      {/* Main fluid blob — sits directly on the page background */}
+      {/* Main fluid blob */}
       <Path d={BLOB} fill="url(#pfBlob)" />
 
       {/* Specular crescent — liquid-glass reflection */}

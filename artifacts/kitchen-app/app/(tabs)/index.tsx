@@ -793,19 +793,19 @@ export default function TodayScreen() {
         <View style={s.header}>
           <View style={s.headerLeft}>
             <Text style={s.dateLabel}>{todayDate}</Text>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-              <PrepFlowsLogo size={30} />
-              <Text style={s.headerTitle}>Today's Service</Text>
-            </View>
+            <Text style={s.headerTitle}>Today's Service</Text>
           </View>
-          {isManager && (
-            <Pressable
-              style={({ pressed }) => [s.megaBtn, { backgroundColor: showBroadcast ? AMBER + "25" : colors.card, borderColor: showBroadcast ? AMBER + "60" : colors.border, opacity: pressed ? 0.75 : 1 }]}
-              onPress={openCompose}
-            >
-              <Ionicons name="megaphone" size={18} color={showBroadcast ? AMBER : colors.mutedForeground} />
-            </Pressable>
-          )}
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            {isManager && (
+              <Pressable
+                style={({ pressed }) => [s.megaBtn, { backgroundColor: showBroadcast ? AMBER + "25" : colors.card, borderColor: showBroadcast ? AMBER + "60" : colors.border, opacity: pressed ? 0.75 : 1 }]}
+                onPress={openCompose}
+              >
+                <Ionicons name="megaphone" size={18} color={showBroadcast ? AMBER : colors.mutedForeground} />
+              </Pressable>
+            )}
+            <PrepFlowsLogo size={30} />
+          </View>
         </View>
         {broadcastBanner}
         <AlertsPanel alerts={alerts} criticalCount={criticalCount} warningCount={warningCount} infoCount={infoCount} onDismiss={dismissAlert} onDismissAll={dismissAll} onPress={(fnId) => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push(`/function/${fnId}`); }} />

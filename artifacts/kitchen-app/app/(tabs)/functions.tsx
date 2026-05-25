@@ -636,21 +636,21 @@ export default function FunctionsScreen() {
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={s.header}>
           <View style={{ flex: 1 }}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 2 }}>
-              <PrepFlowsLogo size={26} />
-              <Text style={s.title}>Events</Text>
-            </View>
+            <Text style={s.title}>Events</Text>
             <Text style={s.subtitle}>{visibleFunctions.length} function{visibleFunctions.length !== 1 ? "s" : ""} showing</Text>
           </View>
-          {isManager && (
-            <Pressable
-              style={({ pressed }) => [{ flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 14, paddingVertical: 9, borderRadius: 10, backgroundColor: colors.primary, opacity: pressed ? 0.8 : 1, marginBottom: 4 }]}
-              onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push("/function/add"); }}
-            >
-              <Feather name="plus" size={16} color="#fff" />
-              <Text style={{ fontSize: 13, fontFamily: "Inter_700Bold", color: "#fff" }}>Add Event</Text>
-            </Pressable>
-          )}
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            {isManager && (
+              <Pressable
+                style={({ pressed }) => [{ flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 14, paddingVertical: 9, borderRadius: 10, backgroundColor: colors.primary, opacity: pressed ? 0.8 : 1, marginBottom: 4 }]}
+                onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push("/function/add"); }}
+              >
+                <Feather name="plus" size={16} color="#fff" />
+                <Text style={{ fontSize: 13, fontFamily: "Inter_700Bold", color: "#fff" }}>Add Event</Text>
+              </Pressable>
+            )}
+            <PrepFlowsLogo size={26} />
+          </View>
         </View>
         {renderFunctionList(false)}
         <View style={s.bottomPad} />
