@@ -1,18 +1,44 @@
-<svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="40" y2="0" gradientUnits="userSpaceOnUse">
-      <stop offset="0%"   stop-color="#3B82F6"/>
-      <stop offset="55%"  stop-color="#06B6D4"/>
-      <stop offset="100%" stop-color="#818CF8"/>
+    <linearGradient id="bg" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0B0E14"/>
+      <stop offset="100%" stop-color="#060809"/>
     </linearGradient>
-    <filter id="w" x="-120%" y="-120%" width="340%" height="340%">
-      <feGaussianBlur in="SourceGraphic" stdDeviation="1.4" result="blur"/>
-      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    <radialGradient id="blob" cx="33%" cy="27%" r="75%">
+      <stop offset="0%"   stop-color="#FEFCE8"/>
+      <stop offset="12%"  stop-color="#FDE047"/>
+      <stop offset="36%"  stop-color="#EAB308"/>
+      <stop offset="62%"  stop-color="#CA8A04"/>
+      <stop offset="82%"  stop-color="#14532D"/>
+      <stop offset="100%" stop-color="#052E16"/>
+    </radialGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"   stop-color="#EAB308" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#EAB308" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="f" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="2.5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
     </filter>
   </defs>
-  <rect width="40" height="40" rx="10" fill="#0A0A0A"/>
-  <rect x="7" y="9" width="24" height="22" rx="4" fill="url(#g)" opacity="0.06"/>
-  <rect x="8" y="11"   width="22" height="3.5" rx="1.75" fill="url(#g)" filter="url(#w)"/>
-  <rect x="8" y="18.5" width="15" height="3.5" rx="1.75" fill="url(#g)" filter="url(#w)" opacity="0.78"/>
-  <rect x="8" y="26"   width="9"  height="3.5" rx="1.75" fill="url(#g)" filter="url(#w)" opacity="0.48"/>
+
+  <!-- Background -->
+  <rect width="100" height="100" rx="22" fill="url(#bg)"/>
+  <!-- Ambient glow -->
+  <rect width="100" height="100" rx="22" fill="url(#glow)"/>
+  <!-- Main fluid blob -->
+  <path d="M 57 13 C 78 11, 89 29, 87 52 C 85 73, 69 88, 49 86 C 29 84, 13 67, 14 46 C 15 26, 36 15, 57 13 Z" fill="url(#blob)"/>
+  <!-- Specular crescent reflection -->
+  <path d="M 32 26 C 39 17, 59 16, 66 25 C 71 32, 57 20, 45 21 C 37 21, 30 31, 32 26 Z" fill="white" opacity="0.48"/>
+  <!-- Micro highlight -->
+  <path d="M 36 33 C 41 25, 51 24, 55 29 C 47 23, 37 29, 36 33 Z" fill="white" opacity="0.65"/>
+  <!-- P letterform -->
+  <path d="M 37 72 L 37 28 Q 37 22 43 22 L 55 22 Q 67 22 67 35 L 67 44 Q 67 57 55 57 L 37 57"
+    stroke="white" stroke-width="8.5" fill="none"
+    stroke-linecap="round" stroke-linejoin="round"
+    filter="url(#f)"/>
 </svg>
