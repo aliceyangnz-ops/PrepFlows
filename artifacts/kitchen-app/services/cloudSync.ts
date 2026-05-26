@@ -187,9 +187,28 @@ export interface ParsedFunctionData {
   serviceEvents: Array<{ time: string; label: string }>;
   dietaryRequirements: Array<{ name: string; count: number; note: string }>;
   specialRequirements: string[];
-  prepItems: Array<{ team: string; dish: string; quantity: string; deadline: string }>;
+  prepItems: Array<{ team: string; dish: string; quantity: string; deadline: string; haccpNote?: string }>;
   confidence: Record<string, number>;
   aiUsed: boolean;
+  // Enhanced culinary lexicon fields (present when server returns them)
+  allergenWarnings?: Array<{
+    dish: string;
+    allergens: string[];
+    severity: "definite" | "likely" | "possible";
+    note: string;
+  }>;
+  haccpNotes?: Array<{
+    rule: string;
+    priority: "critical" | "major" | "minor";
+    minTemp?: number;
+    context: string;
+  }>;
+  detectedTerminology?: Array<{
+    term: string;
+    language: string;
+    meaning: string;
+    category: string;
+  }>;
 }
 
 /**

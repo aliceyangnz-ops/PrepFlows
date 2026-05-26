@@ -163,6 +163,9 @@ interface ParseBanner {
   menuCount: number;
   prepCount: number;
   aiUsed: boolean;
+  allergenCount: number;
+  haccpCount: number;
+  termCount: number;
 }
 
 const EMPTY_FORM: FormState = {
@@ -206,6 +209,12 @@ export default function AddFunctionScreen() {
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [showMenu, setShowMenu]           = useState(false);
   const [showPrep, setShowPrep]           = useState(false);
+  const [showAllergens, setShowAllergens] = useState(true);
+  const [showHaccp, setShowHaccp]         = useState(false);
+  const [showGlossary, setShowGlossary]   = useState(false);
+  const [parsedAllergens, setParsedAllergens] = useState<ParsedFunctionData["allergenWarnings"]>([]);
+  const [parsedHaccp, setParsedHaccp]         = useState<ParsedFunctionData["haccpNotes"]>([]);
+  const [parsedTerms, setParsedTerms]         = useState<ParsedFunctionData["detectedTerminology"]>([]);
 
   if (!isManager) {
     const ns = StyleSheet.create({
@@ -252,8 +261,18 @@ export default function AddFunctionScreen() {
       specialRequirements: data.specialRequirements.length > 0 ? data.specialRequirements : prev.specialRequirements,
     }));
 
+    // Store enhanced culinary intelligence fields
+    setParsedAllergens(data.allergenWarnings ?? []);
+    setParsedHaccp(data.haccpNotes ?? []);
+    setParsedTerms(data.detectedTerminology ?? []);
+    // Auto-expand allergen card if critical warnings found
+    setShowAllergens((data.allergenWarnings?.length ?? 0) > 0);
+
+    const allergenCount = data.allergenWarnings?.length ?? 0;
+    const haccpCount = data.haccpNotes?.filter((n) => n.priority === "critical").length ?? 0;
+    const termCount = data.detectedTerminology?.length ?? 0;
     const fieldsFound = [data.name, data.room, data.startTime, data.guestCount > 0, data.functionType].filter(Boolean).length;
-    setBanner({ fieldsFound, menuCount: data.menu.length, prepCount: data.prepItems.length, aiUsed: data.aiUsed });
+    setBanner({ fieldsFound, menuCount: data.menu.length, prepCount: data.prepItems.length, aiUsed: data.aiUsed, allergenCount, haccpCount, termCount });
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     setTimeout(() => scrollRef.current?.scrollTo({ y: 420, animated: true }), 200);
   }
@@ -407,6 +426,12 @@ export default function AddFunctionScreen() {
     setCapturedImage(null);
     setShowMenu(false);
     setShowPrep(false);
+    setShowAllergens(true);
+    setShowHaccp(false);
+    setShowGlossary(false);
+    setParsedAllergens([]);
+    setParsedHaccp([]);
+    setParsedTerms([]);
   }
 
   function handleFunctionTypeChange(type: FunctionType) {
@@ -551,6 +576,34 @@ export default function AddFunctionScreen() {
     prepTeamText: { fontSize: 10, fontFamily: "Inter_700Bold", color: "#fff" },
     prepDish:     { fontSize: 13, fontFamily: "Inter_600SemiBold", color: colors.foreground },
     prepMeta:     { fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground, marginTop: 1 },
+
+    // Allergen card styles
+    allergenItem:     { paddingHorizontal: 14, paddingVertical: 10, borderTopWidth: 1 },
+    severityBadge:    { paddingHorizontal: 7, paddingVertical: 2, borderRadius: 5, borderWidth: 1 },
+    severityText:     { fontSize: 10, fontFamily: "Inter_700Bold" },
+    allergenDish:     { flex: 1, fontSize: 13, fontFamily: "Inter_600SemiBold" },
+    allergenTag:      { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, borderWidth: 1 },
+    allergenTagText:  { fontSize: 11, fontFamily: "Inter_700Bold" },
+    allergenNote:     { fontSize: 11, fontFamily: "Inter_400Regular", color: colors.mutedForeground, lineHeight: 17, fontStyle: "italic" },
+    allergenFooter:   { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 14, paddingVertical: 10, borderTopWidth: 1, borderTopColor: colors.border },
+    allergenFooterText: { flex: 1, fontSize: 11, fontFamily: "Inter_400Regular", color: colors.mutedForeground, lineHeight: 16, fontStyle: "italic" },
+
+    // HACCP card styles
+    haccpGroupHeader: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 14, paddingVertical: 6, borderTopWidth: 1, borderTopColor: colors.border },
+    haccpGroupDot:    { width: 8, height: 8, borderRadius: 4 },
+    haccpGroupLabel:  { fontSize: 10, fontFamily: "Inter_700Bold", letterSpacing: 1 },
+    haccpItem:        { paddingHorizontal: 14, paddingVertical: 9, borderTopWidth: 1, gap: 3 },
+    haccpTempBadge:   { flexDirection: "row", alignItems: "center", gap: 3, alignSelf: "flex-start", backgroundColor: "#F9741620", borderRadius: 5, paddingHorizontal: 6, paddingVertical: 2 },
+    haccpTempText:    { fontSize: 11, fontFamily: "Inter_700Bold", color: "#F97316" },
+    haccpRule:        { fontSize: 13, fontFamily: "Inter_400Regular", color: colors.foreground, lineHeight: 19 },
+    haccpContext:     { fontSize: 11, fontFamily: "Inter_400Regular", color: colors.mutedForeground, fontStyle: "italic" },
+
+    // Terminology glossary styles
+    glossaryItem:     { paddingHorizontal: 14, paddingVertical: 9, borderTopWidth: 1, gap: 2 },
+    langBadge:        { paddingHorizontal: 7, paddingVertical: 2, borderRadius: 5 },
+    langBadgeText:    { fontSize: 10, fontFamily: "Inter_700Bold" },
+    glossaryTerm:     { fontSize: 13, fontFamily: "Inter_600SemiBold", color: colors.foreground },
+    glossaryMeaning:  { fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground, lineHeight: 18, paddingLeft: 4 },
 
     bottomPad:    { height: Platform.OS === "web" ? 80 : insets.bottom + 100 },
   });
@@ -715,6 +768,181 @@ export default function AddFunctionScreen() {
             <Text style={s.actionBtnText}>Choose different photo</Text>
           </Pressable>
         )}
+      </>
+    );
+  }
+
+  function getAllergenColor(severity: "definite" | "likely" | "possible"): string {
+    if (severity === "definite") return "#EF4444";
+    if (severity === "likely")   return "#F97316";
+    return "#F59E0B";
+  }
+
+  function getHACCPColor(priority: "critical" | "major" | "minor"): string {
+    if (priority === "critical") return "#EF4444";
+    if (priority === "major")    return "#F97316";
+    return "#6B7A94";
+  }
+
+  function getLanguageColor(lang: string): string {
+    if (lang === "French")         return "#8B5CF6";
+    if (lang === "Te Reo Māori")   return "#22C55E";
+    if (lang === "AU/NZ")          return "#3B82F6";
+    return "#6B7A94";
+  }
+
+  function renderAllergenWarnings() {
+    if (!parsedAllergens || parsedAllergens.length === 0) return null;
+    const criticalCount = parsedAllergens.filter((w) => w.severity === "definite").length;
+    return (
+      <>
+        <Text style={s.sectionLabel}>Allergen Intelligence</Text>
+        <View style={[s.card, { borderColor: "#EF444440" }]}>
+          <Pressable style={s.expandRow} onPress={() => setShowAllergens((v) => !v)}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+              <Ionicons name="warning" size={16} color="#EF4444" />
+              <Text style={s.expandLabel}>Allergen Risks Found</Text>
+            </View>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+              {criticalCount > 0 && (
+                <View style={{ backgroundColor: "#EF444425", borderRadius: 6, paddingHorizontal: 8, paddingVertical: 2 }}>
+                  <Text style={{ fontSize: 11, fontFamily: "Inter_700Bold", color: "#EF4444" }}>{criticalCount} DEFINITE</Text>
+                </View>
+              )}
+              <Text style={s.expandCount}>{parsedAllergens.length} dishes</Text>
+              <Feather name={showAllergens ? "chevron-up" : "chevron-down"} size={16} color={colors.mutedForeground} />
+            </View>
+          </Pressable>
+          {showAllergens && parsedAllergens.map((warning, idx) => {
+            const col = getAllergenColor(warning.severity);
+            const [, ...dishRest] = warning.dish.split(": ");
+            const dishName = dishRest.join(": ") || warning.dish;
+            return (
+              <View key={idx} style={[s.allergenItem, { borderTopColor: colors.border }]}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                  <View style={[s.severityBadge, { backgroundColor: col + "20", borderColor: col + "50" }]}>
+                    <Text style={[s.severityText, { color: col }]}>{warning.severity.toUpperCase()}</Text>
+                  </View>
+                  <Text style={[s.allergenDish, { color: colors.foreground }]} numberOfLines={1}>{dishName}</Text>
+                </View>
+                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 4, marginBottom: 4 }}>
+                  {warning.allergens.map((a) => (
+                    <View key={a} style={[s.allergenTag, { backgroundColor: col + "18", borderColor: col + "40" }]}>
+                      <Text style={[s.allergenTagText, { color: col }]}>{a}</Text>
+                    </View>
+                  ))}
+                </View>
+                {warning.note ? (
+                  <Text style={s.allergenNote}>{warning.note}</Text>
+                ) : null}
+              </View>
+            );
+          })}
+          {showAllergens && (
+            <View style={s.allergenFooter}>
+              <Ionicons name="information-circle-outline" size={14} color={colors.mutedForeground} />
+              <Text style={s.allergenFooterText}>Auto-inferred from dish names — always verify with client.</Text>
+            </View>
+          )}
+        </View>
+      </>
+    );
+  }
+
+  function renderHACCPNotes() {
+    if (!parsedHaccp || parsedHaccp.length === 0) return null;
+    const criticals = parsedHaccp.filter((n) => n.priority === "critical");
+    const majors    = parsedHaccp.filter((n) => n.priority === "major");
+    const minors    = parsedHaccp.filter((n) => n.priority === "minor");
+    return (
+      <>
+        <Text style={s.sectionLabel}>HACCP Critical Points</Text>
+        <View style={[s.card, { borderColor: "#F9741640" }]}>
+          <Pressable style={s.expandRow} onPress={() => setShowHaccp((v) => !v)}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+              <Ionicons name="thermometer" size={16} color="#F97316" />
+              <Text style={s.expandLabel}>Food Safety Controls</Text>
+            </View>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+              {criticals.length > 0 && (
+                <View style={{ backgroundColor: "#EF444425", borderRadius: 6, paddingHorizontal: 8, paddingVertical: 2 }}>
+                  <Text style={{ fontSize: 11, fontFamily: "Inter_700Bold", color: "#EF4444" }}>{criticals.length} CRITICAL</Text>
+                </View>
+              )}
+              <Text style={s.expandCount}>{parsedHaccp.length} rules</Text>
+              <Feather name={showHaccp ? "chevron-up" : "chevron-down"} size={16} color={colors.mutedForeground} />
+            </View>
+          </Pressable>
+          {showHaccp && ([
+            { items: criticals, label: "CRITICAL", color: "#EF4444" },
+            { items: majors,    label: "MAJOR",    color: "#F97316" },
+            { items: minors,    label: "MINOR",    color: "#6B7A94" },
+          ] as const).map(({ items, label, color }) =>
+            items.length > 0 ? (
+              <View key={label}>
+                <View style={[s.haccpGroupHeader, { backgroundColor: color + "15" }]}>
+                  <View style={[s.haccpGroupDot, { backgroundColor: color }]} />
+                  <Text style={[s.haccpGroupLabel, { color }]}>{label}</Text>
+                </View>
+                {items.map((note, idx) => (
+                  <View key={idx} style={[s.haccpItem, { borderTopColor: colors.border }]}>
+                    {note.minTemp != null && (
+                      <View style={s.haccpTempBadge}>
+                        <Ionicons name="thermometer" size={12} color="#F97316" />
+                        <Text style={s.haccpTempText}>{note.minTemp}°C min</Text>
+                      </View>
+                    )}
+                    <Text style={s.haccpRule}>{note.rule}</Text>
+                    {note.context && note.context !== "all functions" && (
+                      <Text style={s.haccpContext}>Context: {note.context}</Text>
+                    )}
+                  </View>
+                ))}
+              </View>
+            ) : null
+          )}
+          {showHaccp && (
+            <View style={s.allergenFooter}>
+              <Ionicons name="shield-checkmark-outline" size={14} color={colors.mutedForeground} />
+              <Text style={s.allergenFooterText}>FSANZ / MPI aligned. Complete HACCP log before service.</Text>
+            </View>
+          )}
+        </View>
+      </>
+    );
+  }
+
+  function renderTerminologyGlossary() {
+    if (!parsedTerms || parsedTerms.length === 0) return null;
+    return (
+      <>
+        <Text style={s.sectionLabel}>Culinary Terminology Detected</Text>
+        <View style={s.card}>
+          <Pressable style={s.expandRow} onPress={() => setShowGlossary((v) => !v)}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+              <Ionicons name="language" size={16} color={colors.primary} />
+              <Text style={s.expandLabel}>Glossary</Text>
+            </View>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+              <Text style={s.expandCount}>{parsedTerms.length} terms</Text>
+              <Feather name={showGlossary ? "chevron-up" : "chevron-down"} size={16} color={colors.mutedForeground} />
+            </View>
+          </Pressable>
+          {showGlossary && parsedTerms.map((t, idx) => {
+            const langColor = getLanguageColor(t.language);
+            return (
+              <View key={idx} style={[s.glossaryItem, { borderTopColor: colors.border }]}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 6, flex: 1 }}>
+                  <View style={[s.langBadge, { backgroundColor: langColor + "20" }]}>
+                    <Text style={[s.langBadgeText, { color: langColor }]}>{t.language}</Text>
+                  </View>
+                  <Text style={s.glossaryTerm}>{t.term}</Text>
+                </View>
+                <Text style={s.glossaryMeaning} numberOfLines={2}>{t.meaning}</Text>
+              </View>
+            );
+          })}
+        </View>
       </>
     );
   }
@@ -1008,12 +1236,15 @@ export default function AddFunctionScreen() {
                       ? `All key details found — review and tap Save`
                       : `${banner.fieldsFound} field${banner.fieldsFound !== 1 ? "s" : ""} found — fill in the missing details below`}
                   </Text>
-                  {(banner.menuCount > 0 || banner.prepCount > 0) && (
+                  {(banner.menuCount > 0 || banner.prepCount > 0 || banner.allergenCount > 0 || banner.haccpCount > 0) && (
                     <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground }}>
                       {[
-                        banner.menuCount > 0 && `${banner.menuCount} menu items extracted`,
-                        banner.prepCount > 0 && `${banner.prepCount} prep tasks generated`,
-                        banner.aiUsed && "· AI enhanced",
+                        banner.menuCount > 0   && `${banner.menuCount} menu items`,
+                        banner.prepCount > 0   && `${banner.prepCount} prep tasks`,
+                        banner.allergenCount > 0 && `${banner.allergenCount} allergen risks`,
+                        banner.haccpCount > 0  && `${banner.haccpCount} critical HACCP`,
+                        banner.termCount > 0   && `${banner.termCount} terms decoded`,
+                        banner.aiUsed          && "AI enhanced",
                       ].filter(Boolean).join(" · ")}
                     </Text>
                   )}
@@ -1021,11 +1252,14 @@ export default function AddFunctionScreen() {
               </View>
             )}
 
-            {/* Menu + prep list */}
+            {/* Menu + prep list + allergen/HACCP/glossary cards */}
             {hasParsed && !importLoading && (
               <>
                 {renderMenu()}
                 {renderPrepList()}
+                {renderAllergenWarnings()}
+                {renderHACCPNotes()}
+                {renderTerminologyGlossary()}
               </>
             )}
 
