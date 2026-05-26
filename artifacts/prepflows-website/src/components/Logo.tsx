@@ -61,16 +61,16 @@ export function Logo({ size = 32, className = "" }: LogoProps) {
           <stop offset="18%" stopColor="white" stopOpacity="0" />
         </linearGradient>
 
-        <linearGradient id={ids.pGrad} x1="28" y1="12" x2="82" y2="88" gradientUnits="userSpaceOnUse">
-          <stop offset="0%"   stopColor="#D1EEFF" />
-          <stop offset="28%"  stopColor="#60A5FA" />
-          <stop offset="62%"  stopColor="#818CF8" />
-          <stop offset="100%" stopColor="#A78BFA" />
+        <linearGradient id={ids.pGrad} x1="18" y1="10" x2="82" y2="90" gradientUnits="userSpaceOnUse">
+          <stop offset="0%"   stopColor="#C7E8FF" />
+          <stop offset="25%"  stopColor="#60A5FA" />
+          <stop offset="60%"  stopColor="#2563EB" />
+          <stop offset="100%" stopColor="#0F2554" />
         </linearGradient>
 
-        <radialGradient id={ids.glowBg} cx="54%" cy="42%" r="42%">
-          <stop offset="0%"   stopColor="#4D7CFF" stopOpacity="0.28" />
-          <stop offset="100%" stopColor="#4D7CFF" stopOpacity="0" />
+        <radialGradient id={ids.glowBg} cx="54%" cy="42%" r="44%">
+          <stop offset="0%"   stopColor="#2563EB" stopOpacity="0.35" />
+          <stop offset="100%" stopColor="#2563EB" stopOpacity="0" />
         </radialGradient>
 
         <linearGradient id={ids.pShine} x1="30" y1="12" x2="60" y2="32" gradientUnits="userSpaceOnUse">
@@ -129,26 +129,23 @@ export function Logo({ size = 32, className = "" }: LogoProps) {
       {/* 7. Bottom inner shadow */}
       <rect width="100" height="100" rx="22" fill={`url(#${ids.innerShadow})`} />
 
-      {/* 8. P letterform with glow */}
-      <path
-        d="M 32 82 L 32 20 C 32 14 42 10 53 10 C 70 10 80 21 80 35 C 80 51 69 60 52 60 L 32 60"
-        stroke={`url(#${ids.pGrad})`}
-        strokeWidth="12.5"
-        fill="none"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        filter={`url(#${ids.glow})`}
-      />
+      {/* 8. Digital watch P — geometric beveled letterform */}
+      <g filter={`url(#${ids.glow})`}>
+        <path
+          fillRule="evenodd"
+          fill={`url(#${ids.pGrad})`}
+          d="M 18 87 L 18 12 L 64 12 L 80 26 L 80 56 L 64 68 L 30 68 L 30 87 Z
+             M 30 24 L 56 24 L 68 34 L 68 48 L 56 57 L 30 57 Z"
+        />
+      </g>
 
-      {/* 9. P top shine */}
+      {/* 9. Top-face shine on P segments */}
       <path
-        d="M 32 20 C 32 14 42 10 53 10 C 70 10 80 21 80 35"
-        stroke={`url(#${ids.pShine})`}
-        strokeWidth="4"
-        fill="none"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        opacity="0.7"
+        fillRule="evenodd"
+        fill={`url(#${ids.pShine})`}
+        opacity="0.65"
+        d="M 18 12 L 64 12 L 80 26 L 80 40 L 18 40 Z
+           M 30 24 L 56 24 L 68 34 L 68 36 L 30 36 Z"
       />
 
       {/* 10. Rim */}
