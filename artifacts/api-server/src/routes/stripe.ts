@@ -97,7 +97,7 @@ router.post('/stripe/checkout', requireAuth, async (req: Request, res: Response)
     const session = await stripeService.createCheckoutSession(
       customerId,
       resolvedPriceId,
-      `${baseUrl}/?subscribed=true`,
+      `${baseUrl}/prepflows-website/app?subscribed=true`,
       `${baseUrl}/prepflows-website/pricing`,
     );
 
@@ -118,7 +118,7 @@ router.post('/stripe/portal', requireAuth, async (req: Request, res: Response) =
     const baseUrl = `${req.protocol}://${req.get('host')}`;
     const session = await stripeService.createCustomerPortalSession(
       profile.stripeCustomerId,
-      `${baseUrl}/subscribe`,
+      `${baseUrl}/prepflows-website/app`,
     );
 
     res.json({ url: session.url });

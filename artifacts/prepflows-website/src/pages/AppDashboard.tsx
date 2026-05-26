@@ -55,6 +55,8 @@ function ManagerDashboard({ onLogout, role }: { onLogout: () => void; role: Staf
   const [portalLoading, setPortalLoading] = useState(false);
   const [portalError, setPortalError] = useState<string | null>(null);
   const [, navigate] = useLocation();
+  const [location] = useLocation();
+  const justSubscribed = new URLSearchParams(location.split("?")[1] ?? "").get("subscribed") === "true";
 
   const endDate = subscription?.current_period_end
     ? new Date(subscription.current_period_end * 1000).toLocaleDateString("en-AU", {
@@ -98,6 +100,16 @@ function ManagerDashboard({ onLogout, role }: { onLogout: () => void; role: Staf
       </nav>
 
       <div className="max-w-4xl mx-auto px-6 py-12">
+        {justSubscribed && (
+          <div className="mb-6 p-4 rounded-xl flex items-center gap-3"
+            style={{ background: `${GREEN}12`, border: `1px solid ${GREEN}35` }}>
+            <span className="text-xl">🎉</span>
+            <div>
+              <p className="text-sm font-bold" style={{ color: GREEN }}>You're on PrepFlows Pro!</p>
+              <p className="text-xs" style={{ color: "#8B949E" }}>Your subscription is now active. Welcome aboard.</p>
+            </div>
+          </div>
+        )}
         <h1 className="text-2xl font-bold mb-2">Your workspace</h1>
         <p className="text-sm mb-8" style={{ color: "#8B949E" }}>
           Signed in as Head Office / Manager — you have full access to all settings and controls.
