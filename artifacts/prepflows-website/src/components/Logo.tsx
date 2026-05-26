@@ -1,4 +1,4 @@
-import logoSrc from "@assets/087EDDDA-D524-4C13-B632-5D34B7AC927E_1779795965505.png";
+import logoSrc from "@assets/F05F2FD9-CE9B-4179-AA06-CFB58422178D_1779802862293.png";
 
 interface LogoProps {
   size?: number;
