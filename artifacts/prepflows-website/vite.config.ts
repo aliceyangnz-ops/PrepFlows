@@ -57,6 +57,50 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    target: "es2020",
+    chunkSizeWarningLimit: 600,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          // Core React — cached separately and reused across chunks
+          if (id.includes("node_modules/react/") || id.includes("node_modules/react-dom/")) {
+            return "vendor-react";
+          }
+          // Framer Motion — large animation library, only used on Home page
+          if (id.includes("node_modules/framer-motion")) {
+            return "vendor-framer";
+          }
+          // Stripe — only needed when the user reaches /app
+          if (id.includes("node_modules/@stripe")) {
+            return "vendor-stripe";
+          }
+          // Radix UI primitives
+          if (id.includes("node_modules/@radix-ui")) {
+            return "vendor-radix";
+          }
+          // Tanstack Query
+          if (id.includes("node_modules/@tanstack")) {
+            return "vendor-query";
+          }
+          // Charts — recharts + d3 deps
+          if (id.includes("node_modules/recharts") || id.includes("node_modules/d3") || id.includes("node_modules/victory")) {
+            return "vendor-charts";
+          }
+          // Icons
+          if (id.includes("node_modules/lucide-react") || id.includes("node_modules/react-icons")) {
+            return "vendor-icons";
+          }
+          // Date utilities
+          if (id.includes("node_modules/date-fns") || id.includes("node_modules/react-day-picker")) {
+            return "vendor-dates";
+          }
+          // Everything else in node_modules → shared vendor chunk
+          if (id.includes("node_modules/")) {
+            return "vendor-misc";
+          }
+        },
+      },
+    },
   },
   server: {
     port,
