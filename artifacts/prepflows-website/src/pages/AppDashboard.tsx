@@ -142,7 +142,7 @@ function ManagerDashboard({ onLogout, role }: { onLogout: () => void; role: Staf
               <div className="mb-5 p-4 rounded-xl"
                 style={{ background: `${BLUE}10`, border: `1px solid ${BLUE}25` }}>
                 <p className="text-sm font-semibold mb-1" style={{ color: BLUE }}>
-                  Upgrade to Pro — 14-day free trial
+                  Upgrade to Pro — first month free
                 </p>
                 <p className="text-xs" style={{ color: "#8B949E" }}>
                   Unlimited functions, Live Service Mode, Analytics, Smart Import, and more.
@@ -454,7 +454,7 @@ function AuthForm() {
             {mode === "login" ? "Welcome back" : "Create account"}
           </h1>
           <p className="text-sm mb-6" style={{ color: "#8B949E" }}>
-            {mode === "login" ? "Sign in to your workspace" : "Start your 14-day free trial"}
+            {mode === "login" ? "Sign in to your workspace" : "First month is on us"}
           </p>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">

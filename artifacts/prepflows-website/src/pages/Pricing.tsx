@@ -51,7 +51,7 @@ const PLANS = [
       { text: "Analytics Dashboard", included: true },
       { text: "Priority support", included: true },
     ],
-    cta: "Start free trial",
+    cta: "Try first month free",
     highlight: true,
     badge: "Most popular",
     priceId: "pro",
@@ -84,7 +84,7 @@ const PLANS = [
 const FAQ = [
   {
     q: "Is there a free trial?",
-    a: "Yes — Pro includes a 14-day free trial. No credit card required to start. You'll only be charged after the trial ends.",
+    a: "Yes — your first month on Pro is completely free. No credit card required to start. You'll only be charged after your first month ends.",
   },
   {
     q: "Can I switch plans later?",

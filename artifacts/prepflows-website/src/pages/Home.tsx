@@ -119,7 +119,7 @@ function Nav() {
             style={{ background: C.grad, color: "#fff", fontSize: 14, fontWeight: 600, padding: "9px 20px", borderRadius: 9999, border: "none", cursor: "pointer", transition: "opacity 0.2s, transform 0.2s", letterSpacing: "-0.01em" }}
             onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.85"; e.currentTarget.style.transform = "scale(1.03)"; }}
             onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.transform = "scale(1)"; }}
-          >Start free trial</button>
+          >Try first month free</button>
         </div>
 
         {/* Hamburger */}
@@ -226,7 +226,7 @@ function Hero() {
             onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.87"; e.currentTarget.style.transform = "scale(1.03)"; }}
             onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.transform = "scale(1)"; }}
           >
-            Start free trial
+            Try first month free
           </button>
           <button onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })}
             style={{ background: "transparent", color: C.muted, fontSize: 15, fontWeight: 500, padding: "15px 36px", borderRadius: 9999, border: `1px solid ${C.border}`, cursor: "pointer", letterSpacing: "-0.01em", transition: "border-color 0.2s, color 0.2s, transform 0.2s" }}
@@ -581,7 +581,7 @@ function FinalCTA() {
                 opacity: hoverPrimary ? 0.85 : 1,
                 transform: hoverPrimary ? "scale(1.03)" : "scale(1)",
               }}
-            >Start free trial</button>
+            >Try first month free</button>
             <button
               onClick={() => navigate("/pricing")}
               onMouseEnter={() => setHoverSecondary(true)}
