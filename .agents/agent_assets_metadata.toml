@@ -16,7 +16,7 @@ title = "prepflows splash screen"
 id = "r7POdARTufhxKszBWx7G8"
 uri = "file://artifacts/kitchen-app/assets/images/icon.png"
 type = "image"
-title = "KitchenCommand App Icon (1024×1024)"
+title = "PrepFlows App Icon"
 
 [[outputs]]
 id = "Q7qOqhWdD9Quy9e6hL8RX"
