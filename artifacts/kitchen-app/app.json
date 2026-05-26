@@ -28,7 +28,9 @@
         "NSPrivacyAccessedAPITypes": [
           {
             "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryUserDefaults",
-            "NSPrivacyAccessedAPITypeReasons": ["CA92.1"]
+            "NSPrivacyAccessedAPITypeReasons": [
+              "CA92.1"
+            ]
           }
         ]
       }
@@ -74,9 +76,12 @@
       "reactCompiler": true
     },
     "extra": {
+      "supabaseUrl": "https://ixfbzmcczngcmdqkidbm.supabase.co",
+      "supabaseAnonKey": "sb_publishable_yuklFmmIogtQVno06Vvdbg_vMgzSXaQ",
       "eas": {
-        "projectId": "prepflows-app"
+        "projectId": "1b0f2131-5c1e-4b13-9daa-4d5aa9871dba"
       }
-    }
+    },
+    "owner": "prepflows"
   }
 }
