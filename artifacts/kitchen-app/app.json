@@ -22,7 +22,8 @@
         "UIStatusBarStyle": "UIStatusBarStyleLightContent",
         "UIViewControllerBasedStatusBarAppearance": false,
         "NSUserNotificationsUsageDescription": "PrepFlows sends shift reminders and service alerts to keep your kitchen team informed.",
-        "UIApplicationCategoryType": "UIApplicationCategoryBusinessFoodAndDrink"
+        "UIApplicationCategoryType": "UIApplicationCategoryBusinessFoodAndDrink",
+        "ITSAppUsesNonExemptEncryption": false
       },
       "privacyManifests": {
         "NSPrivacyAccessedAPITypes": [
