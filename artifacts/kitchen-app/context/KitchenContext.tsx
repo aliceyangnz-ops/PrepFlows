@@ -118,6 +118,25 @@ export interface StaffMember {
   accessLevel?: AccessLevel;
 }
 
+export type RoomFloor = "Ground Floor" | "Level 1" | "Level 2" | "Level 3" | "Level 4" | "Rooftop" | "Basement" | "Other";
+export type RoomStyle = "Ballroom" | "Boardroom" | "Terrace" | "Courtyard" | "Private Dining" | "Suite" | "Theatre" | "Classroom" | "Cocktail" | "Other";
+
+export interface KitchenRoom {
+  id: string;
+  name: string;
+  floor: RoomFloor;
+  style: RoomStyle;
+  capacity: number;
+  banquetCapacity?: number;
+  cocktailCapacity?: number;
+  theatreCapacity?: number;
+  area?: number;
+  features: string[];
+  notes?: string;
+  isActive: boolean;
+  imageUri?: string;
+}
+
 export function getAccessLevel(member: StaffMember): AccessLevel {
   if (member.accessLevel) return member.accessLevel;
   const managerRoles: StaffMember["role"][] = ["Head Chef", "Executive Chef", "Executive Sous Chef", "Kitchen Manager"];
@@ -140,6 +159,39 @@ export interface BroadcastMessage {
   senderRole: string;
   sentAt: string;
 }
+
+const SAMPLE_ROOMS: KitchenRoom[] = [
+  {
+    id: "r1", name: "Ballroom A", floor: "Level 1", style: "Ballroom",
+    capacity: 350, banquetCapacity: 300, cocktailCapacity: 450, theatreCapacity: 500,
+    area: 480, features: ["AV System", "Stage", "Dance Floor", "Dedicated Bar", "Natural Light", "Climate Control"],
+    notes: "Main grand ballroom. Divides into Ballroom A1 and A2 via airwall. Loading dock access from Level 1 service corridor.", isActive: true,
+  },
+  {
+    id: "r2", name: "Suite 3", floor: "Level 2", style: "Boardroom",
+    capacity: 22, banquetCapacity: 18, cocktailCapacity: 30,
+    area: 65, features: ["AV System", "Video Conferencing", "Whiteboard", "Climate Control", "City View"],
+    notes: "Private boardroom with built-in VC screen. Catering via service lift — no trolleys in main corridor during business hours.", isActive: true,
+  },
+  {
+    id: "r3", name: "Grand Ballroom", floor: "Ground Floor", style: "Ballroom",
+    capacity: 600, banquetCapacity: 500, cocktailCapacity: 800, theatreCapacity: 900,
+    area: 980, features: ["AV System", "Stage", "Dance Floor", "Two Dedicated Bars", "Chandeliers", "Loading Dock", "Climate Control"],
+    notes: "Largest space. Ceiling height 9m. Croquembouche must use flat boards — no trolleys at height. VIP entry from Heritage Lane.", isActive: true,
+  },
+  {
+    id: "r4", name: "The Courtyard", floor: "Ground Floor", style: "Courtyard",
+    capacity: 200, cocktailCapacity: 300,
+    area: 320, features: ["Outdoor", "Retractable Awning", "Garden Views", "Bar Cart", "Heating"],
+    notes: "Semi-outdoor. Retractable awning covers 70% — check weather 48h prior. Generator for AV in outdoor events.", isActive: true,
+  },
+  {
+    id: "r5", name: "River Terrace", floor: "Level 3", style: "Terrace",
+    capacity: 120, cocktailCapacity: 180,
+    area: 200, features: ["Outdoor", "River Views", "Bar", "Heating Lamps", "String Lights"],
+    notes: "Rooftop-style terrace. Access via Lift 2 only (service lift too small for chafing dishes). Wind exposure — check BOM forecast.", isActive: true,
+  },
+];
 
 const SAMPLE_STAFF: StaffMember[] = [
   { id: "s1", staffNumber: "#0001", name: "Marco Ricci",   role: "Head Chef",        phone: "0412 000 001", shiftStart: "05:00", shiftEnd: "14:00", functionIds: ["f1","f2","f3"], teamLeadFor: "Hot Kitchen",   section: "Hot Kitchen" },
@@ -675,6 +727,7 @@ interface KitchenContextType {
   functions: KitchenFunction[];
   prepItems: PrepItem[];
   staff: StaffMember[];
+  rooms: KitchenRoom[];
   sickStaffIds: string[];
   currentStaffId: string | null;
   notificationsEnabled: boolean;
@@ -694,6 +747,9 @@ interface KitchenContextType {
   addStaff: (member: StaffMember) => void;
   updateStaff: (id: string, updates: Partial<StaffMember>) => void;
   removeStaff: (id: string) => void;
+  addRoom: (room: KitchenRoom) => void;
+  updateRoom: (id: string, updates: Partial<KitchenRoom>) => void;
+  removeRoom: (id: string) => void;
   resetToSampleData: () => void;
   clearAllData: () => void;
   todayDate: string;
@@ -714,11 +770,13 @@ const STORAGE_KEY_DISMISSED = "@kitchen_dismissed_broadcast";
 const STORAGE_KEY_STAFF = "@kitchen_staff_v1";
 const STORAGE_KEY_HIDDEN = "@kitchen_hidden_fns_v1";
 const STORAGE_KEY_MIGRATED = "@kitchen_supabase_migrated_v1";
+const STORAGE_KEY_ROOMS = "@kitchen_rooms_v1";
 
 export function KitchenProvider({ children }: { children: React.ReactNode }) {
   const [functions, setFunctions] = useState<KitchenFunction[]>(SAMPLE_FUNCTIONS);
   const [prepItems, setPrepItems] = useState<PrepItem[]>(SAMPLE_PREP);
   const [staff, setStaff] = useState<StaffMember[]>(SAMPLE_STAFF);
+  const [rooms, setRooms] = useState<KitchenRoom[]>(SAMPLE_ROOMS);
   const [sickStaffIds, setSickStaffIds] = useState<string[]>([]);
   const [currentStaffId, setCurrentStaffIdState] = useState<string | null>(null);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
@@ -762,6 +820,7 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
           storedSick,
           storedStaffList,
           storedHidden,
+          storedRooms,
         ] = await Promise.all([
           AsyncStorage.getItem(STORAGE_KEY_FUNCTIONS),
           AsyncStorage.getItem(STORAGE_KEY_PREP),
@@ -772,6 +831,7 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
           AsyncStorage.getItem(STORAGE_KEY_SICK),
           AsyncStorage.getItem(STORAGE_KEY_STAFF),
           AsyncStorage.getItem(STORAGE_KEY_HIDDEN),
+          AsyncStorage.getItem(STORAGE_KEY_ROOMS),
         ]);
         if (storedFunctions) { localFunctions = JSON.parse(storedFunctions); setFunctions(localFunctions); }
         if (storedPrep) { localPrepItems = JSON.parse(storedPrep); setPrepItems(localPrepItems); }
@@ -782,6 +842,7 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
         if (storedSick) setSickStaffIds(JSON.parse(storedSick));
         if (storedStaffList) { localStaff = JSON.parse(storedStaffList); setStaff(localStaff); }
         if (storedHidden) setHiddenFunctionIds(JSON.parse(storedHidden));
+        if (storedRooms) setRooms(JSON.parse(storedRooms));
       } catch {
         // use defaults on parse errors
       }
@@ -1010,17 +1071,46 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
+  const addRoom = useCallback((room: KitchenRoom) => {
+    if (!isCallerManager()) return;
+    setRooms((prev) => {
+      const updated = [...prev, room];
+      AsyncStorage.setItem(STORAGE_KEY_ROOMS, JSON.stringify(updated));
+      return updated;
+    });
+  }, []);
+
+  const updateRoom = useCallback((id: string, updates: Partial<KitchenRoom>) => {
+    if (!isCallerManager()) return;
+    setRooms((prev) => {
+      const updated = prev.map((r) => r.id === id ? { ...r, ...updates } : r);
+      AsyncStorage.setItem(STORAGE_KEY_ROOMS, JSON.stringify(updated));
+      return updated;
+    });
+  }, []);
+
+  const removeRoom = useCallback((id: string) => {
+    if (!isCallerManager()) return;
+    setRooms((prev) => {
+      const updated = prev.filter((r) => r.id !== id);
+      AsyncStorage.setItem(STORAGE_KEY_ROOMS, JSON.stringify(updated));
+      return updated;
+    });
+  }, []);
+
   const resetToSampleData = useCallback(() => {
     if (!isCallerManager()) return;
     setStaff(SAMPLE_STAFF);
     setFunctions(SAMPLE_FUNCTIONS);
     setPrepItems(SAMPLE_PREP);
+    setRooms(SAMPLE_ROOMS);
     setSickStaffIds([]);
     setCurrentStaffIdState(null);
     Promise.all([
       AsyncStorage.setItem(STORAGE_KEY_STAFF, JSON.stringify(SAMPLE_STAFF)),
       AsyncStorage.setItem(STORAGE_KEY_FUNCTIONS, JSON.stringify(SAMPLE_FUNCTIONS)),
       AsyncStorage.setItem(STORAGE_KEY_PREP, JSON.stringify(SAMPLE_PREP)),
+      AsyncStorage.setItem(STORAGE_KEY_ROOMS, JSON.stringify(SAMPLE_ROOMS)),
       AsyncStorage.setItem(STORAGE_KEY_SICK, JSON.stringify([])),
       AsyncStorage.setItem(STORAGE_KEY_CURRENT_STAFF, ""),
     ]);
@@ -1031,6 +1121,7 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
     setStaff([]);
     setFunctions([]);
     setPrepItems([]);
+    setRooms([]);
     setSickStaffIds([]);
     setHiddenFunctionIds([]);
     setCurrentStaffIdState(null);
@@ -1038,6 +1129,7 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
       AsyncStorage.setItem(STORAGE_KEY_STAFF, JSON.stringify([])),
       AsyncStorage.setItem(STORAGE_KEY_FUNCTIONS, JSON.stringify([])),
       AsyncStorage.setItem(STORAGE_KEY_PREP, JSON.stringify([])),
+      AsyncStorage.setItem(STORAGE_KEY_ROOMS, JSON.stringify([])),
       AsyncStorage.setItem(STORAGE_KEY_SICK, JSON.stringify([])),
       AsyncStorage.setItem(STORAGE_KEY_CURRENT_STAFF, ""),
       AsyncStorage.removeItem(STORAGE_KEY_HIDDEN),
@@ -1204,12 +1296,13 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
   return (
     <KitchenContext.Provider
       value={{
-        functions, prepItems, staff, sickStaffIds,
+        functions, prepItems, staff, rooms, sickStaffIds,
         currentStaffId, notificationsEnabled,
         broadcastMessage, dismissedBroadcastId,
         setCurrentStaff, setBroadcast, clearBroadcast, dismissBroadcast,
         togglePrepItem, toggleTimelineItem, updateFunction, addFunction, deleteFunction, generatePrepItems, markStaffSick,
-        addStaff, updateStaff, removeStaff, resetToSampleData, clearAllData, todayDate,
+        addStaff, updateStaff, removeStaff, addRoom, updateRoom, removeRoom,
+        resetToSampleData, clearAllData, todayDate,
         hiddenFunctionIds, hideFunction, showFunction,
       }}
     >

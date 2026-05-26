@@ -171,3 +171,45 @@ export async function fetchFunctionsSince(sinceMs: number): Promise<KitchenFunct
   const rows = await apiGet<Record<string, unknown>[]>(`/functions/since/${sinceMs}`);
   return rows.map(dbRowToKitchenFunction);
 }
+
+// ─── AI Parse ──────────────────────────────────────────────────────────────
+
+export interface ParsedFunctionData {
+  name: string;
+  room: string;
+  floor: string;
+  date: string;
+  functionType: string;
+  startTime: string;
+  endTime: string;
+  guestCount: number;
+  menu: string[];
+  serviceEvents: Array<{ time: string; label: string }>;
+  dietaryRequirements: Array<{ name: string; count: number; note: string }>;
+  specialRequirements: string[];
+  prepItems: Array<{ team: string; dish: string; quantity: string; deadline: string }>;
+  confidence: Record<string, number>;
+  aiUsed: boolean;
+}
+
+/**
+ * Parse free-form text (paste from email, booking brief, etc.) into structured function data.
+ */
+export async function parseAIText(content: string): Promise<ParsedFunctionData> {
+  return apiPost<ParsedFunctionData>("/import/ai-parse", { content, type: "text" });
+}
+
+/**
+ * Parse a base64-encoded image (document scan or photo) into structured function data.
+ * Requires AI vision to be enabled on the server; returns partial data otherwise.
+ */
+export async function parseAIImage(base64: string, mimeType: string): Promise<ParsedFunctionData> {
+  return apiPost<ParsedFunctionData>("/import/ai-parse", { content: base64, type: "image_base64", mimeType });
+}
+
+/**
+ * Upload a document (Word/PDF/Excel) as base64 for server-side text extraction and parsing.
+ */
+export async function parseDocument(base64: string, filename: string, mimeType: string): Promise<ParsedFunctionData> {
+  return apiPost<ParsedFunctionData>("/import/parse-document-base64", { base64, filename, mimeType });
+}

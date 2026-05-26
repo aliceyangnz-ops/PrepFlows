@@ -20,11 +20,14 @@ A hospitality operations platform for back-of-house staff (iOS, Android, and web
 
 - `artifacts/kitchen-app/` — the main Expo mobile app
 - `artifacts/kitchen-app/app/(tabs)/` — tab screens: Today, Functions, Prep, Roster
-- `artifacts/kitchen-app/app/function/` — function detail + add screens
+- `artifacts/kitchen-app/app/function/` — function detail + add screens (Smart Import: paste/file/scan/gallery)
+- `artifacts/kitchen-app/app/rooms/` — function room management screen
 - `artifacts/kitchen-app/app/staff/` — staff add/edit screen (`[id].tsx`, id="new" for adding)
 - `artifacts/kitchen-app/app/brief/` — casual staff QR brief screen (`[id].tsx`)
 - `artifacts/kitchen-app/app/prep-print/` — combined print/share document
 - `artifacts/kitchen-app/context/KitchenContext.tsx` — **source of truth**: data model, AsyncStorage persistence, all CRUD operations
+- `artifacts/api-server/src/routes/aiParse.ts` — AI/rule-based parse endpoints for Smart Import
+- `artifacts/kitchen-app/services/cloudSync.ts` — API client incl. parseAIText, parseAIImage, parseDocument
 
 ## Architecture decisions
 
@@ -58,6 +61,7 @@ A hospitality operations platform for back-of-house staff (iOS, Android, and web
 - `@kitchen_functions_v3` — functions array
 - `@kitchen_prep_v4` — prep items array
 - `@kitchen_staff_v1` — staff array
+- `@kitchen_rooms_v1` — function rooms array
 - `@kitchen_sick_v1` — sick staff ID array
 - `@kitchen_current_staff` — logged-in staff ID
 - `@kitchen_notifs_enabled` — notifications flag
