@@ -112,7 +112,7 @@ export default function RosterScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const isTablet = useIsTablet();
-  const { staff, functions, prepItems, currentStaffId, notificationsEnabled, sickStaffIds, setCurrentStaff, markStaffSick, resetToSampleData, clearAllData } = useKitchen();
+  const { staff, functions, prepItems, currentStaffId, notificationsEnabled, sickStaffIds, setCurrentStaff, markStaffSick, resetToSampleData, clearAllData, updateStaff } = useKitchen();
   const [loading, setLoading] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [showSettings, setShowSettings] = useState(false);
@@ -198,6 +198,43 @@ export default function RosterScreen() {
     setVerifyTarget(null);
     setVerifyInput("");
     doSignIn(memberId);
+  }
+
+  function handleAccessToggle(memberId: string, currentlyHasFullAccess: boolean) {
+    const member = staff.find((s) => s.id === memberId)!;
+    const firstName = member.name.split(" ")[0];
+    if (currentlyHasFullAccess) {
+      Alert.alert(
+        `Remove full access for ${firstName}?`,
+        `${firstName} will go back to view-only mode and won't be able to edit functions or mark prep done.`,
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Remove access",
+            style: "destructive",
+            onPress: () => {
+              updateStaff(memberId, { accessLevel: undefined });
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            },
+          },
+        ]
+      );
+    } else {
+      Alert.alert(
+        `Grant full access to ${firstName}?`,
+        `${firstName} will be able to edit functions and mark prep tasks as done, same as a manager.`,
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Grant access",
+            onPress: () => {
+              updateStaff(memberId, { accessLevel: "manager" });
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            },
+          },
+        ]
+      );
+    }
   }
 
   function handleSickToggle(memberId: string, currentlySick: boolean) {
@@ -593,6 +630,8 @@ export default function RosterScreen() {
           const isMe = currentStaffId === member.id;
           const isLoading = loading === member.id;
           const isSick = sickStaffIds.includes(member.id);
+          const memberAccessLevel = getAccessLevel(member);
+          const hasFullAccess = memberAccessLevel === "manager";
           const isLeader = !!member.teamLeadFor;
           const shiftStart = timeToFloat(member.shiftStart);
           const shiftEnd = timeToFloat(member.shiftEnd);
@@ -688,6 +727,29 @@ export default function RosterScreen() {
                       >
                         <Feather name="edit-2" size={11} color={colors.mutedForeground} />
                         <Text style={[s.sickBtnText, { color: colors.mutedForeground }]}>Edit</Text>
+                      </Pressable>
+                    )}
+                    {/* Access toggle — managers only, not on themselves */}
+                    {isManager && member.id !== currentStaffId && (
+                      <Pressable
+                        style={({ pressed }) => [
+                          s.sickBtn,
+                          {
+                            backgroundColor: hasFullAccess ? "#22C55E18" : "transparent",
+                            borderColor: hasFullAccess ? "#22C55E" : colors.border,
+                            opacity: pressed ? 0.7 : 1,
+                          },
+                        ]}
+                        onPress={() => handleAccessToggle(member.id, hasFullAccess)}
+                      >
+                        <Ionicons
+                          name={hasFullAccess ? "lock-open-outline" : "lock-closed-outline"}
+                          size={11}
+                          color={hasFullAccess ? "#22C55E" : colors.mutedForeground}
+                        />
+                        <Text style={[s.sickBtnText, { color: hasFullAccess ? "#22C55E" : colors.mutedForeground }]}>
+                          {hasFullAccess ? "Open" : "Locked"}
+                        </Text>
                       </Pressable>
                     )}
                     {/* Sick call button — managers only, not on themselves */}
