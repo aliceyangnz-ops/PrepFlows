@@ -1,23 +1,119 @@
 <svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
+    <!-- Base: deep navy-black -->
     <linearGradient id="bg" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#050C1A"/>
-      <stop offset="100%" stop-color="#0A1528"/>
+      <stop offset="0%"   stop-color="#0C1828"/>
+      <stop offset="100%" stop-color="#060D18"/>
     </linearGradient>
-    <linearGradient id="p" x1="50%" y1="0%" x2="50%" y2="100%">
-      <stop offset="0%"   stop-color="#93C5FD"/>
-      <stop offset="30%"  stop-color="#4D7CFF"/>
-      <stop offset="65%"  stop-color="#818CF8"/>
-      <stop offset="100%" stop-color="#A259FF"/>
+
+    <!-- Glass body: subtle blue-tinted inner layer -->
+    <linearGradient id="glass" x1="50" y1="0" x2="50" y2="100" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="#1A3A6B" stop-opacity="0.55"/>
+      <stop offset="60%"  stop-color="#0E1F40" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#060D18" stop-opacity="0.10"/>
     </linearGradient>
-    <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
-      <feGaussianBlur stdDeviation="3" result="blur"/>
-      <feMerge><feMergeNode in="blur"/><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+
+    <!-- Top specular: white glare at top edge (key glass effect) -->
+    <radialGradient id="spec-top" cx="50%" cy="-8%" r="68%" gradientUnits="objectBoundingBox">
+      <stop offset="0%"   stop-color="white" stop-opacity="0.32"/>
+      <stop offset="55%"  stop-color="white" stop-opacity="0.07"/>
+      <stop offset="100%" stop-color="white" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Left edge specular: thin bright strip down left side -->
+    <linearGradient id="spec-left" x1="0" y1="0" x2="1" y2="0" gradientUnits="objectBoundingBox">
+      <stop offset="0%"  stop-color="white" stop-opacity="0.18"/>
+      <stop offset="18%" stop-color="white" stop-opacity="0"/>
+    </linearGradient>
+
+    <!-- P letterform gradient: ice-blue → electric-blue → indigo -->
+    <linearGradient id="p-grad" x1="28" y1="12" x2="82" y2="88" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="#D1EEFF"/>
+      <stop offset="28%"  stop-color="#60A5FA"/>
+      <stop offset="62%"  stop-color="#818CF8"/>
+      <stop offset="100%" stop-color="#A78BFA"/>
+    </linearGradient>
+
+    <!-- Glow behind the P -->
+    <radialGradient id="glow-bg" cx="54%" cy="42%" r="42%">
+      <stop offset="0%"   stop-color="#4D7CFF" stop-opacity="0.30"/>
+      <stop offset="100%" stop-color="#4D7CFF" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- P inner highlight (top of stroke) -->
+    <linearGradient id="p-shine" x1="30" y1="12" x2="60" y2="32" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="white" stop-opacity="0.60"/>
+      <stop offset="100%" stop-color="white" stop-opacity="0"/>
+    </linearGradient>
+
+    <!-- Glow filter for P -->
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="3.5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
     </filter>
+
+    <!-- Rim: glass edge highlight gradient -->
+    <linearGradient id="rim" x1="0" y1="0" x2="1" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0%"   stop-color="white" stop-opacity="0.35"/>
+      <stop offset="40%"  stop-color="white" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#4D7CFF" stop-opacity="0.22"/>
+    </linearGradient>
+
+    <!-- Inner shadow at bottom (depth) -->
+    <linearGradient id="inner-shadow" x1="50" y1="60" x2="50" y2="100" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="black" stop-opacity="0"/>
+      <stop offset="100%" stop-color="black" stop-opacity="0.30"/>
+    </linearGradient>
+
+    <clipPath id="icon-clip">
+      <rect width="100" height="100" rx="22"/>
+    </clipPath>
   </defs>
+
+  <!-- 1. Base -->
   <rect width="100" height="100" rx="22" fill="url(#bg)"/>
-  <path d="M 36 78 L 36 26 C 36 17 46 13 56 13 C 72 13 78 25 78 37 C 78 51 68 59 54 59 L 36 59"
-    stroke="url(#p)" stroke-width="11" fill="none"
-    stroke-linecap="round" stroke-linejoin="round"
-    filter="url(#glow)"/>
+
+  <!-- 2. Glass body tint -->
+  <rect width="100" height="100" rx="22" fill="url(#glass)"/>
+
+  <!-- 3. Glow bloom behind P -->
+  <rect width="100" height="100" rx="22" fill="url(#glow-bg)"/>
+
+  <!-- 4. Diagonal caustic band (light refraction through glass) -->
+  <g clip-path="url(#icon-clip)">
+    <path d="M -10 18 Q 28 8 52 22 Q 76 36 112 18 L 112 -4 Q 76 14 52 2 Q 28 -10 -10 6 Z"
+          fill="white" fill-opacity="0.055"/>
+  </g>
+
+  <!-- 5. Top specular glare -->
+  <rect width="100" height="100" rx="22" fill="url(#spec-top)"/>
+
+  <!-- 6. Left edge glare -->
+  <rect width="100" height="100" rx="22" fill="url(#spec-left)"/>
+
+  <!-- 7. Bottom inner shadow (depth) -->
+  <rect width="100" height="100" rx="22" fill="url(#inner-shadow)"/>
+
+  <!-- 8. P letterform — main with glow -->
+  <path d="M 32 82 L 32 20 C 32 14 42 10 53 10 C 70 10 80 21 80 35 C 80 51 69 60 52 60 L 32 60"
+        stroke="url(#p-grad)" stroke-width="12.5" fill="none"
+        stroke-linecap="round" stroke-linejoin="round"
+        filter="url(#glow)"/>
+
+  <!-- 9. P top shine (white highlight on top edge of stroke) -->
+  <path d="M 32 20 C 32 14 42 10 53 10 C 70 10 80 21 80 35"
+        stroke="url(#p-shine)" stroke-width="4" fill="none"
+        stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/>
+
+  <!-- 10. Rim (glass edge) -->
+  <rect width="100" height="100" rx="22"
+        stroke="url(#rim)" stroke-width="1.5" fill="none"/>
+
+  <!-- 11. Thin inner rim -->
+  <rect x="1.5" y="1.5" width="97" height="97" rx="21"
+        stroke="white" stroke-opacity="0.06" stroke-width="1" fill="none"/>
 </svg>
