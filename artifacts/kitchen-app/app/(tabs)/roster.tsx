@@ -140,6 +140,27 @@ export default function RosterScreen() {
   const sickCount = sickStaffIds.length;
   const casualCount = staff.filter((s) => s.role === "Casual").length;
 
+  type DisplayItem =
+    | { type: "header"; section: string; count: number; sickInSection: number }
+    | { type: "staff"; member: StaffMember };
+
+  const displayItems = useMemo<DisplayItem[]>(() => {
+    if (search.length > 0) return filteredStaff.map(m => ({ type: "staff" as const, member: m }));
+    const grouped = new Map<string, StaffMember[]>();
+    filteredStaff.forEach(m => {
+      const key = m.section ?? "Other";
+      if (!grouped.has(key)) grouped.set(key, []);
+      grouped.get(key)!.push(m);
+    });
+    const result: DisplayItem[] = [];
+    grouped.forEach((members, section) => {
+      const sickInSection = members.filter(m => sickStaffIds.includes(m.id)).length;
+      result.push({ type: "header", section, count: members.length, sickInSection });
+      members.forEach(m => result.push({ type: "staff", member: m }));
+    });
+    return result;
+  }, [filteredStaff, search, sickStaffIds]);
+
   async function doSignIn(memberId: string) {
     setLoading(memberId);
     const member = staff.find((s) => s.id === memberId)!;
@@ -419,11 +440,24 @@ export default function RosterScreen() {
         {search.length === 0 && (
           <View>
             {sickCount > 0 && (
-              <View style={s.sickAlertBanner}>
-                <Ionicons name="warning" size={18} color="#EF4444" />
-                <Text style={{ flex: 1, fontSize: 13, fontFamily: "Inter_600SemiBold", color: "#EF4444" }}>
-                  {sickCount} staff call-in{sickCount > 1 ? 's' : ''} today. Adjust the roster as needed.
-                </Text>
+              <View style={{ marginHorizontal: 20, marginBottom: 16, borderRadius: 12, borderWidth: 1, borderColor: "rgba(239,68,68,0.25)", overflow: "hidden" }}>
+                <LinearGradient
+                  colors={["rgba(239,68,68,0.14)", "rgba(249,115,22,0.04)"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={{ padding: 16 }}
+                >
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                    <Ionicons name="warning" size={15} color="#EF4444" />
+                    <Text style={{ fontSize: 14, fontFamily: "Inter_700Bold", color: "#EF4444" }}>Coverage Alert</Text>
+                  </View>
+                  <Text style={{ fontSize: 13, fontFamily: "Inter_400Regular", color: colors.foreground, marginBottom: 10, opacity: 0.9 }}>
+                    {sickCount} staff call-in{sickCount > 1 ? 's' : ''} today — shifts may be short
+                  </Text>
+                  <Text style={{ fontSize: 13, fontFamily: "Inter_700Bold", color: "#F97316" }}>
+                    Review affected shifts →
+                  </Text>
+                </LinearGradient>
               </View>
             )}
             <View style={s.statsRow}>
@@ -612,9 +646,6 @@ export default function RosterScreen() {
             {filteredStaff.length} result{filteredStaff.length !== 1 ? "s" : ""} for "{search}"
           </Text>
         )}
-        {search.length === 0 && (
-          <Text style={s.sectionDividerLabel}>All staff</Text>
-        )}
 
         {filteredStaff.length === 0 && (
           <View style={s.noResults}>
@@ -624,7 +655,27 @@ export default function RosterScreen() {
         )}
 
         <View style={isTablet ? { flexDirection: "row", flexWrap: "wrap", paddingHorizontal: 8 } : {}}>
-        {filteredStaff.map((member) => {
+        {displayItems.map((item) => {
+          if (item.type === "header") {
+            return (
+              <View key={`hdr-${item.section}`} style={{ width: "100%", flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginHorizontal: 20, marginTop: 20, marginBottom: 8, paddingRight: 20 }}>
+                <Text style={{ fontSize: 10, fontFamily: "Inter_700Bold", color: colors.mutedForeground, textTransform: "uppercase", letterSpacing: 1.5 }}>
+                  {item.section}
+                </Text>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                  {item.sickInSection > 0 && (
+                    <Text style={{ fontSize: 11, fontFamily: "Inter_700Bold", color: "#EF4444" }}>
+                      {item.sickInSection} sick ·{" "}
+                    </Text>
+                  )}
+                  <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground }}>
+                    {item.count} staff
+                  </Text>
+                </View>
+              </View>
+            );
+          }
+          const member = item.member;
           const rc = getRoleColor(member.role);
           const tc = getTeamColor(member.section);
           const isMe = currentStaffId === member.id;
@@ -647,6 +698,8 @@ export default function RosterScreen() {
                 isTablet && { width: "50%", marginHorizontal: 0, paddingHorizontal: 4 },
                 {
                   borderLeftColor: isSick ? "#EF4444" : rc,
+                  borderStyle: isSick ? "dashed" : "solid",
+                  opacity: isSick ? 0.8 : 1,
                 },
               ]}
             >
@@ -834,6 +887,15 @@ export default function RosterScreen() {
                       </View>
                     );
                   })}
+                </View>
+              )}
+
+              {/* Sick — shift coverage notice */}
+              {isSick && isManager && (
+                <View style={{ paddingHorizontal: 14, paddingBottom: 12, paddingTop: 4 }}>
+                  <Text style={{ fontSize: 12, fontFamily: "Inter_500Medium", color: "#EAB308" }}>
+                    Shift uncovered · Find replacement
+                  </Text>
                 </View>
               )}
             </View>
