@@ -12,26 +12,34 @@ jobs:
   deploy:
     name: Deploy to Replit
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
         with:
           version: 10
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 22
           cache: pnpm
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # ✅ IMPORTANT: build all shared packages first
+      - name: Build monorepo packages
+        run: pnpm -r run build
+
+      # Typecheck AFTER build (prevents .d.ts errors)
       - name: Typecheck API server
         run: pnpm --filter @workspace/api-server run typecheck
 
-      # The API server is hosted on Replit — pushes to main auto-deploy via
-      # the Replit GitHub integration. This step just verifies the build is clean.
+      # Final build step
       - name: Build API server
         run: pnpm --filter @workspace/api-server run build
         env:
