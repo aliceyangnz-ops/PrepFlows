@@ -1,224 +1,240 @@
-PrepFlows — Production Documentation
-AI-powered Hospitality Operations Platform
+# PrepFlows
 
-PrepFlows is a unified operational system built for the hospitality industry, including restaurants, hotels, and professional kitchens.
+Hospitality operations platform for back-of-house kitchen teams. Manages daily functions, service timetables, rosters, prep lists, and work plans. Designed for plain English readability, suitable for restaurants, hotels, and professional kitchens.
 
-It replaces fragmented tools such as spreadsheets and manual workflows with an AI-driven platform that automates planning, scheduling, and kitchen execution.
+---
 
-Overview
+## Architecture
 
-PrepFlows consolidates hospitality operations into a single intelligent system.
+```
+prepflows/
+├── artifacts/
+│   ├── kitchen-app/          # Expo React Native app (iOS, Android, web)
+│   ├── api-server/           # Express API — AI parse, Stripe, PMS sync
+│   ├── prepflows-website/    # Vite/React marketing + SaaS site
+│   └── mockup-sandbox/       # UI prototype playground (dev only)
+├── lib/
+│   ├── db/                   # Drizzle ORM schema + migrations
+│   ├── api-spec/             # OpenAPI spec (source of truth)
+│   ├── api-client-react/     # Generated React Query hooks (Orval)
+│   ├── api-zod/              # Generated Zod schemas
+│   └── connector-core/       # PMS integration logic (Opera, iVvy, Delphi…)
+└── scripts/                  # Utility scripts (seeding, Stripe)
+```
 
-It enables teams to:
+**Tech Stack:**
 
-Automate prep list generation
-Generate AI-driven workflows from menus and recipes
-Manage schedules and kitchen timetables
-Track inventory and operational processes
-Operate seamlessly across mobile and web platforms
-Key Features
-Smart Workflow Engine
+- **Mobile**: Expo SDK 54, expo-router, React Native 0.81
+- **Web**: Vite + React 19, Tailwind CSS v4
+- **API**: Express 5, Drizzle ORM, Pino, Zod
+- **Database**: Supabase (PostgreSQL) via Drizzle
+- **Auth**: Supabase Auth
+- **Payments**: Stripe
+- **AI**: OpenAI GPT-4o (Smart Import — optional, falls back to rule-based)
+- **Monorepo**: pnpm workspaces
 
-Automatically generates structured kitchen workflows based on menus, recipes, and operational logic.
+---
 
-Prep List Automation
+## Local Development
 
-Transforms structured or unstructured inputs into production-ready prep lists for kitchen execution.
+### Prerequisites
 
-Menu Intelligence System
+- Node.js 24+
+- pnpm 9+ (`npm install -g pnpm`)
+- A Supabase project (free tier works)
 
-Extracts, normalizes, and interprets culinary terminology across multiple languages and formats.
+### Setup
 
-Operational Dashboard
-
-Provides real-time visibility into kitchen operations for chefs and managers.
-
-Multi-platform Access
-iOS (Expo / EAS)
-Android (Expo / EAS)
-Web dashboard (Vite + React)
-
-Tech Stack
-Frontend
-React Native (Expo SDK 54, expo-router)
-React 19 (Web)
-Vite
-Tailwind CSS v4
-Backend
-Node.js (TypeScript)
-Express 5
-Drizzle ORM
-Zod validation
-Pino logging
-
-Database
-Supabase (PostgreSQL)
-Drizzle ORM abstraction layer
-Authentication
-Supabase Auth
-Payments
-Stripe (Subscriptions + Webhooks)
-AI Layer
-OpenAI GPT-4o
-Smart Import system with rule-based fallback
-Infrastructure
-pnpm workspaces (monorepo)
-GitHub Actions CI/CD
-EAS (Expo Application Services)
-CI/CD Architecture
-System Overview
-
-GitHub Push (main / dev / PR)
-            │
-            ├──────────────────────────────┬──────────────────────────────┬──────────────────────────────┐
-            │                              │                              │
-            ▼                              ▼                              ▼
-
-      Lint CI                      API CI                        Mobile CI
-      lint.yml                    deploy-api.yml                eas-build.yml
-
-            │                              │                              │
-            ▼                              ▼                              ▼
-
- Code Quality Checks          Monorepo Build               Expo EAS Build
- Prettier + ESLint            API Typecheck                iOS / Android Build
- Type Validation              Backend Build                TestFlight / Play Store
-CI Pipelines
-Lint CI (lint.yml)
-
-Responsible for code quality enforcement.
-
-Prettier formatting checks
-ESLint validation
-Type safety verification
-API CI (deploy-api.yml)
-
-Backend validation pipeline.
-
-Monorepo build (pnpm -r build)
-API type checking
-Backend build verification
-Replit deployment compatibility checks
-Mobile CI (eas-build.yml)
-
-Mobile application build pipeline.
-
-Expo authentication via EAS
-iOS build (TestFlight ready)
-Android build support
-Secure token-based authentication
-Local Development
-Prerequisites
-Node.js 24 or higher
-pnpm 9 or higher
-Supabase project (free tier supported)
-Setup
+```bash
+# 1. Clone the repo
 git clone https://github.com/your-org/prepflows.git
 cd prepflows
 
+# 2. Install dependencies
 pnpm install
 
+# 3. Copy and configure environment variables
 cp .env.example .env
-# Configure environment variables
+# Edit .env with your Supabase URL, keys, Stripe keys, etc.
 
+# 4. Run database migrations
 pnpm --filter @workspace/db run migrate
 
-pnpm --filter @workspace/api-server run dev
-pnpm --filter @workspace/prepflows-website run dev
-pnpm --filter @workspace/kitchen-app run dev
-Mobile Development
+# 5. Start all services
+pnpm --filter @workspace/api-server run dev          # API on :8080
+pnpm --filter @workspace/prepflows-website run dev   # Website on :5173
+pnpm --filter @workspace/kitchen-app run dev         # Expo (web) on :8081
+```
+
+### Mobile App (iOS/Android Simulator)
+
+```bash
+# Install Expo CLI globally if needed
 npm install -g expo-cli
 
+# Start the Expo dev server
 cd artifacts/kitchen-app
 npx expo start
-Controls
-i → iOS simulator
-a → Android emulator
-w → Web preview
-Type Checking
-pnpm run typecheck
-pnpm run typecheck:libs
 
-pnpm --filter @workspace/api-server run typecheck
-pnpm --filter @workspace/kitchen-app run typecheck
-Environment Variables
-Variable	Description
-SUPABASE_URL	Supabase project URL
-SUPABASE_ANON_KEY	Public Supabase key
-SUPABASE_SERVICE_ROLE_KEY	Server-side admin key
-SUPABASE_POOLER_URL	DB connection pooler
-SUPABASE_DB_URL	Direct DB connection
-SESSION_SECRET	Session signing key
-STRIPE_SECRET_KEY	Stripe backend key
-STRIPE_WEBHOOK_SECRET	Stripe webhook verification
-VITE_STRIPE_PUBLISHABLE_KEY	Stripe frontend key
-OPENAI_API_KEY	AI features (optional)
-EXPO_TOKEN	EAS CI/CD token
-Deployment
-API Server (Replit)
+# Then press in the terminal:
+#  i — open iOS simulator
+#  a — open Android emulator
+#  w — open web browser
+```
 
-Automatically deployed on push to main branch via Replit GitHub integration.
+### Type Checking
 
-Requires:
+```bash
+pnpm run typecheck                                              # Full workspace
+pnpm run typecheck:libs                                         # Shared libraries only
+pnpm --filter @workspace/kitchen-app run typecheck             # Mobile app only
+pnpm --filter @workspace/api-server run typecheck              # API server only
+```
 
-Supabase credentials
-Stripe keys
-Session secret
-OpenAI key (optional)
-Web Application (Vercel)
+---
+
+## Environment Variables
+
+Copy `.env.example` to `.env` and configure the following required variables:
+
+| Variable | Description |
+|----------|-------------|
+| `SUPABASE_URL` | Your Supabase project URL |
+| `SUPABASE_ANON_KEY` | Supabase public key (safe for client) |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key (server only) |
+| `SUPABASE_POOLER_URL` | Transaction pooler URL for API server connections |
+| `SUPABASE_DB_URL` | Direct database connection URL (migrations only) |
+| `EXPO_PUBLIC_SUPABASE_URL` | Same as `SUPABASE_URL` — injected into Expo bundle |
+| `EXPO_PUBLIC_SUPABASE_ANON_KEY` | Same as `SUPABASE_ANON_KEY` — injected into Expo bundle |
+| `SESSION_SECRET` | Random 32-character string for session signing |
+| `STRIPE_SECRET_KEY` | Stripe secret key (`sk_live_…` or `sk_test_…`) |
+| `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret (`whsec_…`) |
+| `VITE_STRIPE_PUBLISHABLE_KEY` | Stripe publishable key for the website |
+| `OPENAI_API_KEY` | Optional — enables GPT-4o Smart Import; falls back to rule-based parsing |
+| `EXPO_TOKEN` | EAS CLI token for CI/CD deployments |
+
+---
+
+## Deployment
+
+### API Server — Replit
+
+The API server runs on Replit with automatic redeployment on pushes to `main` via GitHub integration.
+
+**Required secrets in Replit:**
+
+- `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
+- `SUPABASE_POOLER_URL`, `DATABASE_URL`
+- `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`
+- `SESSION_SECRET`
+- `OPENAI_API_KEY` (optional)
+
+### Website — Vercel
+
+Deploy the website from the `artifacts/prepflows-website` directory:
+
+```bash
+npm install -g vercel
 cd artifacts/prepflows-website
 vercel --prod
+```
 
-Required:
+**Set environment variables in Vercel dashboard:**
 
-VITE_STRIPE_PUBLISHABLE_KEY
-SUPABASE_URL
-SUPABASE_ANON_KEY
-Mobile Application (EAS)
+- `VITE_STRIPE_PUBLISHABLE_KEY`
+- `SUPABASE_URL`, `SUPABASE_ANON_KEY`
+
+### Mobile App — EAS Build
+
+```bash
 cd artifacts/kitchen-app
 
+# Development build (for simulator testing)
 eas build --profile development --platform ios
+
+# Preview build (for internal testing)
 eas build --profile preview --platform all
+
+# Production build (for App Store / Play Store submission)
 eas build --profile production --platform all
-First-time setup
-Configure EXPO_PUBLIC_SUPABASE_ANON_KEY in EAS secrets
-Set App Store Connect App ID in eas.json
-Add Google Play service account credentials
-Submission
+```
+
+**Before your first production build:**
+
+1. Set `EXPO_PUBLIC_SUPABASE_ANON_KEY` as an EAS secret:
+   ```bash
+   eas secret:create --scope project --name EXPO_PUBLIC_SUPABASE_ANON_KEY --value "your-anon-key"
+   ```
+2. Update `eas.json` → `submit.production.ios.ascAppId` with your App Store Connect App ID
+3. Add `google-service-account.json` credentials for Android Play Store submission
+
+**Submit to app stores:**
+
+```bash
 eas submit --platform ios --latest
 eas submit --platform android --latest
-Database
-PostgreSQL via Supabase
-Drizzle ORM abstraction layer
-Migration system in @workspace/db
+```
+
+### Database Migrations
+
+Apply migrations to your Supabase instance:
+
+```bash
 pnpm --filter @workspace/db run migrate
-CI/CD Summary
-Workflow	Trigger	Purpose
-lint.yml	push / PR	Code quality checks
-deploy-api.yml	backend changes	API validation + build
-eas-build.yml	mobile changes	Mobile build pipeline
+```
 
-Required secrets:
+Alternatively, manually execute SQL from:
+- `lib/db/supabase-setup.sql`
+- `artifacts/kitchen-app/supabase/migrations/`
 
-EXPO_TOKEN
-DATABASE_URL
-Supabase keys
-Key Features Mapping
-Feature	Location
-Dashboard	kitchen-app/app/(tabs)/index.tsx
-Smart Import	function/add.tsx + api-server/routes/aiParse.ts
-Prep Lists	prep.tsx
-Roster System	roster.tsx
-QR Briefing	brief/[id].tsx
-Stripe Billing	api-server/routes/stripe.ts
-Realtime Sync	supabase-sync.ts
-Branding
-Product Name: PrepFlows
-URL Scheme: prepflows://
-Primary Color: #EAB308
-Background: #0D1117
-Card: #161B22
-Accent: #22C55E
-License
+---
 
-Private — all rights reserved
+## GitHub Actions
+
+Three CI/CD workflows are included in `.github/workflows/`:
+
+| Workflow | Trigger | Purpose |
+|----------|---------|---------|
+| `ci.yml` | Push / PR to main | Typecheck + format check across all packages |
+| `eas-build.yml` | Push to main (app changes) | Runs EAS preview build for mobile |
+| `deploy-api.yml` | Push to main (API changes) | Typechecks + builds the API server |
+
+**Required GitHub secrets:**
+
+- `EXPO_TOKEN` — from [expo.dev](https://expo.dev) → Account settings → Access tokens
+- `EXPO_PUBLIC_SUPABASE_ANON_KEY` — your Supabase anonymous key
+- `DATABASE_URL` — for API build verification
+
+---
+
+## Key Features
+
+| Feature | Location |
+|---------|----------|
+| Today dashboard | `kitchen-app/app/(tabs)/index.tsx` |
+| Function list & detail | `kitchen-app/app/(tabs)/index.tsx`, `app/function/[id].tsx` |
+| Smart Import (paste / file / scan) | `kitchen-app/app/function/add.tsx` + `api-server/routes/aiParse.ts` |
+| Prep list + print/share | `kitchen-app/app/(tabs)/prep.tsx`, `app/prep-print/` |
+| Roster + sick calls | `kitchen-app/app/(tabs)/roster.tsx` |
+| Casual staff QR brief | `kitchen-app/app/brief/[id].tsx` |
+| PMS connector sync | `api-server/routes/connectors.ts` + `lib/connector-core/` |
+| Stripe billing | `api-server/routes/stripe.ts` + `api-server/stripeService.ts` |
+| Supabase realtime sync | `kitchen-app/lib/supabase-sync.ts` |
+
+---
+
+## Branding
+
+- **App name**: PrepFlows
+- **Bundle ID / package**: `com.prepflows.app`
+- **URL scheme**: `prepflows://`
+- **Primary color**: `#EAB308` (yellow)
+- **Background**: `#0D1117`
+- **Card background**: `#161B22`
+- **Accent**: `#22C55E`
+
+---
+
+## License
+
+Private — all rights reserved.
