@@ -170,12 +170,22 @@ function Hero() {
 
       <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
 
+        {/* Eyebrow tagline — sits above everything else */}
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.04, duration: 0.6 }}
+          style={{ fontSize: 11, fontWeight: 700, color: "#3F3F46", letterSpacing: "0.28em", textTransform: "uppercase", marginBottom: 28, margin: "0 0 28px" }}
+        >
+          Plan &nbsp;·&nbsp; Prep &nbsp;·&nbsp; Service &nbsp;·&nbsp; Scale
+        </motion.p>
+
         {/* Announcement badge */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.08, duration: 0.5 }}
-          style={{ display: "inline-flex", alignItems: "center", gap: 8, borderRadius: 9999, padding: "1px", background: C.grad, marginBottom: 44 }}
+          style={{ display: "inline-flex", alignItems: "center", gap: 8, borderRadius: 9999, padding: "1px", background: C.grad, marginBottom: 36 }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 8, background: C.bg, borderRadius: 9999, padding: "6px 16px" }}>
             <span style={{ width: 6, height: 6, borderRadius: "50%", background: C.grad, display: "inline-block", flexShrink: 0 }} />
@@ -188,7 +198,7 @@ function Hero() {
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15, duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
-          style={{ fontSize: "clamp(56px, 9vw, 96px)", fontWeight: 700, lineHeight: 1.0, letterSpacing: "-0.05em", margin: 0, marginBottom: 8 }}
+          style={{ fontSize: "clamp(52px, 8vw, 88px)", fontWeight: 700, lineHeight: 1.0, letterSpacing: "-0.055em", margin: 0, marginBottom: 20 }}
         >
           <span style={gradText}>PrepFlows</span>
         </motion.h1>
@@ -198,38 +208,28 @@ function Hero() {
           initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.24, duration: 0.6 }}
-          style={{ fontSize: "clamp(18px, 2.8vw, 28px)", fontWeight: 300, color: "#71717A", letterSpacing: "-0.02em", margin: 0, marginBottom: 16, maxWidth: 620, lineHeight: 1.3 }}
+          style={{ fontSize: "clamp(16px, 2.2vw, 22px)", fontWeight: 300, color: "#71717A", letterSpacing: "-0.02em", margin: 0, marginBottom: 44, maxWidth: 480, lineHeight: 1.4 }}
         >
           The operating system for<br />
           <span style={{ color: C.muted }}>professional kitchens.</span>
-        </motion.p>
-
-        {/* Tagline */}
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.32, duration: 0.6 }}
-          style={{ fontSize: 12, fontWeight: 600, color: "#3F3F46", letterSpacing: "0.22em", textTransform: "uppercase", marginBottom: 56 }}
-        >
-          Plan &nbsp;·&nbsp; Prep &nbsp;·&nbsp; Service &nbsp;·&nbsp; Scale
         </motion.p>
 
         {/* CTAs */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.40, duration: 0.5 }}
-          style={{ display: "flex", flexWrap: "wrap", gap: 14, justifyContent: "center", marginBottom: 88 }}
+          transition={{ delay: 0.34, duration: 0.5 }}
+          style={{ display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "center", marginBottom: 64 }}
         >
           <button onClick={() => navigate("/app")}
-            style={{ background: C.grad, color: "#fff", fontSize: 15, fontWeight: 600, padding: "15px 36px", borderRadius: 9999, border: "none", cursor: "pointer", letterSpacing: "-0.02em", transition: "opacity 0.2s, transform 0.2s", boxShadow: "0 0 32px rgba(59,130,246,0.35), 0 0 64px rgba(6,182,212,0.15)" }}
+            style={{ background: C.grad, color: "#fff", fontSize: 14, fontWeight: 600, padding: "13px 32px", borderRadius: 9999, border: "none", cursor: "pointer", letterSpacing: "-0.02em", transition: "opacity 0.2s, transform 0.2s", boxShadow: "0 0 28px rgba(59,130,246,0.32), 0 0 56px rgba(6,182,212,0.12)" }}
             onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.87"; e.currentTarget.style.transform = "scale(1.03)"; }}
             onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.transform = "scale(1)"; }}
           >
             Try first month free
           </button>
           <button onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })}
-            style={{ background: "transparent", color: C.muted, fontSize: 15, fontWeight: 500, padding: "15px 36px", borderRadius: 9999, border: `1px solid ${C.border}`, cursor: "pointer", letterSpacing: "-0.01em", transition: "border-color 0.2s, color 0.2s, transform 0.2s" }}
+            style={{ background: "transparent", color: C.muted, fontSize: 14, fontWeight: 500, padding: "13px 32px", borderRadius: 9999, border: `1px solid ${C.border}`, cursor: "pointer", letterSpacing: "-0.01em", transition: "border-color 0.2s, color 0.2s, transform 0.2s" }}
             onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.22)"; e.currentTarget.style.color = C.text; e.currentTarget.style.transform = "scale(1.02)"; }}
             onMouseLeave={(e) => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted; e.currentTarget.style.transform = "scale(1)"; }}
           >
@@ -241,40 +241,44 @@ function Hero() {
         <motion.div
           initial={{ opacity: 0, y: 28 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.50, duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
-          style={{ width: "100%", maxWidth: 820, display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}
+          transition={{ delay: 0.44, duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
+          style={{ width: "100%", maxWidth: 820, display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}
         >
           {[
-            { label: "Today",   sub: "All functions at a glance", number: "4 live",    icon: <DashIcon /> },
-            { label: "Prep",    sub: "Team tasks & progress",     number: "68% done",  icon: <PrepIcon /> },
-            { label: "Service", sub: "Fire courses in real-time", number: "Main away", icon: <ServiceIcon /> },
+            { label: "Today",   sub: "All functions at a glance", number: "4 live",    icon: <DashIcon />,    statColor: "#06B6D4", statBg: "rgba(6,182,212,0.1)",    statBorder: "rgba(6,182,212,0.2)",    bar: "100%" },
+            { label: "Prep",    sub: "Team tasks & progress",     number: "68% done",  icon: <PrepIcon />,    statColor: "#818CF8", statBg: "rgba(129,140,248,0.1)", statBorder: "rgba(129,140,248,0.2)", bar: "68%"  },
+            { label: "Service", sub: "Fire courses in real-time", number: "Main away", icon: <ServiceIcon />, statColor: "#06B6D4", statBg: "rgba(6,182,212,0.1)",    statBorder: "rgba(6,182,212,0.2)",    bar: "45%"  },
           ].map((s, i) => (
             <motion.div
               key={s.label}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.54 + i * 0.07, duration: 0.5, ease: "easeOut" }}
+              transition={{ delay: 0.48 + i * 0.07, duration: 0.5, ease: "easeOut" }}
               whileHover={{ scale: 1.025 }}
               style={{
                 position: "relative",
                 background: "rgba(255,255,255,0.035)",
                 border: "1px solid rgba(255,255,255,0.08)",
-                borderRadius: 18,
-                padding: "22px 20px",
+                borderRadius: 20,
+                padding: "28px 24px 24px",
                 textAlign: "left",
                 overflow: "hidden",
               }}
             >
               {/* Gradient top accent line */}
-              <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 1, background: C.grad, opacity: 0.5 }} />
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-                <div style={{ width: 32, height: 32, borderRadius: 9, background: "linear-gradient(135deg, rgba(59,130,246,0.2), rgba(6,182,212,0.15))", border: "1px solid rgba(59,130,246,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 1, background: C.grad, opacity: 0.45 }} />
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
+                <div style={{ width: 34, height: 34, borderRadius: 10, background: "linear-gradient(135deg, rgba(59,130,246,0.2), rgba(6,182,212,0.15))", border: "1px solid rgba(59,130,246,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   {s.icon}
                 </div>
-                <span style={{ fontSize: 11, fontWeight: 700, color: "#06B6D4", background: "rgba(6,182,212,0.1)", border: "1px solid rgba(6,182,212,0.2)", borderRadius: 9999, padding: "3px 9px", letterSpacing: "0.02em" }}>{s.number}</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: s.statColor, background: s.statBg, border: `1px solid ${s.statBorder}`, borderRadius: 9999, padding: "3px 10px", letterSpacing: "0.02em" }}>{s.number}</span>
               </div>
-              <div style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 4, letterSpacing: "-0.02em" }}>{s.label}</div>
-              <div style={{ fontSize: 12, color: C.muted }}>{s.sub}</div>
+              <div style={{ fontSize: 15, fontWeight: 600, color: C.text, marginBottom: 6, letterSpacing: "-0.03em" }}>{s.label}</div>
+              <div style={{ fontSize: 12, color: "#52525B", lineHeight: 1.5 }}>{s.sub}</div>
+              {/* Progress bar */}
+              <div style={{ marginTop: 20, height: 3, borderRadius: 9999, background: "rgba(255,255,255,0.05)", overflow: "hidden" }}>
+                <div style={{ height: "100%", borderRadius: 9999, background: C.grad, width: s.bar, opacity: 0.6 }} />
+              </div>
             </motion.div>
           ))}
         </motion.div>
