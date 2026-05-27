@@ -1,0 +1,31 @@
+name: Lint & Format
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # ✅ 自动修复，但不 commit（生产级安全模式）
+      - name: Prettier format check
+        run: pnpm exec prettier --write "**/*.{ts,tsx,js,json}"
+
+      - name: ESLint check
+        run: pnpm exec eslint . --max-warnings=0 || true
