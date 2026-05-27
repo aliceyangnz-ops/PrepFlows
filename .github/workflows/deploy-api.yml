@@ -22,7 +22,7 @@ jobs:
         with:
           version: 10
 
-      - name: Setup Node.js
+      - name: Setup Node.js (LTS)
         uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -31,15 +31,15 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # ✅ IMPORTANT: build all shared packages first
+      # ✅ IMPORTANT: build shared packages first
       - name: Build monorepo packages
         run: pnpm -r run build
 
-      # Typecheck AFTER build (prevents .d.ts errors)
+      # ✅ Now typecheck API server
       - name: Typecheck API server
         run: pnpm --filter @workspace/api-server run typecheck
 
-      # Final build step
+      # Final build
       - name: Build API server
         run: pnpm --filter @workspace/api-server run build
         env:
