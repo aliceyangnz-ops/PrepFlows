@@ -152,6 +152,8 @@ export default function FunctionDetailScreen() {
   else if (now >= startDate) status = "LIVE";
 
   const statusColor = status === "LIVE" ? "#EAB308" : status === "Done" ? "#22C55E" : "#3B82F6";
+  const minsToEnd   = Math.max(0, Math.round((endDate.getTime() - now.getTime()) / 60000));
+  const minsToStart = Math.max(0, Math.round((startDate.getTime() - now.getTime()) / 60000));
 
   const dietaryReqs = fn.dietaryRequirements ?? [];
   const totalDietary = dietaryReqs.reduce((sum, d) => sum + d.count, 0);
@@ -522,22 +524,42 @@ export default function FunctionDetailScreen() {
               <Text style={s.floorTagText}>· {editing ? draft.floor || fn.floor : fn.floor}</Text>
             </View>
           </View>
+          {!editing && status === "LIVE" && (
+            <View style={{ alignSelf: "flex-start", flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: "rgba(249,115,22,0.12)", paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, marginBottom: 14 }}>
+              <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: "#F97316" }} />
+              <Text style={{ fontSize: 12, fontFamily: "Inter_700Bold", color: "#F97316" }}>
+                {"LIVE · Ends in "}
+                {minsToEnd >= 60 ? `${Math.floor(minsToEnd / 60)}h ${minsToEnd % 60}m` : `${minsToEnd}m`}
+              </Text>
+            </View>
+          )}
+          {!editing && status === "Upcoming" && minsToStart > 0 && minsToStart <= 240 && (
+            <View style={{ alignSelf: "flex-start", flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: "rgba(59,130,246,0.10)", paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, marginBottom: 14 }}>
+              <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: "#3B82F6" }} />
+              <Text style={{ fontSize: 12, fontFamily: "Inter_700Bold", color: "#3B82F6" }}>
+                {"Starting in "}
+                {minsToStart >= 60 ? `${Math.floor(minsToStart / 60)}h ${minsToStart % 60}m` : `${minsToStart}m`}
+              </Text>
+            </View>
+          )}
           <View style={s.infoGrid}>
             <View style={s.infoBox}>
               <Text style={s.infoNum}>{editing ? draft.guestCount : fn.guestCount}</Text>
-              <Text style={s.infoLabel}>Guests</Text>
+              <Text style={s.infoLabel}>Covers</Text>
             </View>
             <View style={s.infoBox}>
-              <Text style={s.infoNum}>{editing ? draft.startTime : fn.startTime}</Text>
-              <Text style={s.infoLabel}>Start</Text>
+              <Text style={[s.infoNum, { color: "#F97316" }]}>{editing ? draft.startTime : fn.startTime}</Text>
+              <Text style={s.infoLabel}>Service</Text>
             </View>
             <View style={s.infoBox}>
               <Text style={s.infoNum}>{editing ? draft.endTime : fn.endTime}</Text>
-              <Text style={s.infoLabel}>Finish</Text>
+              <Text style={s.infoLabel}>End</Text>
             </View>
             <View style={s.infoBox}>
-              <Text style={s.infoNum}>{editing ? draft.functionType.split(" ")[0] : fn.functionType.split(" ")[0]}</Text>
-              <Text style={s.infoLabel}>Type</Text>
+              <Text style={[s.infoNum, { color: colors.primary, fontSize: 13 }]} numberOfLines={1}>
+                {editing ? draft.functionType.split(" ")[0] : fn.functionType.split(" ")[0]}
+              </Text>
+              <Text style={s.infoLabel}>Package</Text>
             </View>
           </View>
         </View>
@@ -850,7 +872,113 @@ export default function FunctionDetailScreen() {
               </View>
             </View>
 
-            {/* ── Card 1: Function Menu + Dietary Tags ──────────────── */}
+            {/* ── Dietary Requirements ───────────────────────────────── */}
+            {dietaryReqs.length > 0 && (
+              <View style={{ paddingHorizontal: 20, paddingTop: 20, paddingBottom: 4 }}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                  <Ionicons name="shield" size={15} color={colors.mutedForeground} />
+                  <Text style={{ fontSize: 14, fontFamily: "Inter_700Bold", color: colors.foreground }}>Dietary Requirements</Text>
+                  <View style={{ marginLeft: "auto" as any, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8, backgroundColor: hasSevereAllergen ? "rgba(239,68,68,0.15)" : "rgba(255,255,255,0.07)" }}>
+                    <Text style={{ fontSize: 11, fontFamily: "Inter_700Bold", color: hasSevereAllergen ? "#EF4444" : colors.mutedForeground }}>{totalDietary} guests</Text>
+                  </View>
+                </View>
+                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 10 }}>
+                  {dietaryReqs.map((req, idx) => {
+                    const n = req.name.toLowerCase();
+                    const isNut = n.includes("nut");
+                    const isGF = n.includes("gluten");
+                    const isVegan = n.includes("vegan");
+                    const isVeg = n.includes("vegetarian");
+                    const isDairy = n.includes("dairy");
+                    let color = getDietaryColor(req.name);
+                    let bg = color + "20";
+                    let border = color + "40";
+                    let borderWidth = 1;
+                    if (isNut) { color = "#EF4444"; bg = "rgba(239,68,68,0.18)"; border = "rgba(239,68,68,0.45)"; borderWidth = 1.5; }
+                    else if (isGF) { color = "#EAB308"; bg = "rgba(234,179,8,0.15)"; border = "rgba(234,179,8,0.35)"; }
+                    else if (isVegan || isVeg) { color = "#22C55E"; bg = "rgba(34,197,94,0.15)"; border = "rgba(34,197,94,0.35)"; }
+                    else if (isDairy) { color = "#3B82F6"; bg = "rgba(59,130,246,0.15)"; border = "rgba(59,130,246,0.35)"; }
+                    return (
+                      <View key={idx} style={{ flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 6, backgroundColor: bg, borderWidth, borderColor: border }}>
+                        <Text style={{ fontSize: 13, fontFamily: "Inter_600SemiBold", color }}>{req.count} {req.name}</Text>
+                      </View>
+                    );
+                  })}
+                </View>
+                {hasSevereAllergen && (
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: "rgba(239,68,68,0.05)", paddingHorizontal: 12, paddingVertical: 8, borderRadius: 6, borderWidth: 1, borderColor: "rgba(239,68,68,0.3)", borderStyle: "dashed" }}>
+                    <Ionicons name="warning" size={14} color="#EF4444" />
+                    <Text style={{ flex: 1, fontSize: 12, fontFamily: "Inter_600SemiBold", color: "#EF4444" }}>Confirm nut allergy with kitchen before service</Text>
+                  </View>
+                )}
+              </View>
+            )}
+
+            {/* ── Run Sheet ──────────────────────────────────────────── */}
+            {fn.timeline.length > 0 && (
+              <View style={{ paddingHorizontal: 20, paddingTop: 20, paddingBottom: 4 }}>
+                <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+                  <Text style={s.sectionTitle}>Run Sheet</Text>
+                  <Text style={{ fontSize: 13, fontFamily: "Inter_500Medium", color: colors.mutedForeground }}>
+                    {fn.timeline.length} tasks · {stepsDone} done
+                  </Text>
+                </View>
+                <View>
+                  {fn.timeline.map((item, i) => {
+                    const catStyle = getCategoryStyle(item.category);
+                    const isDone = item.completed;
+                    const isActive = !isDone && i === fn.timeline.findIndex((t) => !t.completed);
+                    return (
+                      <Pressable
+                        key={item.id}
+                        style={({ pressed }) => ({
+                          flexDirection: "row",
+                          gap: 14,
+                          paddingVertical: 12,
+                          borderBottomWidth: i < fn.timeline.length - 1 ? 1 : 0,
+                          borderBottomColor: colors.border,
+                          opacity: pressed ? 0.7 : isDone ? 0.6 : 1,
+                          backgroundColor: isActive ? "rgba(249,115,22,0.04)" : "transparent",
+                        })}
+                        onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); toggleTimelineItem(fn.id, item.id); }}
+                      >
+                        <Text style={{ width: 46, fontSize: 12, fontFamily: Platform.OS === "ios" ? "Courier" : "monospace", color: colors.mutedForeground, paddingTop: 2 }}>
+                          {item.time}
+                        </Text>
+                        <View style={{ width: 20, alignItems: "center" }}>
+                          <View style={{
+                            width: 12, height: 12, borderRadius: 6, marginTop: 3, zIndex: 2,
+                            backgroundColor: isDone ? "#22C55E" : isActive ? "#F97316" : "transparent",
+                            borderWidth: isDone || isActive ? 0 : 2,
+                            borderColor: colors.mutedForeground,
+                          }} />
+                          {i < fn.timeline.length - 1 && (
+                            <View style={{ position: "absolute", top: 15, bottom: -12, width: 2, backgroundColor: colors.border, zIndex: 1 }} />
+                          )}
+                        </View>
+                        <View style={{ flex: 1, flexDirection: "row", alignItems: "flex-start", gap: 8 }}>
+                          <Text style={{
+                            flex: 1, fontSize: 14,
+                            fontFamily: isDone ? "Inter_400Regular" : isActive ? "Inter_700Bold" : "Inter_500Medium",
+                            color: isDone ? colors.mutedForeground : colors.foreground,
+                            textDecorationLine: isDone ? "line-through" : "none",
+                          }}>
+                            {item.task}
+                          </Text>
+                          <View style={{ paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }}>
+                            <Text style={{ fontSize: 10, fontFamily: "Inter_700Bold", color: catStyle.color, letterSpacing: 0.5, textTransform: "uppercase" }}>
+                              {catStyle.label}
+                            </Text>
+                          </View>
+                        </View>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </View>
+            )}
+
+            {/* ── Card 1: Function Menu ──────────────────────────────── */}
             <View style={{ marginHorizontal: 20, marginTop: 14, borderRadius: colors.radius, borderWidth: 1.5, borderColor: "#22C55E55", overflow: "hidden" }}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 14, paddingVertical: 10, backgroundColor: "#22C55E15", borderBottomWidth: 1, borderBottomColor: "#22C55E30" }}>
                 <Feather name="book-open" size={14} color="#22C55E" />
@@ -871,21 +999,6 @@ export default function FunctionDetailScreen() {
                   </Pressable>
                 )}
               </View>
-              {/* Dietary tags row */}
-              {dietaryReqs.length > 0 && (
-                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, paddingHorizontal: 14, paddingTop: 10, paddingBottom: fn.menu.length > 0 ? 6 : 12 }}>
-                  {dietaryReqs.map((req, idx) => {
-                    const dc = getDietaryColor(req.name);
-                    const isSevere = req.name.toLowerCase().includes("nut") || req.name.toLowerCase().includes("shellfish");
-                    return (
-                      <View key={idx} style={{ flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, paddingVertical: 5, borderRadius: 8, backgroundColor: dc + "20", borderWidth: 1, borderColor: dc + "50" }}>
-                        {isSevere && <Ionicons name="warning" size={10} color={dc} />}
-                        <Text style={{ fontSize: 12, fontFamily: "Inter_700Bold", color: dc }}>{req.name.toUpperCase()}</Text>
-                      </View>
-                    );
-                  })}
-                </View>
-              )}
               {/* Menu items */}
               {fn.menu.length === 0 ? (
                 <View style={{ paddingHorizontal: 14, paddingVertical: 16 }}>
@@ -918,66 +1031,6 @@ export default function FunctionDetailScreen() {
                 </View>
               )}
             </View>
-
-            {/* ── Card 2: Dietary Requests ───────────────────────────── */}
-            {dietaryReqs.length > 0 && (
-              <View style={{ marginHorizontal: 20, marginTop: 14, borderRadius: colors.radius, borderWidth: 1.5, borderColor: hasSevereAllergen ? "#EF444480" : "#F59E0B60", overflow: "hidden" }}>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 14, paddingVertical: 10, backgroundColor: hasSevereAllergen ? "#EF444415" : "#F59E0B15", borderBottomWidth: 1, borderBottomColor: hasSevereAllergen ? "#EF444430" : "#F59E0B30" }}>
-                  <Ionicons name="warning" size={14} color={hasSevereAllergen ? "#EF4444" : "#F59E0B"} />
-                  <Text style={{ flex: 1, fontSize: 13, fontFamily: "Inter_700Bold", color: hasSevereAllergen ? "#EF4444" : "#F59E0B" }}>
-                    Dietary Requests{hasSevereAllergen ? " — SEVERE ALLERGEN" : ""}
-                  </Text>
-                  <View style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10, backgroundColor: hasSevereAllergen ? "#EF4444" : "#F59E0B" }}>
-                    <Text style={{ fontSize: 12, fontFamily: "Inter_700Bold", color: "#fff" }}>{totalDietary} guests</Text>
-                  </View>
-                </View>
-                {dietaryReqs.some(d => d.name.toLowerCase().includes("nut")) && (
-                  <View style={{ paddingHorizontal: 14, paddingVertical: 8, backgroundColor: "rgba(239,68,68,0.05)" }}>
-                    <Text style={{ fontSize: 12, fontFamily: "Inter_700Bold", color: "#EF4444" }}>⚠ Confirm nut allergy with kitchen</Text>
-                  </View>
-                )}
-                <View style={{ padding: 10, gap: 8 }}>
-                  {dietaryReqs.map((req, idx) => {
-                    let dc = getDietaryColor(req.name);
-                    let bg = dc + "12";
-                    let border = dc + "20";
-                    let isNut = req.name.toLowerCase().includes("nut");
-                    let isGF = req.name.toLowerCase().includes("gluten");
-                    let isVegan = req.name.toLowerCase().includes("vegan") || req.name.toLowerCase().includes("vegetarian");
-
-                    if (isNut) { dc = "#EF4444"; bg = "rgba(239,68,68,0.15)"; border = "rgba(239,68,68,0.3)"; }
-                    else if (isGF) { dc = "#EAB308"; bg = "rgba(234,179,8,0.12)"; border = "rgba(234,179,8,0.2)"; }
-                    else if (isVegan) { dc = "#22C55E"; bg = "rgba(34,197,94,0.12)"; border = "rgba(34,197,94,0.2)"; }
-
-                    const isExpanded = expandedDietary === req.name + idx;
-                    return (
-                      <View key={idx} style={{ borderRadius: 10, overflow: "hidden", borderWidth: 1, backgroundColor: bg, borderColor: border }}>
-                        <View style={{ flexDirection: "row", alignItems: "center", padding: 10, gap: 10 }}>
-                          <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: dc + "25", alignItems: "center", justifyContent: "center" }}>
-                            <Text style={{ fontSize: 18, fontFamily: "Inter_700Bold", color: dc }}>{req.count}</Text>
-                          </View>
-                          <View style={{ flex: 1 }}>
-                            <Text style={{ fontSize: 14, fontFamily: "Inter_700Bold", color: dc }}>{req.name.toUpperCase()}{isNut ? " ⚠" : ""}</Text>
-                            {req.note ? (
-                              <Pressable onPress={() => setExpandedDietary(isExpanded ? null : req.name + idx)}>
-                                <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: dc, marginTop: 2 }}>{isExpanded ? "▲ Hide details" : "▼ View special instructions"}</Text>
-                              </Pressable>
-                            ) : (
-                              <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: dc, opacity: 0.7, marginTop: 2 }}>Standard {req.name} menu</Text>
-                            )}
-                          </View>
-                        </View>
-                        {isExpanded && req.note ? (
-                          <View style={{ paddingHorizontal: 14, paddingBottom: 12 }}>
-                            <Text style={{ fontSize: 13, fontFamily: "Inter_400Regular", color: dc, lineHeight: 19 }}>{req.note}</Text>
-                          </View>
-                        ) : null}
-                      </View>
-                    );
-                  })}
-                </View>
-              </View>
-            )}
 
             <View style={s.div} />
 
