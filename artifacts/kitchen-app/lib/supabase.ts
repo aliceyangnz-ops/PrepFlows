@@ -1,18 +1,26 @@
 /**
  * Supabase client for the PrepFlows app.
  *
- * Credentials are injected at runtime via app.config.js → Constants.expoConfig.extra.
- * The client is null when credentials are not yet configured — all sync helpers
+ * Credentials are loaded from EXPO_PUBLIC_SUPABASE_URL and
+ * EXPO_PUBLIC_SUPABASE_ANON_KEY environment variables.
+ *
+ * Local dev:  set them in artifacts/kitchen-app/.env
+ * EAS builds: set them as EAS environment variables
+ *             (`eas env:create --name EXPO_PUBLIC_SUPABASE_URL …`)
+ * CI:         set them as GitHub Actions secrets
+ *
+ * The client is null when credentials are absent — all sync helpers
  * check for null and fall back to AsyncStorage-only mode gracefully.
  */
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { Platform } from "react-native";
-import Constants from "expo-constants";
 
-const extra = (Constants.expoConfig?.extra ?? {}) as Record<string, string>;
+const SUPABASE_URL = (
+  process.env.EXPO_PUBLIC_SUPABASE_URL ?? ""
+).replace(/\/$/, "");
+const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? "";
 
-export const SUPABASE_URL: string = extra.supabaseUrl ?? "";
-export const SUPABASE_ANON_KEY: string = extra.supabaseAnonKey ?? "";
+export { SUPABASE_URL, SUPABASE_ANON_KEY };
 
 /** Returns true when both Supabase credentials are available. */
 export const isSupabaseConfigured = (): boolean =>
@@ -44,6 +52,6 @@ function buildClient(): SupabaseClient | null {
 
 /**
  * The Supabase client instance.
- * Null when SUPABASE_URL / SUPABASE_ANON_KEY are not set.
+ * Null when EXPO_PUBLIC_SUPABASE_URL / EXPO_PUBLIC_SUPABASE_ANON_KEY are not set.
  */
 export const supabase: SupabaseClient | null = buildClient();
