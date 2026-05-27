@@ -7,12 +7,18 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://ixfbzmcczngcmdqkidbm.supabase.co"
+      },
       "ios": {
         "simulator": true
       }
     },
     "preview": {
       "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://ixfbzmcczngcmdqkidbm.supabase.co"
+      },
       "ios": {
         "simulator": false
       },
@@ -22,6 +28,9 @@
     },
     "production": {
       "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://ixfbzmcczngcmdqkidbm.supabase.co"
+      },
       "ios": {
         "image": "latest"
       },
@@ -34,7 +43,7 @@
     "production": {
       "ios": {
         "appleId": "Alice.yang.nz@gmail.com",
-        "ascAppId": "YOUR_APP_STORE_CONNECT_APP_ID",
+        "ascAppId": "6745708701",
         "appleTeamId": "KR39B536C5"
       },
       "android": {
