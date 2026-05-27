@@ -15,9 +15,10 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { Platform } from "react-native";
 
-const SUPABASE_URL = (
-  process.env.EXPO_PUBLIC_SUPABASE_URL ?? ""
-).replace(/\/$/, "");
+const SUPABASE_URL = (process.env.EXPO_PUBLIC_SUPABASE_URL ?? "").replace(
+  /\/$/,
+  "",
+);
 const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? "";
 
 export { SUPABASE_URL, SUPABASE_ANON_KEY };
