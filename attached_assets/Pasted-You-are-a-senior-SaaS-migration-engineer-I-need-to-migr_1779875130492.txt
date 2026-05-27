@@ -1,0 +1,111 @@
+You are a senior SaaS migration engineer.
+
+I need to migrate my existing PrepFlows SaaS platform from a Replit-only structure into a scalable production-grade architecture.
+
+GOALS:
+- Keep all existing functionality
+- Prepare for iOS + Android App Store deployment
+- Prepare for long-term scaling
+- Use modern 2026 SaaS architecture
+- Keep AI-assisted development compatibility
+- Optimize for Expo + EAS + Supabase + Vercel
+
+TARGET STACK:
+- Expo React Native app
+- Next.js web app
+- TypeScript everywhere
+- Supabase backend/auth/storage/database
+- GitHub as source of truth
+- Vercel deployment
+- EAS Build for mobile
+- Turborepo monorepo structure
+
+TASKS:
+
+1. Analyze the entire existing codebase.
+
+2. Create a clean monorepo structure:
+
+apps/
+  mobile/
+  web/
+
+packages/
+  ui/
+  shared/
+  api/
+
+3. Move reusable logic into shared packages.
+
+4. Convert any JavaScript to TypeScript where safe.
+
+5. Prepare Expo mobile app:
+- app.json
+- eas.json
+- expo-router
+- environment variables
+- splash screen
+- adaptive icon
+- iOS bundle identifier
+- Android package name
+
+6. Prepare Next.js web app:
+- App Router
+- environment variables
+- API routes
+- production build config
+
+7. Prepare Supabase integration:
+- auth
+- database
+- storage
+- environment handling
+- typed client
+
+8. Generate:
+- .env.example
+- README.md
+- deployment instructions
+- local development instructions
+
+9. Setup GitHub compatibility:
+- .gitignore
+- GitHub Actions CI/CD
+- proper package scripts
+
+10. Optimize for EAS Build:
+- ensure mobile app builds cleanly
+- remove incompatible packages
+- fix native dependency issues
+
+11. Create migration notes:
+- what was changed
+- what still needs manual setup
+- possible risks
+
+12. Do NOT delete old code immediately.
+Create a /legacy folder for anything uncertain.
+
+13. Ensure the project can run locally using:
+npm install
+npm run dev
+
+14. Ensure mobile app can run using:
+npx expo start
+
+15. Generate production-ready folder structure and configs.
+
+IMPORTANT:
+- Never break existing features intentionally
+- Prefer stable libraries over experimental ones
+- Keep the code modular and scalable
+- Keep UI modern and App Store compliant
+- Prepare for future Stripe integration
+- Prepare for future AI features
+
+Finally:
+Generate a detailed migration report summarizing:
+- architecture
+- changes made
+- remaining tasks
+- deployment steps
