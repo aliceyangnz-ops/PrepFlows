@@ -25,7 +25,12 @@ const router: IRouter = Router();
  * Returns: import job record + preview of parsed events + column mapping
  */
 router.post("/import/parse", async (req: Request, res: Response) => {
-  const { rows, filename, uploadedBy = "unknown", columnOverrides } = req.body as {
+  const {
+    rows,
+    filename,
+    uploadedBy = "unknown",
+    columnOverrides,
+  } = req.body as {
     rows: Record<string, unknown>[];
     filename: string;
     uploadedBy?: string;
@@ -38,7 +43,10 @@ router.post("/import/parse", async (req: Request, res: Response) => {
   }
 
   const headers = Object.keys(rows[0] || {});
-  const columnMappingDetails: ColumnMappingDetail[] = scoreColumnMapping(headers, columnOverrides);
+  const columnMappingDetails: ColumnMappingDetail[] = scoreColumnMapping(
+    headers,
+    columnOverrides,
+  );
   const columnMapping = autoMapColumns(headers, columnOverrides);
   const sourceSystem = detectSourceSystem(filename || "", headers);
 
@@ -120,7 +128,9 @@ router.post("/import/confirm/:jobId", async (req: Request, res: Response) => {
     .where(eq(importJobsTable.id, jobId));
 
   const columnMapping = (job.columnMapping as Record<string, string>) || {};
-  const sourceSystem = job.sourceSystem as ReturnType<typeof detectSourceSystem>;
+  const sourceSystem = job.sourceSystem as ReturnType<
+    typeof detectSourceSystem
+  >;
 
   let imported = 0;
   let failed = 0;
@@ -134,7 +144,11 @@ router.post("/import/confirm/:jobId", async (req: Request, res: Response) => {
 
     if (!parsed.name || parsed.name === "(Unnamed Event)") {
       failed++;
-      errors.push({ row: i + 1, field: "name", message: "Row skipped — no event name" });
+      errors.push({
+        row: i + 1,
+        field: "name",
+        message: "Row skipped — no event name",
+      });
       continue;
     }
 
@@ -218,22 +232,28 @@ router.get("/functions", async (_req: Request, res: Response) => {
  * GET /api/functions/since/:timestamp
  * Functions created after a unix timestamp (ms) — used for real-time polling.
  */
-router.get("/functions/since/:timestamp", async (req: Request, res: Response) => {
-  const tsParam = req.params["timestamp"];
-  const ts = parseInt(Array.isArray(tsParam) ? tsParam[0] ?? "0" : tsParam, 10);
-  if (isNaN(ts)) {
-    res.status(400).json({ error: "Invalid timestamp" });
-    return;
-  }
+router.get(
+  "/functions/since/:timestamp",
+  async (req: Request, res: Response) => {
+    const tsParam = req.params["timestamp"];
+    const ts = parseInt(
+      Array.isArray(tsParam) ? (tsParam[0] ?? "0") : tsParam,
+      10,
+    );
+    if (isNaN(ts)) {
+      res.status(400).json({ error: "Invalid timestamp" });
+      return;
+    }
 
-  const since = new Date(ts);
-  const functions = await db
-    .select()
-    .from(kitchenFunctionsTable)
-    .where(gte(kitchenFunctionsTable.createdAt, since))
-    .orderBy(desc(kitchenFunctionsTable.createdAt));
+    const since = new Date(ts);
+    const functions = await db
+      .select()
+      .from(kitchenFunctionsTable)
+      .where(gte(kitchenFunctionsTable.createdAt, since))
+      .orderBy(desc(kitchenFunctionsTable.createdAt));
 
-  res.json(functions);
-});
+    res.json(functions);
+  },
+);
 
 export default router;

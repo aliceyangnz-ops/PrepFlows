@@ -17,7 +17,11 @@ const QRCode = require("qrcode");
 
 const STATIC_ROOT = path.resolve(__dirname, "..", "static-build");
 const TEMPLATE_PATH = path.resolve(__dirname, "templates", "landing-page.html");
-const TEMPLATE_ANDROID_PATH = path.resolve(__dirname, "templates", "landing-page-android.html");
+const TEMPLATE_ANDROID_PATH = path.resolve(
+  __dirname,
+  "templates",
+  "landing-page-android.html",
+);
 const basePath = (process.env.BASE_PATH || "/").replace(/\/+$/, "");
 
 function isAndroidUA(req) {
@@ -27,26 +31,41 @@ function isAndroidUA(req) {
 
 const MIME_TYPES = {
   ".html": "text/html; charset=utf-8",
-  ".js":   "application/javascript; charset=utf-8",
+  ".js": "application/javascript; charset=utf-8",
   ".json": "application/json; charset=utf-8",
-  ".css":  "text/css; charset=utf-8",
-  ".png":  "image/png",
-  ".jpg":  "image/jpeg",
+  ".css": "text/css; charset=utf-8",
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
   ".jpeg": "image/jpeg",
-  ".gif":  "image/gif",
-  ".svg":  "image/svg+xml",
-  ".ico":  "image/x-icon",
+  ".gif": "image/gif",
+  ".svg": "image/svg+xml",
+  ".ico": "image/x-icon",
   ".woff": "font/woff",
-  ".woff2":"font/woff2",
-  ".ttf":  "font/ttf",
-  ".otf":  "font/otf",
-  ".map":  "application/json",
-  ".txt":  "text/plain; charset=utf-8",
-  ".xml":  "application/xml; charset=utf-8",
+  ".woff2": "font/woff2",
+  ".ttf": "font/ttf",
+  ".otf": "font/otf",
+  ".map": "application/json",
+  ".txt": "text/plain; charset=utf-8",
+  ".xml": "application/xml; charset=utf-8",
 };
 
 function getCacheControl(ext) {
-  if ([".js", ".css", ".woff", ".woff2", ".ttf", ".otf", ".png", ".jpg", ".jpeg", ".gif", ".svg", ".ico"].includes(ext)) {
+  if (
+    [
+      ".js",
+      ".css",
+      ".woff",
+      ".woff2",
+      ".ttf",
+      ".otf",
+      ".png",
+      ".jpg",
+      ".jpeg",
+      ".gif",
+      ".svg",
+      ".ico",
+    ].includes(ext)
+  ) {
     return "public, max-age=31536000, immutable";
   }
   if (ext === ".html") return "public, max-age=0, must-revalidate";
@@ -67,7 +86,9 @@ function serveManifest(platform, res) {
   const manifestPath = path.join(STATIC_ROOT, platform, "manifest.json");
   if (!fs.existsSync(manifestPath)) {
     res.writeHead(404, { "content-type": "application/json" });
-    res.end(JSON.stringify({ error: `Manifest not found for platform: ${platform}` }));
+    res.end(
+      JSON.stringify({ error: `Manifest not found for platform: ${platform}` }),
+    );
     return;
   }
   const manifest = fs.readFileSync(manifestPath, "utf-8");
@@ -113,7 +134,7 @@ async function serveLandingPage(req, res, templates, appName) {
     "x-robots-tag": "index, follow",
     "x-content-type-options": "nosniff",
     "referrer-policy": "strict-origin-when-cross-origin",
-    "vary": "User-Agent",
+    vary: "User-Agent",
   });
   res.end(html);
 }
@@ -123,12 +144,9 @@ function serveRobotsTxt(req, res) {
   const protocol = req.headers["x-forwarded-proto"] || "https";
   const sitemapUrl = `${protocol}://${host}${basePath}/sitemap.xml`;
 
-  const body = [
-    "User-agent: *",
-    "Allow: /",
-    "",
-    `Sitemap: ${sitemapUrl}`,
-  ].join("\n");
+  const body = ["User-agent: *", "Allow: /", "", `Sitemap: ${sitemapUrl}`].join(
+    "\n",
+  );
 
   res.writeHead(200, {
     "content-type": "text/plain; charset=utf-8",

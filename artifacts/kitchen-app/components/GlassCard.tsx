@@ -53,7 +53,10 @@ export function GlassCard({ children, style, accentColor }: GlassCardProps) {
         locations={[0, 0.45, 1]}
         start={{ x: 0.15, y: 0 }}
         end={{ x: 0.85, y: 1 }}
-        style={[StyleSheet.absoluteFill, { borderRadius: radius, bottom: "60%" }]}
+        style={[
+          StyleSheet.absoluteFill,
+          { borderRadius: radius, bottom: "60%" },
+        ]}
       />
 
       {/* ④ Glass border — top edge is brightest (iOS specular) */}

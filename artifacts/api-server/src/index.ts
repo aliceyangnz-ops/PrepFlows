@@ -18,10 +18,13 @@ async function initStripe() {
     const stripeSync = await getStripeSync();
 
     const webhookBaseUrl = `https://${(process.env.REPLIT_DOMAINS ?? "").split(",")[0]}`;
-    await stripeSync.findOrCreateManagedWebhook(`${webhookBaseUrl}/api/stripe/webhook`);
+    await stripeSync.findOrCreateManagedWebhook(
+      `${webhookBaseUrl}/api/stripe/webhook`,
+    );
     logger.info("Stripe webhook configured");
 
-    stripeSync.syncBackfill()
+    stripeSync
+      .syncBackfill()
       .then(() => logger.info("Stripe backfill complete"))
       .catch((err) => logger.error({ err }, "Stripe backfill failed"));
   } catch (err) {
@@ -31,7 +34,9 @@ async function initStripe() {
 
 const rawPort = process.env["PORT"];
 if (!rawPort) {
-  throw new Error("PORT environment variable is required but was not provided.");
+  throw new Error(
+    "PORT environment variable is required but was not provided.",
+  );
 }
 
 const port = Number(rawPort);

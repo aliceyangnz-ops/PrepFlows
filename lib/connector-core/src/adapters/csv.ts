@@ -27,9 +27,9 @@ export interface CsvAdapterOptions {
 // ── CSV tokenizer ─────────────────────────────────────────────────────────────
 
 function detectDelimiter(firstLine: string): "," | ";" | "\t" {
-  const tabs   = (firstLine.match(/\t/g) ?? []).length;
-  const semis  = (firstLine.match(/;/g)  ?? []).length;
-  const commas = (firstLine.match(/,/g)  ?? []).length;
+  const tabs = (firstLine.match(/\t/g) ?? []).length;
+  const semis = (firstLine.match(/;/g) ?? []).length;
+  const commas = (firstLine.match(/,/g) ?? []).length;
   if (tabs >= semis && tabs >= commas) return "\t";
   if (semis > commas) return ";";
   return ",";
@@ -73,10 +73,10 @@ export function parseCsv(
   const lines = content.replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n");
   if (lines.length === 0) return [];
 
-  const headerRowIdx  = options.headerRow     ?? 0;
-  const dataStartIdx  = options.dataStartRow  ?? headerRowIdx + 1;
-  const maxRows       = options.maxRows       ?? 0;
-  const delimiter     = options.delimiter     ?? detectDelimiter(lines[0] ?? "");
+  const headerRowIdx = options.headerRow ?? 0;
+  const dataStartIdx = options.dataStartRow ?? headerRowIdx + 1;
+  const maxRows = options.maxRows ?? 0;
+  const delimiter = options.delimiter ?? detectDelimiter(lines[0] ?? "");
 
   const headerLine = lines[headerRowIdx];
   if (!headerLine) return [];

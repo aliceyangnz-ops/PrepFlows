@@ -49,7 +49,12 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "src"),
-      "@assets": path.resolve(import.meta.dirname, "..", "..", "attached_assets"),
+      "@assets": path.resolve(
+        import.meta.dirname,
+        "..",
+        "..",
+        "attached_assets",
+      ),
     },
     dedupe: ["react", "react-dom"],
   },
@@ -63,7 +68,10 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           // Core React — cached separately and reused across chunks
-          if (id.includes("node_modules/react/") || id.includes("node_modules/react-dom/")) {
+          if (
+            id.includes("node_modules/react/") ||
+            id.includes("node_modules/react-dom/")
+          ) {
             return "vendor-react";
           }
           // Framer Motion — large animation library, only used on Home page
@@ -83,15 +91,25 @@ export default defineConfig({
             return "vendor-query";
           }
           // Charts — recharts + d3 deps
-          if (id.includes("node_modules/recharts") || id.includes("node_modules/d3") || id.includes("node_modules/victory")) {
+          if (
+            id.includes("node_modules/recharts") ||
+            id.includes("node_modules/d3") ||
+            id.includes("node_modules/victory")
+          ) {
             return "vendor-charts";
           }
           // Icons
-          if (id.includes("node_modules/lucide-react") || id.includes("node_modules/react-icons")) {
+          if (
+            id.includes("node_modules/lucide-react") ||
+            id.includes("node_modules/react-icons")
+          ) {
             return "vendor-icons";
           }
           // Date utilities
-          if (id.includes("node_modules/date-fns") || id.includes("node_modules/react-day-picker")) {
+          if (
+            id.includes("node_modules/date-fns") ||
+            id.includes("node_modules/react-day-picker")
+          ) {
             return "vendor-dates";
           }
           // Everything else in node_modules → shared vendor chunk

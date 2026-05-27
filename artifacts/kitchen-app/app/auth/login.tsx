@@ -49,7 +49,10 @@ export default function LoginScreen() {
     setLoading(true);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
-    const { error: authError } = await signIn(email.trim().toLowerCase(), password);
+    const { error: authError } = await signIn(
+      email.trim().toLowerCase(),
+      password,
+    );
 
     if (authError) {
       setError(
@@ -115,7 +118,10 @@ export default function LoginScreen() {
                   placeholder="you@example.com"
                   placeholderTextColor="#3A4250"
                   value={email}
-                  onChangeText={(t) => { setEmail(t); setError(null); }}
+                  onChangeText={(t) => {
+                    setEmail(t);
+                    setError(null);
+                  }}
                   keyboardType="email-address"
                   autoCapitalize="none"
                   autoCorrect={false}
@@ -132,7 +138,10 @@ export default function LoginScreen() {
                     placeholder="••••••••"
                     placeholderTextColor="#3A4250"
                     value={password}
-                    onChangeText={(t) => { setPassword(t); setError(null); }}
+                    onChangeText={(t) => {
+                      setPassword(t);
+                      setError(null);
+                    }}
                     secureTextEntry={!showPassword}
                     autoComplete="current-password"
                     returnKeyType="go"
@@ -163,7 +172,9 @@ export default function LoginScreen() {
               <Pressable
                 onPress={handleSignIn}
                 disabled={loading}
-                style={({ pressed }) => [{ opacity: pressed || loading ? 0.7 : 1 }]}
+                style={({ pressed }) => [
+                  { opacity: pressed || loading ? 0.7 : 1 },
+                ]}
               >
                 <LinearGradient
                   colors={["#3B82F6", "#06B6D4", "#818CF8"]}
@@ -197,7 +208,10 @@ export default function LoginScreen() {
                 <View style={s.dividerLine} />
               </View>
               <Pressable
-                style={({ pressed }) => [s.demoBtn, { opacity: pressed || guestLoading ? 0.75 : 1 }]}
+                style={({ pressed }) => [
+                  s.demoBtn,
+                  { opacity: pressed || guestLoading ? 0.75 : 1 },
+                ]}
                 onPress={async () => {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                   setGuestLoading(true);
@@ -210,7 +224,9 @@ export default function LoginScreen() {
                 ) : (
                   <>
                     <Ionicons name="flash-outline" size={17} color="#EAB308" />
-                    <Text style={s.demoBtnText}>Try Demo — no account needed</Text>
+                    <Text style={s.demoBtnText}>
+                      Try Demo — no account needed
+                    </Text>
                   </>
                 )}
               </Pressable>

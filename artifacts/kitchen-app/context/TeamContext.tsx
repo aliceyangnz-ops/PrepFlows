@@ -51,7 +51,8 @@ function rowToTeam(row: Record<string, unknown>): Team {
     id: row.id as string,
     name: row.name as string,
     ownerId: row.owner_id as string,
-    subscriptionTier: (row.subscription_tier as Team["subscriptionTier"]) ?? "free",
+    subscriptionTier:
+      (row.subscription_tier as Team["subscriptionTier"]) ?? "free",
     createdAt: row.created_at as string,
   };
 }
@@ -95,15 +96,18 @@ export function TeamProvider({ children }: { children: React.ReactNode }) {
 
       if (stored) {
         const memberRows = (data ?? []) as Array<
-          Record<string, unknown> & { team_members: Array<Record<string, unknown>> }
+          Record<string, unknown> & {
+            team_members: Array<Record<string, unknown>>;
+          }
         >;
         const teamRow = memberRows.find((r) => r.id === stored.id);
-        const members = (teamRow?.team_members as Record<string, unknown>[]) ?? [];
+        const members =
+          (teamRow?.team_members as Record<string, unknown>[]) ?? [];
         const myMember = members.find((m) => m.user_id === user.id);
         setMyRole(
           stored.ownerId === user.id
             ? "owner"
-            : (myMember?.role as TeamRole) ?? "staff",
+            : ((myMember?.role as TeamRole) ?? "staff"),
         );
       }
     } catch (e) {
@@ -139,7 +143,7 @@ export function TeamProvider({ children }: { children: React.ReactNode }) {
       setMyRole(
         team.ownerId === user.id
           ? "owner"
-          : (data?.role as TeamRole) ?? "staff",
+          : ((data?.role as TeamRole) ?? "staff"),
       );
     },
     [teams, user],

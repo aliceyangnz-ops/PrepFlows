@@ -24,8 +24,16 @@ export interface JsonAdapterOptions {
 }
 
 const KNOWN_ARRAY_KEYS = [
-  "events", "bookings", "items", "records", "results",
-  "data", "functions", "leads", "reservations", "orders",
+  "events",
+  "bookings",
+  "items",
+  "records",
+  "results",
+  "data",
+  "functions",
+  "leads",
+  "reservations",
+  "orders",
 ];
 
 function resolvePath(obj: unknown, path: string): unknown {
@@ -69,8 +77,16 @@ function flattenObject(
   const result: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(obj)) {
     const key = prefix ? `${prefix}.${k}` : k;
-    if (v && typeof v === "object" && !Array.isArray(v) && !(v instanceof Date)) {
-      Object.assign(result, flattenObject(v as Record<string, unknown>, key, depth + 1));
+    if (
+      v &&
+      typeof v === "object" &&
+      !Array.isArray(v) &&
+      !(v instanceof Date)
+    ) {
+      Object.assign(
+        result,
+        flattenObject(v as Record<string, unknown>, key, depth + 1),
+      );
     } else if (Array.isArray(v) && v.length > 0 && typeof v[0] !== "object") {
       result[key] = v.join("; ");
     } else if (v instanceof Date) {
@@ -100,7 +116,9 @@ export function parseJson(
   let rows: RawEventRow[];
   if (options.dataPath) {
     const resolved = resolvePath(parsed, options.dataPath);
-    rows = Array.isArray(resolved) ? (resolved as RawEventRow[]) : [resolved as RawEventRow];
+    rows = Array.isArray(resolved)
+      ? (resolved as RawEventRow[])
+      : [resolved as RawEventRow];
   } else {
     rows = extractRows(parsed);
   }

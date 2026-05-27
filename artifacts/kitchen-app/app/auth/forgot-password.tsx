@@ -26,7 +26,10 @@ export default function ForgotPasswordScreen() {
   const [loading, setLoading] = useState(false);
 
   async function handleReset() {
-    if (!email.trim()) { setError("Please enter your email address."); return; }
+    if (!email.trim()) {
+      setError("Please enter your email address.");
+      return;
+    }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setError("Please enter a valid email address.");
       return;
@@ -35,7 +38,9 @@ export default function ForgotPasswordScreen() {
     setLoading(true);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
-    const { error: resetError } = await resetPassword(email.trim().toLowerCase());
+    const { error: resetError } = await resetPassword(
+      email.trim().toLowerCase(),
+    );
 
     setLoading(false);
     if (resetError) {
@@ -49,7 +54,12 @@ export default function ForgotPasswordScreen() {
 
   if (sent) {
     return (
-      <View style={[s.root, { justifyContent: "center", alignItems: "center", padding: 32 }]}>
+      <View
+        style={[
+          s.root,
+          { justifyContent: "center", alignItems: "center", padding: 32 },
+        ]}
+      >
         <View style={s.orbTopRight} pointerEvents="none" />
         <View style={s.sentMark}>
           <LinearGradient
@@ -63,11 +73,14 @@ export default function ForgotPasswordScreen() {
         </View>
         <Text style={s.sentTitle}>Reset link sent</Text>
         <Text style={s.sentSub}>
-          Check {email} for a link to reset your password. The link expires in 1 hour.
+          Check {email} for a link to reset your password. The link expires in 1
+          hour.
         </Text>
         <Pressable
           onPress={() => router.replace("/auth/login")}
-          style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1, width: "100%" }]}
+          style={({ pressed }) => [
+            { opacity: pressed ? 0.7 : 1, width: "100%" },
+          ]}
         >
           <LinearGradient
             colors={["#3B82F6", "#06B6D4", "#818CF8"]}
@@ -92,7 +105,11 @@ export default function ForgotPasswordScreen() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <View style={s.inner}>
-          <Pressable style={s.backLink} onPress={() => router.back()} hitSlop={12}>
+          <Pressable
+            style={s.backLink}
+            onPress={() => router.back()}
+            hitSlop={12}
+          >
             <Feather name="arrow-left" size={18} color="#3B82F6" />
             <Text style={s.backText}>Back</Text>
           </Pressable>
@@ -119,7 +136,10 @@ export default function ForgotPasswordScreen() {
             placeholder="you@example.com"
             placeholderTextColor="#3A4250"
             value={email}
-            onChangeText={(t) => { setEmail(t); setError(null); }}
+            onChangeText={(t) => {
+              setEmail(t);
+              setError(null);
+            }}
             keyboardType="email-address"
             autoCapitalize="none"
             autoCorrect={false}
@@ -187,7 +207,11 @@ const styles = (topInset: number) =>
       marginBottom: 40,
       alignSelf: "flex-start",
     },
-    backText: { fontSize: 14, fontFamily: "Inter_600SemiBold", color: "#3B82F6" },
+    backText: {
+      fontSize: 14,
+      fontFamily: "Inter_600SemiBold",
+      color: "#3B82F6",
+    },
     iconWrap: {
       width: 64,
       height: 64,

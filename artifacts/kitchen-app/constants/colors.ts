@@ -25,10 +25,19 @@ interface ThemeColors {
   infoForeground: string;
 }
 
-const COMMON: Pick<ThemeColors,
-  "text" | "foreground" | "cardForeground" | "primaryForeground" |
-  "secondaryForeground" | "accentForeground" | "destructiveForeground" |
-  "destructive" | "warning" | "warningForeground" | "infoForeground"
+const COMMON: Pick<
+  ThemeColors,
+  | "text"
+  | "foreground"
+  | "cardForeground"
+  | "primaryForeground"
+  | "secondaryForeground"
+  | "accentForeground"
+  | "destructiveForeground"
+  | "destructive"
+  | "warning"
+  | "warningForeground"
+  | "infoForeground"
 > = {
   text: "#0a0a0a",
   foreground: "#F0F2F5",

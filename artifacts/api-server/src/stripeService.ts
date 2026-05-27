@@ -1,5 +1,5 @@
-import { getUncachableStripeClient } from './stripeClient.js';
-import { stripeStorage } from './stripeStorage.js';
+import { getUncachableStripeClient } from "./stripeClient.js";
+import { stripeStorage } from "./stripeStorage.js";
 
 export class StripeService {
   async createCustomer(email: string, userId: string) {
@@ -16,9 +16,9 @@ export class StripeService {
     const stripe = await getUncachableStripeClient();
     return stripe.checkout.sessions.create({
       customer: customerId,
-      payment_method_types: ['card'],
+      payment_method_types: ["card"],
       line_items: [{ price: priceId, quantity: 1 }],
-      mode: 'subscription',
+      mode: "subscription",
       subscription_data: { trial_period_days: 30 },
       success_url: successUrl,
       cancel_url: cancelUrl,
@@ -44,7 +44,9 @@ export class StripeService {
     }
 
     const customer = await this.createCustomer(email, userId);
-    await stripeStorage.updateProfileStripeInfo(userId, { stripeCustomerId: customer.id });
+    await stripeStorage.updateProfileStripeInfo(userId, {
+      stripeCustomerId: customer.id,
+    });
     return customer.id;
   }
 }

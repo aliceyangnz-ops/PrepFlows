@@ -20,17 +20,39 @@ export function GradientProgressBar({
 }) {
   const pct = Math.max(0, Math.min(1, percent));
   return (
-    <View style={[{ height, borderRadius: height / 2, backgroundColor: trackColor, overflow: "hidden" }, style]}>
-      {pct > 0 && (
-        doneColor && pct >= 1
-          ? <View style={{ width: "100%", height: "100%", borderRadius: height / 2, backgroundColor: doneColor }} />
-          : <LinearGradient
-              colors={BRAND_GRAD}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={{ width: `${Math.round(pct * 100)}%`, height: "100%", borderRadius: height / 2 }}
-            />
-      )}
+    <View
+      style={[
+        {
+          height,
+          borderRadius: height / 2,
+          backgroundColor: trackColor,
+          overflow: "hidden",
+        },
+        style,
+      ]}
+    >
+      {pct > 0 &&
+        (doneColor && pct >= 1 ? (
+          <View
+            style={{
+              width: "100%",
+              height: "100%",
+              borderRadius: height / 2,
+              backgroundColor: doneColor,
+            }}
+          />
+        ) : (
+          <LinearGradient
+            colors={BRAND_GRAD}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={{
+              width: `${Math.round(pct * 100)}%`,
+              height: "100%",
+              borderRadius: height / 2,
+            }}
+          />
+        ))}
     </View>
   );
 }
@@ -41,7 +63,17 @@ export function GradientAccentBar({ style }: { style?: ViewStyle }) {
       colors={BRAND_GRAD}
       start={{ x: 0, y: 0 }}
       end={{ x: 0, y: 1 }}
-      style={[{ position: "absolute", left: 0, top: 0, bottom: 0, width: 4, borderRadius: 2 }, style]}
+      style={[
+        {
+          position: "absolute",
+          left: 0,
+          top: 0,
+          bottom: 0,
+          width: 4,
+          borderRadius: 2,
+        },
+        style,
+      ]}
     />
   );
 }
@@ -69,7 +101,10 @@ export function GradientButton({
     <Pressable
       onPress={onPress}
       disabled={disabled}
-      style={({ pressed }) => [{ opacity: pressed || disabled ? 0.65 : 1 }, style]}
+      style={({ pressed }) => [
+        { opacity: pressed || disabled ? 0.65 : 1 },
+        style,
+      ]}
     >
       <LinearGradient
         colors={BRAND_GRAD}
@@ -86,7 +121,17 @@ export function GradientButton({
         }}
       >
         {icon}
-        <Text style={[{ fontSize: 15, fontFamily: "Inter_700Bold", color: "#fff", letterSpacing: -0.3 }, textStyle]}>
+        <Text
+          style={[
+            {
+              fontSize: 15,
+              fontFamily: "Inter_700Bold",
+              color: "#fff",
+              letterSpacing: -0.3,
+            },
+            textStyle,
+          ]}
+        >
           {label}
         </Text>
       </LinearGradient>
@@ -97,7 +142,12 @@ export function GradientButton({
 export function GradientDivider({ style }: { style?: ViewStyle }) {
   return (
     <LinearGradient
-      colors={["transparent", "rgba(59,130,246,0.5)", "rgba(6,182,212,0.4)", "transparent"]}
+      colors={[
+        "transparent",
+        "rgba(59,130,246,0.5)",
+        "rgba(6,182,212,0.4)",
+        "transparent",
+      ]}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 0 }}
       style={[{ height: 1 }, style]}
@@ -109,13 +159,30 @@ export function GradientHeaderDecor({ topPad = 0 }: { topPad?: number }) {
   return (
     <View
       pointerEvents="none"
-      style={{ position: "absolute", top: 0, left: 0, right: 0, height: topPad + 140, overflow: "hidden" }}
+      style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        height: topPad + 140,
+        overflow: "hidden",
+      }}
     >
       <LinearGradient
-        colors={["rgba(59,130,246,0.13)", "rgba(6,182,212,0.05)", "transparent"]}
+        colors={[
+          "rgba(59,130,246,0.13)",
+          "rgba(6,182,212,0.05)",
+          "transparent",
+        ]}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
-        style={{ position: "absolute", top: 0, left: "-30%", right: "-30%", height: "100%" }}
+        style={{
+          position: "absolute",
+          top: 0,
+          left: "-30%",
+          right: "-30%",
+          height: "100%",
+        }}
       />
     </View>
   );

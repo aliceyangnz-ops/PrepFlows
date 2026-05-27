@@ -29,7 +29,10 @@ export default function Root({ children }: PropsWithChildren) {
           server (serve.js) correctly sends X-Robots-Tag: index, follow.
         */}
         <meta name="robots" content="index, follow" />
-        <meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large" />
+        <meta
+          name="googlebot"
+          content="index, follow, max-snippet:-1, max-image-preview:large"
+        />
 
         {/* Canonical — set dynamically so it works across any deployment domain */}
         <script
@@ -42,7 +45,10 @@ export default function Root({ children }: PropsWithChildren) {
         <meta name="theme-color" content="#EAB308" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta
+          name="apple-mobile-web-app-status-bar-style"
+          content="black-translucent"
+        />
         <meta name="apple-mobile-web-app-title" content={APP_NAME} />
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/assets/images/icon.png" />
@@ -50,7 +56,10 @@ export default function Root({ children }: PropsWithChildren) {
 
         {/* ── Open Graph ─────────────────────────────────────────────── */}
         <meta property="og:type" content="website" />
-        <meta property="og:title" content={`${APP_NAME} — Hospitality Operations Platform`} />
+        <meta
+          property="og:title"
+          content={`${APP_NAME} — Hospitality Operations Platform`}
+        />
         <meta property="og:description" content={APP_DESC} />
         <meta property="og:site_name" content={APP_NAME} />
         <meta property="og:locale" content="en_AU" />
@@ -58,7 +67,10 @@ export default function Root({ children }: PropsWithChildren) {
 
         {/* ── Twitter card ───────────────────────────────────────────── */}
         <meta name="twitter:card" content="summary" />
-        <meta name="twitter:title" content={`${APP_NAME} — Hospitality Operations Platform`} />
+        <meta
+          name="twitter:title"
+          content={`${APP_NAME} — Hospitality Operations Platform`}
+        />
         <meta name="twitter:description" content={APP_DESC} />
         <meta name="twitter:image" content="/assets/images/icon.png" />
 
@@ -163,7 +175,14 @@ body{margin:0;padding:0;height:100%;background:#0D1117;-webkit-font-smoothing:an
             <h1 style={{ color: "#EAB308", fontSize: 32, margin: "0 0 12px" }}>
               PrepFlows
             </h1>
-            <h2 style={{ color: "#8B949E", fontSize: 18, fontWeight: 400, margin: "0 0 16px" }}>
+            <h2
+              style={{
+                color: "#8B949E",
+                fontSize: 18,
+                fontWeight: 400,
+                margin: "0 0 16px",
+              }}
+            >
               Hospitality Operations Platform
             </h2>
             <p

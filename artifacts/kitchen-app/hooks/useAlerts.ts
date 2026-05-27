@@ -16,7 +16,12 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useKitchen } from "@/context/KitchenContext";
 
 export type AlertSeverity = "critical" | "warning" | "info";
-export type AlertCategory = "dietary" | "overlap" | "staffing" | "timeline" | "prep";
+export type AlertCategory =
+  | "dietary"
+  | "overlap"
+  | "staffing"
+  | "timeline"
+  | "prep";
 
 export interface KitchenAlert {
   id: string;
@@ -237,7 +242,11 @@ export function useAlerts(): {
       }
     }
 
-    const ORDER: Record<AlertSeverity, number> = { critical: 0, warning: 1, info: 2 };
+    const ORDER: Record<AlertSeverity, number> = {
+      critical: 0,
+      warning: 1,
+      info: 2,
+    };
     return result
       .filter((a) => !dismissed.has(a.id))
       .sort((a, b) => ORDER[a.severity] - ORDER[b.severity]);

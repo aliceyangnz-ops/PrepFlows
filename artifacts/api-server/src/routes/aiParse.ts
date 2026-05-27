@@ -57,13 +57,24 @@ export interface ParsedFunctionData {
   serviceEvents: Array<{ time: string; label: string }>;
   dietaryRequirements: Array<{ name: string; count: number; note: string }>;
   specialRequirements: string[];
-  prepItems: Array<{ team: string; dish: string; quantity: string; deadline: string; haccpNote?: string }>;
+  prepItems: Array<{
+    team: string;
+    dish: string;
+    quantity: string;
+    deadline: string;
+    haccpNote?: string;
+  }>;
   confidence: Record<string, number>;
   aiUsed: boolean;
   // Enhanced fields from culinary lexicon analysis
   allergenWarnings: AllergenFlag[];
   haccpNotes: HACCPNote[];
-  detectedTerminology: Array<{ term: string; language: string; meaning: string; category: string }>;
+  detectedTerminology: Array<{
+    term: string;
+    language: string;
+    meaning: string;
+    category: string;
+  }>;
 }
 
 // ── Time helpers ───────────────────────────────────────────────────────────
@@ -93,19 +104,41 @@ function parseDate(text: string): string {
   }
   // Long-form: "15 March 2026", "March 15 2026"
   const months: Record<string, string> = {
-    january: "01", february: "02", march: "03", april: "04",
-    may: "05", june: "06", july: "07", august: "08",
-    september: "09", october: "10", november: "11", december: "12",
-    jan: "01", feb: "02", mar: "03", apr: "04",
-    jun: "06", jul: "07", aug: "08", sep: "09", oct: "10", nov: "11", dec: "12",
+    january: "01",
+    february: "02",
+    march: "03",
+    april: "04",
+    may: "05",
+    june: "06",
+    july: "07",
+    august: "08",
+    september: "09",
+    october: "10",
+    november: "11",
+    december: "12",
+    jan: "01",
+    feb: "02",
+    mar: "03",
+    apr: "04",
+    jun: "06",
+    jul: "07",
+    aug: "08",
+    sep: "09",
+    oct: "10",
+    nov: "11",
+    dec: "12",
   };
-  const long = text.match(/\b(\d{1,2})\s+(january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|jun|jul|aug|sep|oct|nov|dec)\s+(\d{4})\b/i);
+  const long = text.match(
+    /\b(\d{1,2})\s+(january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|jun|jul|aug|sep|oct|nov|dec)\s+(\d{4})\b/i,
+  );
   if (long) {
     const [, d, mo, y] = long;
     const mm = months[(mo ?? "").toLowerCase()] ?? "01";
     return `${y}-${mm}-${(d ?? "01").padStart(2, "0")}`;
   }
-  const longRev = text.match(/\b(january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|jun|jul|aug|sep|oct|nov|dec)\s+(\d{1,2})[,\s]+(\d{4})\b/i);
+  const longRev = text.match(
+    /\b(january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|jun|jul|aug|sep|oct|nov|dec)\s+(\d{1,2})[,\s]+(\d{4})\b/i,
+  );
   if (longRev) {
     const [, mo, d, y] = longRev;
     const mm = months[(mo ?? "").toLowerCase()] ?? "01";
@@ -127,13 +160,13 @@ function prepDeadline(team: string, startTime: string): string {
   const [h, m] = startTime.split(":").map(Number);
   const base = (h ?? 0) * 60 + (m ?? 0);
   const offsets: Record<string, number> = {
-    "Pastry": -240,
+    Pastry: -240,
     "Cold Larder": -180,
     "Hot Kitchen": -120,
     "Function Team": -60,
   };
   const target = base + (offsets[team] ?? -120);
-  const nh = Math.floor(((target % 1440) + 1440) % 1440 / 60);
+  const nh = Math.floor((((target % 1440) + 1440) % 1440) / 60);
   const nm = ((target % 60) + 60) % 60;
   return `${String(nh).padStart(2, "0")}:${String(nm).padStart(2, "0")}`;
 }
@@ -163,44 +196,92 @@ function generatePrepItems(
 
 const COURSE_HEADERS: Array<{ re: RegExp; label: string }> = [
   // Reception / pre-dinner
-  { re: /^(?:amuse[- ]?bouche|amuse[- ]gueule|reception\s+bites?|arrival\s+canapé[s]?|arrival\s+canape[s]?|pre[- ]?dinner\s+drinks?)/i, label: "Amuse-bouche" },
-  { re: /^(?:canapé[s]?|canape[s]?|finger\s+food|pre[- ]?dinner|cocktail\s+food|party\s+food|nibbles?)/i,                               label: "Canapés" },
+  {
+    re: /^(?:amuse[- ]?bouche|amuse[- ]gueule|reception\s+bites?|arrival\s+canapé[s]?|arrival\s+canape[s]?|pre[- ]?dinner\s+drinks?)/i,
+    label: "Amuse-bouche",
+  },
+  {
+    re: /^(?:canapé[s]?|canape[s]?|finger\s+food|pre[- ]?dinner|cocktail\s+food|party\s+food|nibbles?)/i,
+    label: "Canapés",
+  },
 
   // First course
-  { re: /^(?:entr[ée]e?s?|starters?|first\s+course|appetizer[s]?|hors\s+d['']oeuvre)/i,                          label: "Entrée" },
-  { re: /^(?:soup|bisque|consommé|consomme|velouté|veloute|broth|potage|chowder|gazpacho)/i,                      label: "Soup" },
-  { re: /^(?:salad|salade|garden\s+salad|composed\s+salad|salade\s+composée)/i,                                   label: "Salad" },
+  {
+    re: /^(?:entr[ée]e?s?|starters?|first\s+course|appetizer[s]?|hors\s+d['']oeuvre)/i,
+    label: "Entrée",
+  },
+  {
+    re: /^(?:soup|bisque|consommé|consomme|velouté|veloute|broth|potage|chowder|gazpacho)/i,
+    label: "Soup",
+  },
+  {
+    re: /^(?:salad|salade|garden\s+salad|composed\s+salad|salade\s+composée)/i,
+    label: "Salad",
+  },
 
   // Intermezzo
-  { re: /^(?:intermezzo|palate\s+cleanser|granita\s+course|sorbet\s+intermezzo|trou\s+normand)/i,                 label: "Intermezzo" },
+  {
+    re: /^(?:intermezzo|palate\s+cleanser|granita\s+course|sorbet\s+intermezzo|trou\s+normand)/i,
+    label: "Intermezzo",
+  },
 
   // Main
-  { re: /^(?:main[s]?|second\s+course|principal|mains?\s+course|plat[s]?\s+principal|main\s+event|primary\s+course)/i, label: "Main" },
+  {
+    re: /^(?:main[s]?|second\s+course|principal|mains?\s+course|plat[s]?\s+principal|main\s+event|primary\s+course)/i,
+    label: "Main",
+  },
 
   // Cheese
-  { re: /^(?:cheese|fromage|cheese\s+board|plateau\s+de\s+fromages?|fromage\s+board)/i,                          label: "Cheese" },
+  {
+    re: /^(?:cheese|fromage|cheese\s+board|plateau\s+de\s+fromages?|fromage\s+board)/i,
+    label: "Cheese",
+  },
 
   // Dessert
-  { re: /^(?:dessert[s]?|sweet[s]?|pudding[s]?|third\s+course|pastry|gâteau|gateau|entremets|dolce|postres)/i,  label: "Dessert" },
-  { re: /^(?:mignardise|petit\s+fours?|petits?\s+four|friandises?|tea\s+cookies?)/i,                             label: "Petit Fours" },
+  {
+    re: /^(?:dessert[s]?|sweet[s]?|pudding[s]?|third\s+course|pastry|gâteau|gateau|entremets|dolce|postres)/i,
+    label: "Dessert",
+  },
+  {
+    re: /^(?:mignardise|petit\s+fours?|petits?\s+four|friandises?|tea\s+cookies?)/i,
+    label: "Petit Fours",
+  },
 
   // Supper
-  { re: /^(?:supper|late\s+snack|midnight\s+snack|post[- ]?midnight)/i,                                          label: "Supper" },
+  {
+    re: /^(?:supper|late\s+snack|midnight\s+snack|post[- ]?midnight)/i,
+    label: "Supper",
+  },
 
   // Buffet
-  { re: /^(?:buffet|smorgasbord|self[- ]?service|kai\s+buffet|carvery\s+station|action\s+station)/i,             label: "Buffet" },
+  {
+    re: /^(?:buffet|smorgasbord|self[- ]?service|kai\s+buffet|carvery\s+station|action\s+station)/i,
+    label: "Buffet",
+  },
 
   // High Tea
-  { re: /^(?:high\s+tea|afternoon\s+tea|arvo\s+tea|cream\s+tea|devonshire\s+tea)/i,                              label: "High Tea" },
+  {
+    re: /^(?:high\s+tea|afternoon\s+tea|arvo\s+tea|cream\s+tea|devonshire\s+tea)/i,
+    label: "High Tea",
+  },
 
   // Bread
-  { re: /^(?:bread[s]?\s+service|bread\s+rolls?|dinner\s+rolls?|bread\s+&\s+butter|pain)/i,                     label: "Bread" },
+  {
+    re: /^(?:bread[s]?\s+service|bread\s+rolls?|dinner\s+rolls?|bread\s+&\s+butter|pain)/i,
+    label: "Bread",
+  },
 
   // Beverage
-  { re: /^(?:beverage[s]?|bar|drinks?|wine|champagne|beverages?\s+package|open\s+bar)/i,                         label: "Beverage" },
+  {
+    re: /^(?:beverage[s]?|bar|drinks?|wine|champagne|beverages?\s+package|open\s+bar)/i,
+    label: "Beverage",
+  },
 
   // Māori / Pacific
-  { re: /^(?:hāngī|hangi|kai\s+māori|kai\s+maori|traditional\s+feast|umu|earth\s+oven)/i,                       label: "Hāngī" },
+  {
+    re: /^(?:hāngī|hangi|kai\s+māori|kai\s+maori|traditional\s+feast|umu|earth\s+oven)/i,
+    label: "Hāngī",
+  },
 ];
 
 function extractMenu(text: string): string[] {
@@ -214,12 +295,15 @@ function extractMenu(text: string): string[] {
 
   // Check if there's a MENU section header
   const menuHeaderIdx = lines.findIndex((l) =>
-    /^(?:MENU|FOOD\s+&\s+BEVERAGE|F&B|FOOD\s+MENU|CATERING\s+MENU|EVENT\s+MENU|FUNCTION\s+MENU|KAI|KAI\s+MENU|BUFFET\s+MENU)[\s:]*$/i.test(l)
+    /^(?:MENU|FOOD\s+&\s+BEVERAGE|F&B|FOOD\s+MENU|CATERING\s+MENU|EVENT\s+MENU|FUNCTION\s+MENU|KAI|KAI\s+MENU|BUFFET\s+MENU)[\s:]*$/i.test(
+      l,
+    ),
   );
   const startIdx = menuHeaderIdx >= 0 ? menuHeaderIdx + 1 : 0;
   inMenuSection = menuHeaderIdx >= 0;
 
-  const STOP_SECTIONS = /^(?:DIETARY|ALLERGEN|BEVERAGE|SERVICE|TIMELINE|SCHEDULE|TEAM|STAFF|NOTES?|SPECIAL|CONTACT|BILLING|PAYMENT|DEPOSIT|HACCP|TEMPERATURE|SAFETY)\b/i;
+  const STOP_SECTIONS =
+    /^(?:DIETARY|ALLERGEN|BEVERAGE|SERVICE|TIMELINE|SCHEDULE|TEAM|STAFF|NOTES?|SPECIAL|CONTACT|BILLING|PAYMENT|DEPOSIT|HACCP|TEMPERATURE|SAFETY)\b/i;
 
   for (let i = startIdx; i < lines.length; i++) {
     const line = lines[i] ?? "";
@@ -237,7 +321,11 @@ function extractMenu(text: string): string[] {
         inMenuSection = true;
         // Inline item after course header
         const inline = (m[1] ?? "").trim();
-        if (inline && inline.length > 2 && !/^(?:OR|AND|WITH)\b/i.test(inline)) {
+        if (
+          inline &&
+          inline.length > 2 &&
+          !/^(?:OR|AND|WITH)\b/i.test(inline)
+        ) {
           menu.push(`${label}: ${inline}`);
         }
         matched = true;
@@ -249,12 +337,18 @@ function extractMenu(text: string): string[] {
     if (!inMenuSection) continue;
 
     // Skip obvious non-food lines
-    if (/^(?:OR\b|AND\b|INCLUDED|NOTE:|SUBJECT|DATE:|TIME:|ROOM:|GUEST|PAX|COVERS)/i.test(line)) continue;
+    if (
+      /^(?:OR\b|AND\b|INCLUDED|NOTE:|SUBJECT|DATE:|TIME:|ROOM:|GUEST|PAX|COVERS)/i.test(
+        line,
+      )
+    )
+      continue;
     if (/^\d{1,2}[:\.]\d{2}/.test(line)) continue; // time
     if (/^[A-Z ]{15,}:?\s*$/.test(line)) continue; // all-caps section header
 
     // Bullet or numbered list items
-    const bulletMatch = line.match(/^[•\-–—*]\s*(.+)/) || line.match(/^\d+[\.\)]\s*(.+)/);
+    const bulletMatch =
+      line.match(/^[•\-–—*]\s*(.+)/) || line.match(/^\d+[\.\)]\s*(.+)/);
     if (bulletMatch) {
       const item = (bulletMatch[1] ?? "").trim();
       if (item.length > 3) {
@@ -281,7 +375,10 @@ function parseHospitalityText(text: string): ParsedFunctionData {
   // Normalize AU/NZ/Māori terminology before any pattern matching
   const normalised = normalizeTerminology(text);
   const lower = normalised.toLowerCase();
-  const lines = normalised.split(/\n/).map((l) => l.trim()).filter(Boolean);
+  const lines = normalised
+    .split(/\n/)
+    .map((l) => l.trim())
+    .filter(Boolean);
   const conf: Record<string, number> = {};
 
   // Name
@@ -292,14 +389,21 @@ function parseHospitalityText(text: string): ParsedFunctionData {
   ];
   for (const p of namePats) {
     const m = normalised.match(p);
-    if (m?.[1]?.trim()) { name = m[1].trim().slice(0, 80); conf["name"] = 90; break; }
+    if (m?.[1]?.trim()) {
+      name = m[1].trim().slice(0, 80);
+      conf["name"] = 90;
+      break;
+    }
   }
   if (!name) {
     // First meaningful line
     for (const line of lines) {
       if (
-        line.length >= 4 && line.length <= 80 &&
-        !/^(?:dear|hi |hello|from:|to:|date:|time:|room:|floor:|level:|guests?:|pax:|dietary|service|event\s*id|function\s*id|ref:|phone|email|http|venue:|location:)/i.test(line) &&
+        line.length >= 4 &&
+        line.length <= 80 &&
+        !/^(?:dear|hi |hello|from:|to:|date:|time:|room:|floor:|level:|guests?:|pax:|dietary|service|event\s*id|function\s*id|ref:|phone|email|http|venue:|location:)/i.test(
+          line,
+        ) &&
         !/^\d{1,2}[:/]\d{2}/.test(line) &&
         !/^\d+\s*(?:pax|guests?|covers?)/.test(line)
       ) {
@@ -315,30 +419,67 @@ function parseHospitalityText(text: string): ParsedFunctionData {
   if (date) conf["date"] = 90;
 
   // Times
-  let startTime = "", endTime = "";
+  let startTime = "",
+    endTime = "";
   const TRE = /\d{1,2}(?::\d{2})?\s*(?:[ap]m)?/i;
-  const range = normalised.match(new RegExp(`(${TRE.source})\\s*(?:to|until|through|–|—|-)\\s*(${TRE.source})`, "i"));
+  const range = normalised.match(
+    new RegExp(
+      `(${TRE.source})\\s*(?:to|until|through|–|—|-)\\s*(${TRE.source})`,
+      "i",
+    ),
+  );
   if (range) {
     const s = normaliseTime(range[1] ?? "");
     const e = normaliseTime(range[2] ?? "");
-    if (s) { startTime = s; conf["startTime"] = 90; }
-    if (e) { endTime = e; conf["endTime"] = 90; }
+    if (s) {
+      startTime = s;
+      conf["startTime"] = 90;
+    }
+    if (e) {
+      endTime = e;
+      conf["endTime"] = 90;
+    }
   } else {
-    const sm = normalised.match(/(?:start(?:s|ing)?\s*(?:time)?:|commences?:|from\s+)\s*((?:\d{1,2})(?::\d{2})?\s*(?:[ap]m)?)/i);
-    if (sm) { const t = normaliseTime(sm[1] ?? ""); if (t) { startTime = t; conf["startTime"] = 80; } }
-    const em = normalised.match(/(?:end(?:s|ing)?\s*(?:time)?:|finish(?:es)?:|close[sd]?:|concludes?:|until\s+)\s*((?:\d{1,2})(?::\d{2})?\s*(?:[ap]m)?)/i);
-    if (em) { const t = normaliseTime(em[1] ?? ""); if (t) { endTime = t; conf["endTime"] = 80; } }
+    const sm = normalised.match(
+      /(?:start(?:s|ing)?\s*(?:time)?:|commences?:|from\s+)\s*((?:\d{1,2})(?::\d{2})?\s*(?:[ap]m)?)/i,
+    );
+    if (sm) {
+      const t = normaliseTime(sm[1] ?? "");
+      if (t) {
+        startTime = t;
+        conf["startTime"] = 80;
+      }
+    }
+    const em = normalised.match(
+      /(?:end(?:s|ing)?\s*(?:time)?:|finish(?:es)?:|close[sd]?:|concludes?:|until\s+)\s*((?:\d{1,2})(?::\d{2})?\s*(?:[ap]m)?)/i,
+    );
+    if (em) {
+      const t = normaliseTime(em[1] ?? "");
+      if (t) {
+        endTime = t;
+        conf["endTime"] = 80;
+      }
+    }
   }
 
   // Guest count — understands pax, covers, guests, kaumātua (elders), tangata (people in Māori context)
   // NOTE: use [^\S\r\n]* (non-newline whitespace) not \s* — prevents "Level 2\nGuests:" matching as "2 guests"
   let guestCount = 0;
   const paxM =
-    normalised.match(/^(?:guests?|pax|attendance|covers?|number\s+of\s+guests?|headcount):\s*(\d{1,4})/im) ||
-    normalised.match(/(\d{1,4})[^\S\r\n]*(?:pax|guests?|covers?|people|attendees?|persons?|tangata|kaumātua)/i) ||
-    normalised.match(/(?:for|of)\s+(\d{1,4})\s*(?:pax|guests?|people|covers?)/i) ||
+    normalised.match(
+      /^(?:guests?|pax|attendance|covers?|number\s+of\s+guests?|headcount):\s*(\d{1,4})/im,
+    ) ||
+    normalised.match(
+      /(\d{1,4})[^\S\r\n]*(?:pax|guests?|covers?|people|attendees?|persons?|tangata|kaumātua)/i,
+    ) ||
+    normalised.match(
+      /(?:for|of)\s+(\d{1,4})\s*(?:pax|guests?|people|covers?)/i,
+    ) ||
     normalised.match(/(?:capacity|attendance|numbers?):\s*(\d{1,4})/i);
-  if (paxM) { guestCount = parseInt(paxM[1] ?? "0", 10); conf["guestCount"] = 85; }
+  if (paxM) {
+    guestCount = parseInt(paxM[1] ?? "0", 10);
+    conf["guestCount"] = 85;
+  }
 
   // Room
   let room = "";
@@ -359,59 +500,168 @@ function parseHospitalityText(text: string): ParsedFunctionData {
 
   // Floor/level
   let floor = "";
-  const floorM = normalised.match(/(level\s*\d+|ground\s+floor|lower\s+ground|mezzanine|first\s+floor|second\s+floor|third\s+floor|basement|\d+(?:st|nd|rd|th)\s+floor)/i);
-  if (floorM) { floor = floorM[1]!.trim(); conf["floor"] = 80; }
+  const floorM = normalised.match(
+    /(level\s*\d+|ground\s+floor|lower\s+ground|mezzanine|first\s+floor|second\s+floor|third\s+floor|basement|\d+(?:st|nd|rd|th)\s+floor)/i,
+  );
+  if (floorM) {
+    floor = floorM[1]!.trim();
+    conf["floor"] = 80;
+  }
 
   // Function type — extended with Māori/NZ terms
   let functionType = "A-la-carte";
   const typeMap: [string[], string][] = [
-    [["cocktail party", "drinks function", "standing cocktail", "cocktail reception"], "Cocktail"],
-    [["buffet", "smorgasbord", "self service", "self-service", "carvery", "smorgasbord", "action station"], "Buffet"],
-    [["hāngī", "hangi", "hāngī feast", "hangi feast", "hāngī buffet", "traditional feast"], "Buffet"],
-    [["high tea", "afternoon tea", "arvo tea", "high-tea", "cream tea", "devonshire tea"], "High Tea"],
-    [["school ball", "school formal", "year 12", "formal dinner", "prom"], "School Ball"],
-    [["canapés + a-la-carte", "canapes + a la carte", "canapé + a la carte", "canapés + ala carte"], "Canapés + A-la-carte"],
-    [["canapé", "canape", "finger food", "canapés", "nibbles", "cocktail food"], "Canapés"],
-    [["set menu", "prix fixe", "degustation", "tasting menu", "fixed menu", "dégustation"], "Set Menu"],
+    [
+      [
+        "cocktail party",
+        "drinks function",
+        "standing cocktail",
+        "cocktail reception",
+      ],
+      "Cocktail",
+    ],
+    [
+      [
+        "buffet",
+        "smorgasbord",
+        "self service",
+        "self-service",
+        "carvery",
+        "smorgasbord",
+        "action station",
+      ],
+      "Buffet",
+    ],
+    [
+      [
+        "hāngī",
+        "hangi",
+        "hāngī feast",
+        "hangi feast",
+        "hāngī buffet",
+        "traditional feast",
+      ],
+      "Buffet",
+    ],
+    [
+      [
+        "high tea",
+        "afternoon tea",
+        "arvo tea",
+        "high-tea",
+        "cream tea",
+        "devonshire tea",
+      ],
+      "High Tea",
+    ],
+    [
+      ["school ball", "school formal", "year 12", "formal dinner", "prom"],
+      "School Ball",
+    ],
+    [
+      [
+        "canapés + a-la-carte",
+        "canapes + a la carte",
+        "canapé + a la carte",
+        "canapés + ala carte",
+      ],
+      "Canapés + A-la-carte",
+    ],
+    [
+      [
+        "canapé",
+        "canape",
+        "finger food",
+        "canapés",
+        "nibbles",
+        "cocktail food",
+      ],
+      "Canapés",
+    ],
+    [
+      [
+        "set menu",
+        "prix fixe",
+        "degustation",
+        "tasting menu",
+        "fixed menu",
+        "dégustation",
+      ],
+      "Set Menu",
+    ],
     [["cocktail"], "Cocktail"],
   ];
   // Priority 1: honour an explicit "Type:" label — prevents menu course names from overriding it
-  const explicitTypeM = normalised.match(/^(?:type|function\s*type|event\s*type|service\s*type|function\s*style):\s*(.+)/im);
+  const explicitTypeM = normalised.match(
+    /^(?:type|function\s*type|event\s*type|service\s*type|function\s*style):\s*(.+)/im,
+  );
   if (explicitTypeM) {
     const rawType = (explicitTypeM[1] ?? "").trim().toLowerCase();
     for (const [keywords, type] of typeMap) {
-      if (keywords.some((kw) => rawType.includes(kw))) { functionType = type; conf["functionType"] = 95; break; }
+      if (keywords.some((kw) => rawType.includes(kw))) {
+        functionType = type;
+        conf["functionType"] = 95;
+        break;
+      }
     }
     if (!conf["functionType"]) conf["functionType"] = 70;
   }
   // Priority 2: keyword scan restricted to header lines (before the MENU section) to avoid false menu matches
   if (!conf["functionType"]) {
-    const menuSectionStart = lower.search(/^(?:menu|food\s*&\s*beverage|f&b|catering\s+menu)\s*$/im);
-    const headerText = menuSectionStart > 0 ? lower.slice(0, menuSectionStart) : lower;
+    const menuSectionStart = lower.search(
+      /^(?:menu|food\s*&\s*beverage|f&b|catering\s+menu)\s*$/im,
+    );
+    const headerText =
+      menuSectionStart > 0 ? lower.slice(0, menuSectionStart) : lower;
     for (const [keywords, type] of typeMap) {
-      if (keywords.some((kw) => headerText.includes(kw))) { functionType = type; conf["functionType"] = 80; break; }
+      if (keywords.some((kw) => headerText.includes(kw))) {
+        functionType = type;
+        conf["functionType"] = 80;
+        break;
+      }
     }
   }
 
   // Dietary requirements — extended with AU/NZ/Māori dietary patterns
   const dietaryPatterns: Array<{ re: RegExp; label: string }> = [
-    { re: /(\d+)\s*(?:x\s*)?(?:gluten[- ]?free|gf\b)/i,                         label: "Gluten Free" },
-    { re: /\bgf\s*[x×:]\s*(\d+)|\b(\d+)\s*gf\b/i,                               label: "Gluten Free" },
-    { re: /(\d+)\s*(?:x\s*)?vegan/i,                                              label: "Vegan" },
-    { re: /(\d+)\s*(?:x\s*)?vegetarian/i,                                        label: "Vegetarian" },
-    { re: /(\d+)\s*(?:x\s*)?dairy[- ]?free/i,                                    label: "Dairy Free" },
-    { re: /(\d+)\s*(?:x\s*)?(?:nut|peanut|tree\s*nut)[- ]?allerg/i,             label: "Nut Allergy" },
-    { re: /(\d+)\s*(?:x\s*)?shellfish[- ]?allerg/i,                              label: "Shellfish Allergy" },
-    { re: /(\d+)\s*(?:x\s*)?halal/i,                                             label: "Halal" },
-    { re: /(\d+)\s*(?:x\s*)?kosher/i,                                            label: "Kosher" },
-    { re: /(\d+)\s*(?:x\s*)?egg[- ]?free/i,                                      label: "Egg Free" },
-    { re: /(\d+)\s*(?:x\s*)?(?:low\s+fodmap|fodmap)/i,                          label: "Low FODMAP" },
-    { re: /(\d+)\s*(?:x\s*)?(?:diabetic|low\s+sugar|sugar[- ]?free)/i,          label: "Diabetic Meal" },
-    { re: /(\d+)\s*(?:x\s*)?(?:low\s+sodium|low\s+salt|salt[- ]?free)/i,        label: "Low Sodium" },
-    { re: /(\d+)\s*(?:x\s*)?(?:pescatarian|pescetarian)/i,                       label: "Pescatarian" },
-    { re: /(\d+)\s*(?:x\s*)?(?:soy[- ]?free|soy\s+allerg)/i,                   label: "Soy Free" },
-    { re: /(\d+)\s*(?:x\s*)?(?:sesame[- ]?free|sesame\s+allerg)/i,              label: "Sesame Free" },
-    { re: /(\d+)\s*(?:x\s*)?celiac/i,                                            label: "Coeliac (Gluten Free)" },
+    { re: /(\d+)\s*(?:x\s*)?(?:gluten[- ]?free|gf\b)/i, label: "Gluten Free" },
+    { re: /\bgf\s*[x×:]\s*(\d+)|\b(\d+)\s*gf\b/i, label: "Gluten Free" },
+    { re: /(\d+)\s*(?:x\s*)?vegan/i, label: "Vegan" },
+    { re: /(\d+)\s*(?:x\s*)?vegetarian/i, label: "Vegetarian" },
+    { re: /(\d+)\s*(?:x\s*)?dairy[- ]?free/i, label: "Dairy Free" },
+    {
+      re: /(\d+)\s*(?:x\s*)?(?:nut|peanut|tree\s*nut)[- ]?allerg/i,
+      label: "Nut Allergy",
+    },
+    {
+      re: /(\d+)\s*(?:x\s*)?shellfish[- ]?allerg/i,
+      label: "Shellfish Allergy",
+    },
+    { re: /(\d+)\s*(?:x\s*)?halal/i, label: "Halal" },
+    { re: /(\d+)\s*(?:x\s*)?kosher/i, label: "Kosher" },
+    { re: /(\d+)\s*(?:x\s*)?egg[- ]?free/i, label: "Egg Free" },
+    { re: /(\d+)\s*(?:x\s*)?(?:low\s+fodmap|fodmap)/i, label: "Low FODMAP" },
+    {
+      re: /(\d+)\s*(?:x\s*)?(?:diabetic|low\s+sugar|sugar[- ]?free)/i,
+      label: "Diabetic Meal",
+    },
+    {
+      re: /(\d+)\s*(?:x\s*)?(?:low\s+sodium|low\s+salt|salt[- ]?free)/i,
+      label: "Low Sodium",
+    },
+    {
+      re: /(\d+)\s*(?:x\s*)?(?:pescatarian|pescetarian)/i,
+      label: "Pescatarian",
+    },
+    {
+      re: /(\d+)\s*(?:x\s*)?(?:soy[- ]?free|soy\s+allerg)/i,
+      label: "Soy Free",
+    },
+    {
+      re: /(\d+)\s*(?:x\s*)?(?:sesame[- ]?free|sesame\s+allerg)/i,
+      label: "Sesame Free",
+    },
+    { re: /(\d+)\s*(?:x\s*)?celiac/i, label: "Coeliac (Gluten Free)" },
   ];
   const dietaryRequirements: ParsedFunctionData["dietaryRequirements"] = [];
   const seenDiet = new Set<string>();
@@ -429,19 +679,58 @@ function parseHospitalityText(text: string): ParsedFunctionData {
   // Service events (course times) — extended with Māori/NZ course terminology
   const serviceEvents: ParsedFunctionData["serviceEvents"] = [];
   const coursePats: Array<{ re: RegExp; label: string }> = [
-    { re: /(?:amuse[- ]?bouche|arrival\s+canapé[s]?)s?\s*[:\-–@at]*\s*((?:\d{1,2})(?::\d{2})?\s*(?:[ap]m)?)/i, label: "Amuse-bouche" },
-    { re: /(?:entr[ée]e?s?|starters?|first\s+course)\s*[:\-–@at]*\s*((?:\d{1,2})(?::\d{2})?\s*(?:[ap]m)?)/i,  label: "Entrée Away" },
-    { re: /(?:soup|bisque|consommé|consomme|velouté)\s*[:\-–@at]*\s*((?:\d{1,2})(?::\d{2})?\s*(?:[ap]m)?)/i,   label: "Soup Away" },
-    { re: /(?:salad)\s*[:\-–@at]*\s*((?:\d{1,2})(?::\d{2})?\s*(?:[ap]m)?)/i,                                   label: "Salad Away" },
-    { re: /(?:main[s]?|second\s+course|mains?\s+course)\s*[:\-–@at]*\s*((?:\d{1,2})(?::\d{2})?\s*(?:[ap]m)?)/i,label: "Main Away" },
-    { re: /(?:dessert[s]?|sweet[s]?|third\s+course)\s*[:\-–@at]*\s*((?:\d{1,2})(?::\d{2})?\s*(?:[ap]m)?)/i,   label: "Dessert Away" },
-    { re: /(?:cheese|fromage)\s*[:\-–@at]*\s*((?:\d{1,2})(?::\d{2})?\s*(?:[ap]m)?)/i,                          label: "Cheese Away" },
-    { re: /(?:supper|late\s+snack)\s*[:\-–@at]*\s*((?:\d{1,2})(?::\d{2})?\s*(?:[ap]m)?)/i,                    label: "Supper" },
-    { re: /(?:buffet\s+open[s]?|buffet\s+service|smorgasbord\s+open[s]?)\s*[:\-–@at]*\s*((?:\d{1,2})(?::\d{2})?\s*(?:[ap]m)?)/i, label: "Buffet Open" },
-    { re: /(?:buffet\s+clos(?:e[sd]?|ing))\s*[:\-–@at]*\s*((?:\d{1,2})(?::\d{2})?\s*(?:[ap]m)?)/i,            label: "Buffet Closed" },
-    { re: /(?:canapé[s]?|canape[s]?)\s*service?\s*[:\-–@at]*\s*((?:\d{1,2})(?::\d{2})?\s*(?:[ap]m)?)/i,       label: "Canapés Service" },
-    { re: /(?:high\s+tea|tea\s+service|arvo\s+tea)\s*[:\-–@at]*\s*((?:\d{1,2})(?::\d{2})?\s*(?:[ap]m)?)/i,    label: "High Tea Served" },
-    { re: /(?:hāngī|hangi)\s*(?:ready|open|serve[sd]?|lifted|lift)\s*[:\-–@at]*\s*((?:\d{1,2})(?::\d{2})?\s*(?:[ap]m)?)/i, label: "Hāngī Lifted" },
+    {
+      re: /(?:amuse[- ]?bouche|arrival\s+canapé[s]?)s?\s*[:\-–@at]*\s*((?:\d{1,2})(?::\d{2})?\s*(?:[ap]m)?)/i,
+      label: "Amuse-bouche",
+    },
+    {
+      re: /(?:entr[ée]e?s?|starters?|first\s+course)\s*[:\-–@at]*\s*((?:\d{1,2})(?::\d{2})?\s*(?:[ap]m)?)/i,
+      label: "Entrée Away",
+    },
+    {
+      re: /(?:soup|bisque|consommé|consomme|velouté)\s*[:\-–@at]*\s*((?:\d{1,2})(?::\d{2})?\s*(?:[ap]m)?)/i,
+      label: "Soup Away",
+    },
+    {
+      re: /(?:salad)\s*[:\-–@at]*\s*((?:\d{1,2})(?::\d{2})?\s*(?:[ap]m)?)/i,
+      label: "Salad Away",
+    },
+    {
+      re: /(?:main[s]?|second\s+course|mains?\s+course)\s*[:\-–@at]*\s*((?:\d{1,2})(?::\d{2})?\s*(?:[ap]m)?)/i,
+      label: "Main Away",
+    },
+    {
+      re: /(?:dessert[s]?|sweet[s]?|third\s+course)\s*[:\-–@at]*\s*((?:\d{1,2})(?::\d{2})?\s*(?:[ap]m)?)/i,
+      label: "Dessert Away",
+    },
+    {
+      re: /(?:cheese|fromage)\s*[:\-–@at]*\s*((?:\d{1,2})(?::\d{2})?\s*(?:[ap]m)?)/i,
+      label: "Cheese Away",
+    },
+    {
+      re: /(?:supper|late\s+snack)\s*[:\-–@at]*\s*((?:\d{1,2})(?::\d{2})?\s*(?:[ap]m)?)/i,
+      label: "Supper",
+    },
+    {
+      re: /(?:buffet\s+open[s]?|buffet\s+service|smorgasbord\s+open[s]?)\s*[:\-–@at]*\s*((?:\d{1,2})(?::\d{2})?\s*(?:[ap]m)?)/i,
+      label: "Buffet Open",
+    },
+    {
+      re: /(?:buffet\s+clos(?:e[sd]?|ing))\s*[:\-–@at]*\s*((?:\d{1,2})(?::\d{2})?\s*(?:[ap]m)?)/i,
+      label: "Buffet Closed",
+    },
+    {
+      re: /(?:canapé[s]?|canape[s]?)\s*service?\s*[:\-–@at]*\s*((?:\d{1,2})(?::\d{2})?\s*(?:[ap]m)?)/i,
+      label: "Canapés Service",
+    },
+    {
+      re: /(?:high\s+tea|tea\s+service|arvo\s+tea)\s*[:\-–@at]*\s*((?:\d{1,2})(?::\d{2})?\s*(?:[ap]m)?)/i,
+      label: "High Tea Served",
+    },
+    {
+      re: /(?:hāngī|hangi)\s*(?:ready|open|serve[sd]?|lifted|lift)\s*[:\-–@at]*\s*((?:\d{1,2})(?::\d{2})?\s*(?:[ap]m)?)/i,
+      label: "Hāngī Lifted",
+    },
   ];
   for (const { re, label } of coursePats) {
     const m = normalised.match(re);
@@ -462,24 +751,41 @@ function parseHospitalityText(text: string): ParsedFunctionData {
     );
     if (sectionHdrM && sectionHdrM.index !== undefined) {
       // Trim the leading newline that immediately follows the section header
-      const afterHdr = normalised.slice(sectionHdrM.index + sectionHdrM[0].length).replace(/^\r?\n/, "");
+      const afterHdr = normalised
+        .slice(sectionHdrM.index + sectionHdrM[0].length)
+        .replace(/^\r?\n/, "");
       let seenContent = false;
       for (const rawLine of afterHdr.split(/\n/)) {
         const line = rawLine.trim();
-        if (!line) { if (seenContent) break; else continue; } // skip leading blanks; first blank after content ends section
+        if (!line) {
+          if (seenContent) break;
+          else continue;
+        } // skip leading blanks; first blank after content ends section
         // Stop at a new section header (all-caps word block, or known section keywords)
-        if (/^[A-Z]{2}[A-Z\s]{2,}$/.test(line) || /^(?:DIETARY|SPECIAL|MENU|FOOD|NOTES|STAFF|PREP)\b/i.test(line)) break;
-        const labelFirst = line.match(/^([A-Za-zÀ-ÿ][^:\d][^:]{0,28}):\s*(\d{1,2}:\d{2})/);
-        const timeFirst  = line.match(/^(\d{1,2}:\d{2})\s+(.{2,40})/);
+        if (
+          /^[A-Z]{2}[A-Z\s]{2,}$/.test(line) ||
+          /^(?:DIETARY|SPECIAL|MENU|FOOD|NOTES|STAFF|PREP)\b/i.test(line)
+        )
+          break;
+        const labelFirst = line.match(
+          /^([A-Za-zÀ-ÿ][^:\d][^:]{0,28}):\s*(\d{1,2}:\d{2})/,
+        );
+        const timeFirst = line.match(/^(\d{1,2}:\d{2})\s+(.{2,40})/);
         if (labelFirst) {
           const t = normaliseTime(labelFirst[2]!);
-          if (t && !serviceEvents.some((e) => e.label === labelFirst[1]!.trim())) {
+          if (
+            t &&
+            !serviceEvents.some((e) => e.label === labelFirst[1]!.trim())
+          ) {
             serviceEvents.push({ time: t, label: labelFirst[1]!.trim() });
             seenContent = true;
           }
         } else if (timeFirst) {
           if (!serviceEvents.some((e) => e.time === timeFirst[1])) {
-            serviceEvents.push({ time: timeFirst[1]!, label: timeFirst[2]!.trim() });
+            serviceEvents.push({
+              time: timeFirst[1]!,
+              label: timeFirst[2]!.trim(),
+            });
             seenContent = true;
           }
         }
@@ -522,18 +828,37 @@ function parseHospitalityText(text: string): ParsedFunctionData {
   const detectedTerminology = detectTerminology(text); // original text, before normalization
 
   // If allergens inferred from menu items but not in declared dietary, add a warning note
-  const inferredAllergens = new Set(allergenWarnings.flatMap((w) => w.allergens));
-  const declaredAllergens = new Set(dietaryRequirements.map((d) => d.name.toLowerCase()));
+  const inferredAllergens = new Set(
+    allergenWarnings.flatMap((w) => w.allergens),
+  );
+  const declaredAllergens = new Set(
+    dietaryRequirements.map((d) => d.name.toLowerCase()),
+  );
   for (const allergen of inferredAllergens) {
-    const matchesDeclared = [...declaredAllergens].some((d) => d.includes(allergen.toLowerCase().split(" ")[0] ?? ""));
+    const matchesDeclared = [...declaredAllergens].some((d) =>
+      d.includes(allergen.toLowerCase().split(" ")[0] ?? ""),
+    );
     if (!matchesDeclared) {
-      specialRequirements.push(`⚠ Auto-detected allergen risk: ${allergen} — verify with client and label dishes accordingly`);
+      specialRequirements.push(
+        `⚠ Auto-detected allergen risk: ${allergen} — verify with client and label dishes accordingly`,
+      );
     }
   }
 
   return {
-    name, room, floor, date, functionType, startTime, endTime, guestCount,
-    menu, serviceEvents, dietaryRequirements, specialRequirements, prepItems,
+    name,
+    room,
+    floor,
+    date,
+    functionType,
+    startTime,
+    endTime,
+    guestCount,
+    menu,
+    serviceEvents,
+    dietaryRequirements,
+    specialRequirements,
+    prepItems,
     confidence: conf,
     aiUsed: false,
     allergenWarnings,
@@ -656,7 +981,10 @@ async function parseWithAI(text: string): Promise<ParsedFunctionData> {
     model: "gpt-4o",
     messages: [
       { role: "system", content: AI_SYSTEM },
-      { role: "user", content: `Parse this function sheet and return structured kitchen operations JSON:\n\n${text}` },
+      {
+        role: "user",
+        content: `Parse this function sheet and return structured kitchen operations JSON:\n\n${text}`,
+      },
     ],
     temperature: 0.1,
     max_tokens: 3500,
@@ -677,18 +1005,29 @@ async function parseWithAI(text: string): Promise<ParsedFunctionData> {
     guestCount: data.guestCount ?? 0,
     menu: Array.isArray(data.menu) ? data.menu : [],
     serviceEvents: Array.isArray(data.serviceEvents) ? data.serviceEvents : [],
-    dietaryRequirements: Array.isArray(data.dietaryRequirements) ? data.dietaryRequirements : [],
-    specialRequirements: Array.isArray(data.specialRequirements) ? data.specialRequirements : [],
+    dietaryRequirements: Array.isArray(data.dietaryRequirements)
+      ? data.dietaryRequirements
+      : [],
+    specialRequirements: Array.isArray(data.specialRequirements)
+      ? data.specialRequirements
+      : [],
     prepItems: Array.isArray(data.prepItems) ? data.prepItems : [],
     confidence: {},
     aiUsed: true,
-    allergenWarnings: Array.isArray(data.allergenWarnings) ? data.allergenWarnings : [],
+    allergenWarnings: Array.isArray(data.allergenWarnings)
+      ? data.allergenWarnings
+      : [],
     haccpNotes: Array.isArray(data.haccpNotes) ? data.haccpNotes : [],
-    detectedTerminology: Array.isArray(data.detectedTerminology) ? data.detectedTerminology : [],
+    detectedTerminology: Array.isArray(data.detectedTerminology)
+      ? data.detectedTerminology
+      : [],
   };
 }
 
-async function parseImageWithAI(base64: string, mimeType: string): Promise<ParsedFunctionData> {
+async function parseImageWithAI(
+  base64: string,
+  mimeType: string,
+): Promise<ParsedFunctionData> {
   if (!openai) throw new Error("Vision AI not available");
 
   const resp = await openai.chat.completions.create({
@@ -698,8 +1037,17 @@ async function parseImageWithAI(base64: string, mimeType: string): Promise<Parse
       {
         role: "user",
         content: [
-          { type: "text", text: "Extract all function sheet and kitchen operations data from this document image. Return structured JSON:" },
-          { type: "image_url", image_url: { url: `data:${mimeType};base64,${base64}`, detail: "high" } },
+          {
+            type: "text",
+            text: "Extract all function sheet and kitchen operations data from this document image. Return structured JSON:",
+          },
+          {
+            type: "image_url",
+            image_url: {
+              url: `data:${mimeType};base64,${base64}`,
+              detail: "high",
+            },
+          },
         ],
       },
     ],
@@ -722,14 +1070,22 @@ async function parseImageWithAI(base64: string, mimeType: string): Promise<Parse
     guestCount: data.guestCount ?? 0,
     menu: Array.isArray(data.menu) ? data.menu : [],
     serviceEvents: Array.isArray(data.serviceEvents) ? data.serviceEvents : [],
-    dietaryRequirements: Array.isArray(data.dietaryRequirements) ? data.dietaryRequirements : [],
-    specialRequirements: Array.isArray(data.specialRequirements) ? data.specialRequirements : [],
+    dietaryRequirements: Array.isArray(data.dietaryRequirements)
+      ? data.dietaryRequirements
+      : [],
+    specialRequirements: Array.isArray(data.specialRequirements)
+      ? data.specialRequirements
+      : [],
     prepItems: Array.isArray(data.prepItems) ? data.prepItems : [],
     confidence: {},
     aiUsed: true,
-    allergenWarnings: Array.isArray(data.allergenWarnings) ? data.allergenWarnings : [],
+    allergenWarnings: Array.isArray(data.allergenWarnings)
+      ? data.allergenWarnings
+      : [],
     haccpNotes: Array.isArray(data.haccpNotes) ? data.haccpNotes : [],
-    detectedTerminology: Array.isArray(data.detectedTerminology) ? data.detectedTerminology : [],
+    detectedTerminology: Array.isArray(data.detectedTerminology)
+      ? data.detectedTerminology
+      : [],
   };
 }
 
@@ -746,7 +1102,10 @@ async function smartParseText(text: string): Promise<ParsedFunctionData> {
   return parseHospitalityText(text);
 }
 
-async function smartParseImage(base64: string, mimeType: string): Promise<ParsedFunctionData> {
+async function smartParseImage(
+  base64: string,
+  mimeType: string,
+): Promise<ParsedFunctionData> {
   if (openai) {
     try {
       return await parseImageWithAI(base64, mimeType);
@@ -755,10 +1114,20 @@ async function smartParseImage(base64: string, mimeType: string): Promise<Parsed
     }
   }
   return {
-    name: "", room: "", floor: "", date: "", functionType: "A-la-carte",
-    startTime: "", endTime: "", guestCount: 0,
-    menu: [], serviceEvents: [], dietaryRequirements: [],
-    specialRequirements: ["Image reading requires AI — please enable the AI integration or import as a file"],
+    name: "",
+    room: "",
+    floor: "",
+    date: "",
+    functionType: "A-la-carte",
+    startTime: "",
+    endTime: "",
+    guestCount: 0,
+    menu: [],
+    serviceEvents: [],
+    dietaryRequirements: [],
+    specialRequirements: [
+      "Image reading requires AI — please enable the AI integration or import as a file",
+    ],
     prepItems: [],
     confidence: {},
     aiUsed: false,
@@ -775,7 +1144,11 @@ async function smartParseImage(base64: string, mimeType: string): Promise<Parsed
  * Body: { content: string, type?: "text" | "image_base64", mimeType?: string }
  */
 router.post("/import/ai-parse", async (req: Request, res: Response) => {
-  const { content, type = "text", mimeType = "image/jpeg" } = req.body as {
+  const {
+    content,
+    type = "text",
+    mimeType = "image/jpeg",
+  } = req.body as {
     content: string;
     type?: "text" | "image_base64";
     mimeType?: string;
@@ -787,13 +1160,16 @@ router.post("/import/ai-parse", async (req: Request, res: Response) => {
   }
 
   try {
-    const result = type === "image_base64"
-      ? await smartParseImage(content, mimeType)
-      : await smartParseText(content);
+    const result =
+      type === "image_base64"
+        ? await smartParseImage(content, mimeType)
+        : await smartParseText(content);
 
     res.json(result);
   } catch (err) {
-    res.status(500).json({ error: err instanceof Error ? err.message : "Parse failed" });
+    res
+      .status(500)
+      .json({ error: err instanceof Error ? err.message : "Parse failed" });
   }
 });
 
@@ -804,65 +1180,94 @@ router.post("/import/ai-parse", async (req: Request, res: Response) => {
  * Body: { base64: string, filename: string, mimeType: string }
  * Extracts text from .docx / .pdf / .xlsx then runs smartParseText.
  */
-router.post("/import/parse-document-base64", async (req: Request, res: Response) => {
-  const { base64, filename = "upload", mimeType = "" } = req.body as {
-    base64: string;
-    filename: string;
-    mimeType: string;
-  };
+router.post(
+  "/import/parse-document-base64",
+  async (req: Request, res: Response) => {
+    const {
+      base64,
+      filename = "upload",
+      mimeType = "",
+    } = req.body as {
+      base64: string;
+      filename: string;
+      mimeType: string;
+    };
 
-  if (!base64) {
-    res.status(400).json({ error: "No file data provided" });
-    return;
-  }
-
-  const ext = filename.toLowerCase().split(".").pop() ?? "";
-  const buffer = Buffer.from(base64, "base64");
-  let extractedText = "";
-
-  try {
-    if (ext === "docx" || mimeType.includes("wordprocessingml") || mimeType.includes("msword")) {
-      const mammoth = await import("mammoth");
-      const result = await mammoth.default.extractRawText({ buffer });
-      extractedText = result.value;
-    } else if (ext === "pdf" || mimeType.includes("pdf")) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const pdfMod = (await import("pdf-parse")) as any;
-      const pdfParseFn: (b: Buffer) => Promise<{ text: string }> = pdfMod.default ?? pdfMod;
-      const result = await pdfParseFn(buffer);
-      extractedText = result.text;
-    } else if (ext === "xlsx" || ext === "xls" || ext === "csv" || mimeType.includes("spreadsheet") || mimeType.includes("excel")) {
-      const XLSX = await import("xlsx");
-      const wb = XLSX.read(buffer, { type: "buffer" });
-      const texts: string[] = [];
-      for (const sheetName of wb.SheetNames) {
-        const ws = wb.Sheets[sheetName];
-        if (!ws) continue;
-        const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws, { defval: "" });
-        if (rows.length === 1) {
-          const row = rows[0] ?? {};
-          texts.push(Object.entries(row).map(([k, v]) => `${k}: ${v}`).join("\n"));
-        } else {
-          texts.push(XLSX.utils.sheet_to_csv(ws));
-        }
-      }
-      extractedText = texts.join("\n\n");
-    } else if (ext === "txt" || mimeType.includes("text/plain")) {
-      extractedText = buffer.toString("utf-8");
-    } else {
-      extractedText = buffer.toString("utf-8");
-    }
-
-    if (!extractedText.trim()) {
-      res.status(422).json({ error: "Could not extract text from this file. Try saving as PDF or Word format." });
+    if (!base64) {
+      res.status(400).json({ error: "No file data provided" });
       return;
     }
 
-    const result = await smartParseText(extractedText);
-    res.json({ ...result, extractedTextLength: extractedText.length });
-  } catch (err) {
-    res.status(500).json({ error: err instanceof Error ? err.message : "Document parse failed" });
-  }
-});
+    const ext = filename.toLowerCase().split(".").pop() ?? "";
+    const buffer = Buffer.from(base64, "base64");
+    let extractedText = "";
+
+    try {
+      if (
+        ext === "docx" ||
+        mimeType.includes("wordprocessingml") ||
+        mimeType.includes("msword")
+      ) {
+        const mammoth = await import("mammoth");
+        const result = await mammoth.default.extractRawText({ buffer });
+        extractedText = result.value;
+      } else if (ext === "pdf" || mimeType.includes("pdf")) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const pdfMod = (await import("pdf-parse")) as any;
+        const pdfParseFn: (b: Buffer) => Promise<{ text: string }> =
+          pdfMod.default ?? pdfMod;
+        const result = await pdfParseFn(buffer);
+        extractedText = result.text;
+      } else if (
+        ext === "xlsx" ||
+        ext === "xls" ||
+        ext === "csv" ||
+        mimeType.includes("spreadsheet") ||
+        mimeType.includes("excel")
+      ) {
+        const XLSX = await import("xlsx");
+        const wb = XLSX.read(buffer, { type: "buffer" });
+        const texts: string[] = [];
+        for (const sheetName of wb.SheetNames) {
+          const ws = wb.Sheets[sheetName];
+          if (!ws) continue;
+          const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws, {
+            defval: "",
+          });
+          if (rows.length === 1) {
+            const row = rows[0] ?? {};
+            texts.push(
+              Object.entries(row)
+                .map(([k, v]) => `${k}: ${v}`)
+                .join("\n"),
+            );
+          } else {
+            texts.push(XLSX.utils.sheet_to_csv(ws));
+          }
+        }
+        extractedText = texts.join("\n\n");
+      } else if (ext === "txt" || mimeType.includes("text/plain")) {
+        extractedText = buffer.toString("utf-8");
+      } else {
+        extractedText = buffer.toString("utf-8");
+      }
+
+      if (!extractedText.trim()) {
+        res.status(422).json({
+          error:
+            "Could not extract text from this file. Try saving as PDF or Word format.",
+        });
+        return;
+      }
+
+      const result = await smartParseText(extractedText);
+      res.json({ ...result, extractedTextLength: extractedText.length });
+    } catch (err) {
+      res.status(500).json({
+        error: err instanceof Error ? err.message : "Document parse failed",
+      });
+    }
+  },
+);
 
 export default router;

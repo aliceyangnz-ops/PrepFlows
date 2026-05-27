@@ -1,5 +1,5 @@
-import { db, profilesTable } from '@workspace/db';
-import { eq, sql } from 'drizzle-orm';
+import { db, profilesTable } from "@workspace/db";
+import { eq, sql } from "drizzle-orm";
 
 export class StripeStorage {
   async getProfile(id: string) {
@@ -12,10 +12,7 @@ export class StripeStorage {
 
   async upsertProfile(id: string) {
     try {
-      await db
-        .insert(profilesTable)
-        .values({ id })
-        .onConflictDoNothing();
+      await db.insert(profilesTable).values({ id }).onConflictDoNothing();
     } catch {
       // row already exists — no action needed
     }
@@ -31,8 +28,10 @@ export class StripeStorage {
     info: { stripeCustomerId?: string; stripeSubscriptionId?: string },
   ) {
     const updateData: Partial<typeof profilesTable.$inferInsert> = {};
-    if (info.stripeCustomerId !== undefined) updateData.stripeCustomerId = info.stripeCustomerId;
-    if (info.stripeSubscriptionId !== undefined) updateData.stripeSubscriptionId = info.stripeSubscriptionId;
+    if (info.stripeCustomerId !== undefined)
+      updateData.stripeCustomerId = info.stripeCustomerId;
+    if (info.stripeSubscriptionId !== undefined)
+      updateData.stripeSubscriptionId = info.stripeSubscriptionId;
 
     const [profile] = await db
       .update(profilesTable)

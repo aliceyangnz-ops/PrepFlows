@@ -1,16 +1,16 @@
-import React from 'react';
+import React from "react";
 
 export function RosterPremium() {
   const tokens = {
-    bg: '#0D1117',
-    surface: '#161B22',
-    border: 'rgba(255,255,255,0.08)',
-    primary: '#F97316',
-    success: '#22C55E',
-    warning: '#EAB308',
-    danger: '#EF4444',
-    textPrimary: '#F0F6FC',
-    textSecondary: '#8B949E',
+    bg: "#0D1117",
+    surface: "#161B22",
+    border: "rgba(255,255,255,0.08)",
+    primary: "#F97316",
+    success: "#22C55E",
+    warning: "#EAB308",
+    danger: "#EF4444",
+    textPrimary: "#F0F6FC",
+    textSecondary: "#8B949E",
   };
 
   const styles = {
@@ -18,24 +18,24 @@ export function RosterPremium() {
       width: 390,
       minHeight: 844,
       background: tokens.bg,
-      overflowY: 'auto' as const,
+      overflowY: "auto" as const,
       fontFamily: "'Inter', system-ui, sans-serif",
-      padding: '0 0 48px 0',
+      padding: "0 0 48px 0",
       color: tokens.textPrimary,
-      WebkitFontSmoothing: 'antialiased',
-      boxSizing: 'border-box' as const,
+      WebkitFontSmoothing: "antialiased",
+      boxSizing: "border-box" as const,
     },
     header: {
-      padding: '24px 20px 16px',
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'flex-start',
+      padding: "24px 20px 16px",
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "flex-start",
     },
     headerTitle: {
       fontSize: 24,
       fontWeight: 700,
-      letterSpacing: '-0.02em',
-      margin: '0 0 4px 0',
+      letterSpacing: "-0.02em",
+      margin: "0 0 4px 0",
     },
     headerSubtitle: {
       fontSize: 14,
@@ -44,62 +44,63 @@ export function RosterPremium() {
       margin: 0,
     },
     badgeSick: {
-      background: 'rgba(239, 68, 68, 0.15)',
+      background: "rgba(239, 68, 68, 0.15)",
       color: tokens.danger,
-      padding: '4px 8px',
+      padding: "4px 8px",
       borderRadius: 6,
       fontSize: 12,
       fontWeight: 700,
-      letterSpacing: '0.05em',
-      display: 'flex',
-      alignItems: 'center',
+      letterSpacing: "0.05em",
+      display: "flex",
+      alignItems: "center",
       gap: 4,
     },
     alertBanner: {
-      margin: '0 20px 24px',
-      background: 'linear-gradient(145deg, rgba(239,68,68,0.15) 0%, rgba(249,115,22,0.05) 100%)',
+      margin: "0 20px 24px",
+      background:
+        "linear-gradient(145deg, rgba(239,68,68,0.15) 0%, rgba(249,115,22,0.05) 100%)",
       border: `1px solid rgba(239,68,68,0.2)`,
       borderRadius: 12,
-      padding: '16px',
+      padding: "16px",
     },
     alertTitle: {
       fontSize: 14,
       fontWeight: 600,
       color: tokens.danger,
-      display: 'flex',
-      alignItems: 'center',
+      display: "flex",
+      alignItems: "center",
       gap: 6,
-      margin: '0 0 4px 0',
+      margin: "0 0 4px 0",
     },
     alertDesc: {
       fontSize: 13,
       color: tokens.textPrimary,
-      margin: '0 0 12px 0',
+      margin: "0 0 12px 0",
       opacity: 0.9,
     },
     alertLink: {
       fontSize: 13,
       fontWeight: 600,
       color: tokens.primary,
-      textDecoration: 'none',
-      display: 'inline-flex',
-      alignItems: 'center',
+      textDecoration: "none",
+      display: "inline-flex",
+      alignItems: "center",
     },
     section: {
       marginBottom: 24,
     },
     sectionHeader: {
-      padding: '0 20px 12px',
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
+      padding: "0 20px 12px",
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
     },
     sectionTitle: {
       fontSize: 11,
       fontWeight: 700,
       color: tokens.textSecondary,
-      letterSpacing: '0.08em',
-      textTransform: 'uppercase' as const,
+      letterSpacing: "0.08em",
+      textTransform: "uppercase" as const,
       margin: 0,
     },
     sectionCount: {
@@ -108,17 +109,17 @@ export function RosterPremium() {
       margin: 0,
     },
     cardList: {
-      display: 'flex',
-      flexDirection: 'column' as const,
+      display: "flex",
+      flexDirection: "column" as const,
       gap: 8,
-      padding: '0 20px',
+      padding: "0 20px",
     },
     card: {
       background: tokens.surface,
       border: `1px solid ${tokens.border}`,
       borderRadius: 12,
       padding: 16,
-      display: 'flex',
+      display: "flex",
       gap: 12,
     },
     cardDimmed: {
@@ -130,9 +131,9 @@ export function RosterPremium() {
       width: 36,
       height: 36,
       borderRadius: 18,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
       fontSize: 13,
       fontWeight: 600,
       flexShrink: 0,
@@ -141,9 +142,9 @@ export function RosterPremium() {
       flex: 1,
     },
     cardHeader: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'flex-start',
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "flex-start",
       marginBottom: 2,
     },
     staffName: {
@@ -159,24 +160,24 @@ export function RosterPremium() {
     shiftText: {
       fontSize: 12,
       color: tokens.textSecondary,
-      fontVariantNumeric: 'tabular-nums',
+      fontVariantNumeric: "tabular-nums",
     },
     pill: {
-      display: 'inline-flex',
-      alignItems: 'center',
+      display: "inline-flex",
+      alignItems: "center",
       gap: 4,
-      padding: '2px 8px',
+      padding: "2px 8px",
       borderRadius: 10,
       fontSize: 11,
       fontWeight: 500,
       marginTop: 8,
     },
     pillSuccess: {
-      background: 'rgba(34, 197, 94, 0.1)',
+      background: "rgba(34, 197, 94, 0.1)",
       color: tokens.success,
     },
     pillDanger: {
-      background: 'rgba(239, 68, 68, 0.1)',
+      background: "rgba(239, 68, 68, 0.1)",
       color: tokens.danger,
     },
     cardMeta: {
@@ -187,15 +188,15 @@ export function RosterPremium() {
       borderTop: `1px solid ${tokens.border}`,
     },
     timeline: {
-      margin: '0 20px',
+      margin: "0 20px",
       background: tokens.surface,
       border: `1px solid ${tokens.border}`,
       borderRadius: 12,
-      padding: '16px',
+      padding: "16px",
     },
     timelineHeader: {
-      display: 'flex',
-      justifyContent: 'space-between',
+      display: "flex",
+      justifyContent: "space-between",
       borderBottom: `1px solid ${tokens.border}`,
       paddingBottom: 8,
       marginBottom: 12,
@@ -203,34 +204,34 @@ export function RosterPremium() {
     timeLabel: {
       fontSize: 10,
       color: tokens.textSecondary,
-      fontVariantNumeric: 'tabular-nums',
+      fontVariantNumeric: "tabular-nums",
     },
     timelineRow: {
       height: 24,
-      background: 'rgba(255,255,255,0.03)',
+      background: "rgba(255,255,255,0.03)",
       borderRadius: 4,
-      position: 'relative' as const,
+      position: "relative" as const,
       marginBottom: 8,
-      overflow: 'hidden',
+      overflow: "hidden",
     },
     timelineBar: {
-      position: 'absolute' as const,
+      position: "absolute" as const,
       top: 2,
       bottom: 2,
       borderRadius: 3,
-      display: 'flex',
-      alignItems: 'center',
-      padding: '0 8px',
+      display: "flex",
+      alignItems: "center",
+      padding: "0 8px",
       fontSize: 10,
       fontWeight: 600,
-      color: '#fff',
-      whiteSpace: 'nowrap' as const,
-      overflow: 'hidden',
+      color: "#fff",
+      whiteSpace: "nowrap" as const,
+      overflow: "hidden",
     },
     actionRow: {
-      display: 'flex',
+      display: "flex",
       gap: 12,
-      padding: '0 20px',
+      padding: "0 20px",
       marginTop: 32,
     },
     actionCard: {
@@ -238,14 +239,14 @@ export function RosterPremium() {
       background: tokens.surface,
       border: `1px solid ${tokens.border}`,
       borderRadius: 12,
-      padding: '16px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
+      padding: "16px",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
       gap: 8,
       fontSize: 14,
       fontWeight: 600,
-      cursor: 'pointer',
+      cursor: "pointer",
     },
   };
 
@@ -255,7 +256,9 @@ export function RosterPremium() {
       <div style={styles.header}>
         <div>
           <h1 style={styles.headerTitle}>Roster</h1>
-          <p style={styles.headerSubtitle}>Saturday, 17 May · 14 staff scheduled</p>
+          <p style={styles.headerSubtitle}>
+            Saturday, 17 May · 14 staff scheduled
+          </p>
         </div>
         <div style={styles.badgeSick}>
           <span style={{ fontSize: 8 }}>●</span> 2 SICK
@@ -267,8 +270,12 @@ export function RosterPremium() {
         <h2 style={styles.alertTitle}>
           <span style={{ fontSize: 16 }}>⚠️</span> Coverage Alert
         </h2>
-        <p style={styles.alertDesc}>2 staff called sick — PM shift may be short</p>
-        <a href="#" style={styles.alertLink}>View Coverage Options →</a>
+        <p style={styles.alertDesc}>
+          2 staff called sick — PM shift may be short
+        </p>
+        <a href="#" style={styles.alertLink}>
+          View Coverage Options →
+        </a>
       </div>
 
       {/* Staff List - KITCHEN */}
@@ -280,7 +287,15 @@ export function RosterPremium() {
         <div style={styles.cardList}>
           {/* Card 1 */}
           <div style={styles.card}>
-            <div style={{ ...styles.avatar, background: '#9A3412', color: '#FFEDD5' }}>JT</div>
+            <div
+              style={{
+                ...styles.avatar,
+                background: "#9A3412",
+                color: "#FFEDD5",
+              }}
+            >
+              JT
+            </div>
             <div style={styles.cardContent}>
               <div style={styles.cardHeader}>
                 <div>
@@ -292,13 +307,23 @@ export function RosterPremium() {
               <div style={{ ...styles.pill, ...styles.pillSuccess }}>
                 <span style={{ fontSize: 8 }}>●</span> On Shift
               </div>
-              <div style={styles.cardMeta}>Functions today: Hartley Wedding, Johnson Lunch</div>
+              <div style={styles.cardMeta}>
+                Functions today: Hartley Wedding, Johnson Lunch
+              </div>
             </div>
           </div>
 
           {/* Card 2 */}
           <div style={styles.card}>
-            <div style={{ ...styles.avatar, background: '#6B21A8', color: '#F3E8FF' }}>SM</div>
+            <div
+              style={{
+                ...styles.avatar,
+                background: "#6B21A8",
+                color: "#F3E8FF",
+              }}
+            >
+              SM
+            </div>
             <div style={styles.cardContent}>
               <div style={styles.cardHeader}>
                 <div>
@@ -315,11 +340,26 @@ export function RosterPremium() {
 
           {/* Card 3 (Sick) */}
           <div style={{ ...styles.card, ...styles.cardDimmed }}>
-            <div style={{ ...styles.avatar, background: '#374151', color: '#9CA3AF' }}>DK</div>
+            <div
+              style={{
+                ...styles.avatar,
+                background: "#374151",
+                color: "#9CA3AF",
+              }}
+            >
+              DK
+            </div>
             <div style={styles.cardContent}>
               <div style={styles.cardHeader}>
                 <div>
-                  <h4 style={{ ...styles.staffName, color: 'rgba(240, 246, 252, 0.7)' }}>Daniel Kim</h4>
+                  <h4
+                    style={{
+                      ...styles.staffName,
+                      color: "rgba(240, 246, 252, 0.7)",
+                    }}
+                  >
+                    Daniel Kim
+                  </h4>
                   <p style={styles.staffRole}>Chef de Partie</p>
                 </div>
                 <div style={styles.shiftText}>14:00 – 23:00</div>
@@ -343,7 +383,15 @@ export function RosterPremium() {
         </div>
         <div style={styles.cardList}>
           <div style={styles.card}>
-            <div style={{ ...styles.avatar, background: '#166534', color: '#DCFCE7' }}>ML</div>
+            <div
+              style={{
+                ...styles.avatar,
+                background: "#166534",
+                color: "#DCFCE7",
+              }}
+            >
+              ML
+            </div>
             <div style={styles.cardContent}>
               <div style={styles.cardHeader}>
                 <div>
@@ -362,7 +410,7 @@ export function RosterPremium() {
 
       {/* Timeline */}
       <div style={styles.section}>
-        <div style={{ padding: '0 20px 12px' }}>
+        <div style={{ padding: "0 20px 12px" }}>
           <h3 style={styles.sectionTitle}>Today's Shifts</h3>
         </div>
         <div style={styles.timeline}>
@@ -376,19 +424,57 @@ export function RosterPremium() {
           </div>
           <div style={styles.timelineRow}>
             {/* 07:00 to 16:00 roughly 5% to 60% */}
-            <div style={{ ...styles.timelineBar, left: '5%', width: '55%', background: '#C2410C' }}>JT (Exec)</div>
+            <div
+              style={{
+                ...styles.timelineBar,
+                left: "5%",
+                width: "55%",
+                background: "#C2410C",
+              }}
+            >
+              JT (Exec)
+            </div>
           </div>
           <div style={styles.timelineRow}>
             {/* 10:00 to 22:00 roughly 25% to 100% */}
-            <div style={{ ...styles.timelineBar, left: '25%', width: '75%', background: '#4338CA' }}>SM (Sous)</div>
+            <div
+              style={{
+                ...styles.timelineBar,
+                left: "25%",
+                width: "75%",
+                background: "#4338CA",
+              }}
+            >
+              SM (Sous)
+            </div>
           </div>
           <div style={styles.timelineRow}>
             {/* 14:00 to 23:00 (Sick) */}
-            <div style={{ ...styles.timelineBar, left: '50%', width: '50%', background: 'repeating-linear-gradient(45deg, #7F1D1D, #7F1D1D 4px, #991B1B 4px, #991B1B 8px)', opacity: 0.6 }}>DK (SICK)</div>
+            <div
+              style={{
+                ...styles.timelineBar,
+                left: "50%",
+                width: "50%",
+                background:
+                  "repeating-linear-gradient(45deg, #7F1D1D, #7F1D1D 4px, #991B1B 4px, #991B1B 8px)",
+                opacity: 0.6,
+              }}
+            >
+              DK (SICK)
+            </div>
           </div>
           <div style={styles.timelineRow}>
             {/* 16:00 to 23:00 roughly 60% to 100% */}
-            <div style={{ ...styles.timelineBar, left: '60%', width: '40%', background: '#15803D' }}>ML (FOH)</div>
+            <div
+              style={{
+                ...styles.timelineBar,
+                left: "60%",
+                width: "40%",
+                background: "#15803D",
+              }}
+            >
+              ML (FOH)
+            </div>
           </div>
         </div>
       </div>
@@ -398,7 +484,13 @@ export function RosterPremium() {
         <div style={styles.actionCard}>
           <span style={{ fontSize: 16 }}>📋</span> Add Staff
         </div>
-        <div style={{ ...styles.actionCard, color: tokens.primary, borderColor: 'rgba(249,115,22,0.2)' }}>
+        <div
+          style={{
+            ...styles.actionCard,
+            color: tokens.primary,
+            borderColor: "rgba(249,115,22,0.2)",
+          }}
+        >
           <span style={{ fontSize: 16 }}>📞</span> Call In Casual
         </div>
       </div>

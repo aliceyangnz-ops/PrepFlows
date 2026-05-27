@@ -1,11 +1,33 @@
 export function IconV2AuroraBlue() {
   const S = 300;
   const R = 66;
-  const P = "M 36 78 L 36 26 C 36 17 46 13 56 13 C 72 13 78 25 78 37 C 78 51 68 59 54 59 L 36 59";
+  const P =
+    "M 36 78 L 36 26 C 36 17 46 13 56 13 C 72 13 78 25 78 37 C 78 51 68 59 54 59 L 36 59";
 
   return (
-    <div style={{ minHeight: "100vh", background: "#030810", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 20, fontFamily: "Inter, sans-serif" }}>
-      <svg width={S} height={S} viewBox="0 0 300 300" style={{ borderRadius: R, display: "block", boxShadow: "0 32px 80px rgba(99,102,241,0.5), 0 8px 24px rgba(0,0,0,0.8)" }}>
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "#030810",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 20,
+        fontFamily: "Inter, sans-serif",
+      }}
+    >
+      <svg
+        width={S}
+        height={S}
+        viewBox="0 0 300 300"
+        style={{
+          borderRadius: R,
+          display: "block",
+          boxShadow:
+            "0 32px 80px rgba(99,102,241,0.5), 0 8px 24px rgba(0,0,0,0.8)",
+        }}
+      >
         <defs>
           <linearGradient id="v2bg" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#040818" />
@@ -49,7 +71,11 @@ export function IconV2AuroraBlue() {
           </filter>
           <filter id="v2pglow">
             <feGaussianBlur stdDeviation="5" result="blur" />
-            <feMerge><feMergeNode in="blur" /><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
           </filter>
           <clipPath id="v2clip">
             <rect width="300" height="300" rx={R} />
@@ -57,18 +83,64 @@ export function IconV2AuroraBlue() {
         </defs>
         <g clipPath="url(#v2clip)">
           <rect width="300" height="300" fill="url(#v2bg)" />
-          <rect width="300" height="300" fill="url(#v2a1)" filter="url(#v2blur)" />
-          <rect width="300" height="300" fill="url(#v2a2)" filter="url(#v2blur)" />
-          <rect width="300" height="300" fill="url(#v2a3)" filter="url(#v2blur)" />
-          <rect width="300" height="300" fill="url(#v2a4)" filter="url(#v2blur)" />
+          <rect
+            width="300"
+            height="300"
+            fill="url(#v2a1)"
+            filter="url(#v2blur)"
+          />
+          <rect
+            width="300"
+            height="300"
+            fill="url(#v2a2)"
+            filter="url(#v2blur)"
+          />
+          <rect
+            width="300"
+            height="300"
+            fill="url(#v2a3)"
+            filter="url(#v2blur)"
+          />
+          <rect
+            width="300"
+            height="300"
+            fill="url(#v2a4)"
+            filter="url(#v2blur)"
+          />
           <rect width="300" height="160" fill="url(#v2gloss)" />
         </g>
-        <rect width="300" height="300" rx={R} fill="none" stroke="white" strokeOpacity="0.16" strokeWidth="1.5" />
+        <rect
+          width="300"
+          height="300"
+          rx={R}
+          fill="none"
+          stroke="white"
+          strokeOpacity="0.16"
+          strokeWidth="1.5"
+        />
         <g transform="translate(30, 30) scale(2.4)">
-          <path d={P} stroke="url(#v2p)" strokeWidth="11" fill="none" strokeLinecap="round" strokeLinejoin="round" filter="url(#v2pglow)" />
+          <path
+            d={P}
+            stroke="url(#v2p)"
+            strokeWidth="11"
+            fill="none"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            filter="url(#v2pglow)"
+          />
         </g>
       </svg>
-      <div style={{ color: "#A0B4D0", fontSize: 15, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase" }}>Option 2 — Aurora Blue</div>
+      <div
+        style={{
+          color: "#A0B4D0",
+          fontSize: 15,
+          fontWeight: 600,
+          letterSpacing: "0.04em",
+          textTransform: "uppercase",
+        }}
+      >
+        Option 2 — Aurora Blue
+      </div>
     </div>
   );
 }

@@ -1,6 +1,13 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Notifications from "expo-notifications";
-import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { Platform } from "react-native";
 import { isSupabaseConfigured } from "../lib/supabase";
 import {
@@ -85,7 +92,12 @@ export interface KitchenFunction {
   chefInCharge?: string;
 }
 
-export type PrepTeam = "Cold Larder" | "Pastry" | "Hot Kitchen" | "Function Team" | "Butchery";
+export type PrepTeam =
+  | "Cold Larder"
+  | "Pastry"
+  | "Hot Kitchen"
+  | "Function Team"
+  | "Butchery";
 export type PrepDay = "day-before" | "day-of";
 
 export interface PrepItem {
@@ -107,7 +119,15 @@ export interface StaffMember {
   id: string;
   staffNumber: string;
   name: string;
-  role: "Head Chef" | "Sous Chef" | "Pastry Chef" | "Function Captain" | "Casual" | "Executive Chef" | "Executive Sous Chef" | "Kitchen Manager";
+  role:
+    | "Head Chef"
+    | "Sous Chef"
+    | "Pastry Chef"
+    | "Function Captain"
+    | "Casual"
+    | "Executive Chef"
+    | "Executive Sous Chef"
+    | "Kitchen Manager";
   phone?: string;
   pin?: string;
   shiftStart: string;
@@ -118,8 +138,26 @@ export interface StaffMember {
   accessLevel?: AccessLevel;
 }
 
-export type RoomFloor = "Ground Floor" | "Level 1" | "Level 2" | "Level 3" | "Level 4" | "Rooftop" | "Basement" | "Other";
-export type RoomStyle = "Ballroom" | "Boardroom" | "Terrace" | "Courtyard" | "Private Dining" | "Suite" | "Theatre" | "Classroom" | "Cocktail" | "Other";
+export type RoomFloor =
+  | "Ground Floor"
+  | "Level 1"
+  | "Level 2"
+  | "Level 3"
+  | "Level 4"
+  | "Rooftop"
+  | "Basement"
+  | "Other";
+export type RoomStyle =
+  | "Ballroom"
+  | "Boardroom"
+  | "Terrace"
+  | "Courtyard"
+  | "Private Dining"
+  | "Suite"
+  | "Theatre"
+  | "Classroom"
+  | "Cocktail"
+  | "Other";
 
 export interface KitchenRoom {
   id: string;
@@ -139,17 +177,26 @@ export interface KitchenRoom {
 
 export function getAccessLevel(member: StaffMember): AccessLevel {
   if (member.accessLevel) return member.accessLevel;
-  const managerRoles: StaffMember["role"][] = ["Head Chef", "Executive Chef", "Executive Sous Chef", "Kitchen Manager"];
-  const leaderRoles: StaffMember["role"][] = ["Sous Chef", "Pastry Chef", "Function Captain"];
+  const managerRoles: StaffMember["role"][] = [
+    "Head Chef",
+    "Executive Chef",
+    "Executive Sous Chef",
+    "Kitchen Manager",
+  ];
+  const leaderRoles: StaffMember["role"][] = [
+    "Sous Chef",
+    "Pastry Chef",
+    "Function Captain",
+  ];
   if (managerRoles.includes(member.role)) return "manager";
   if (leaderRoles.includes(member.role)) return "team_leader";
   return "staff";
 }
 
 export const ACCESS_LEVEL_LABELS: Record<AccessLevel, string> = {
-  manager:     "Kitchen Manager / Head Office",
+  manager: "Kitchen Manager / Head Office",
   team_leader: "Team Leader",
-  staff:       "Kitchen Staff",
+  staff: "Kitchen Staff",
 };
 
 export interface BroadcastMessage {
@@ -162,44 +209,181 @@ export interface BroadcastMessage {
 
 const SAMPLE_ROOMS: KitchenRoom[] = [
   {
-    id: "r1", name: "Ballroom A", floor: "Level 1", style: "Ballroom",
-    capacity: 350, banquetCapacity: 300, cocktailCapacity: 450, theatreCapacity: 500,
-    area: 480, features: ["AV System", "Stage", "Dance Floor", "Dedicated Bar", "Natural Light", "Climate Control"],
-    notes: "Main grand ballroom. Divides into Ballroom A1 and A2 via airwall. Loading dock access from Level 1 service corridor.", isActive: true,
+    id: "r1",
+    name: "Ballroom A",
+    floor: "Level 1",
+    style: "Ballroom",
+    capacity: 350,
+    banquetCapacity: 300,
+    cocktailCapacity: 450,
+    theatreCapacity: 500,
+    area: 480,
+    features: [
+      "AV System",
+      "Stage",
+      "Dance Floor",
+      "Dedicated Bar",
+      "Natural Light",
+      "Climate Control",
+    ],
+    notes:
+      "Main grand ballroom. Divides into Ballroom A1 and A2 via airwall. Loading dock access from Level 1 service corridor.",
+    isActive: true,
   },
   {
-    id: "r2", name: "Suite 3", floor: "Level 2", style: "Boardroom",
-    capacity: 22, banquetCapacity: 18, cocktailCapacity: 30,
-    area: 65, features: ["AV System", "Video Conferencing", "Whiteboard", "Climate Control", "City View"],
-    notes: "Private boardroom with built-in VC screen. Catering via service lift — no trolleys in main corridor during business hours.", isActive: true,
+    id: "r2",
+    name: "Suite 3",
+    floor: "Level 2",
+    style: "Boardroom",
+    capacity: 22,
+    banquetCapacity: 18,
+    cocktailCapacity: 30,
+    area: 65,
+    features: [
+      "AV System",
+      "Video Conferencing",
+      "Whiteboard",
+      "Climate Control",
+      "City View",
+    ],
+    notes:
+      "Private boardroom with built-in VC screen. Catering via service lift — no trolleys in main corridor during business hours.",
+    isActive: true,
   },
   {
-    id: "r3", name: "Grand Ballroom", floor: "Ground Floor", style: "Ballroom",
-    capacity: 600, banquetCapacity: 500, cocktailCapacity: 800, theatreCapacity: 900,
-    area: 980, features: ["AV System", "Stage", "Dance Floor", "Two Dedicated Bars", "Chandeliers", "Loading Dock", "Climate Control"],
-    notes: "Largest space. Ceiling height 9m. Croquembouche must use flat boards — no trolleys at height. VIP entry from Heritage Lane.", isActive: true,
+    id: "r3",
+    name: "Grand Ballroom",
+    floor: "Ground Floor",
+    style: "Ballroom",
+    capacity: 600,
+    banquetCapacity: 500,
+    cocktailCapacity: 800,
+    theatreCapacity: 900,
+    area: 980,
+    features: [
+      "AV System",
+      "Stage",
+      "Dance Floor",
+      "Two Dedicated Bars",
+      "Chandeliers",
+      "Loading Dock",
+      "Climate Control",
+    ],
+    notes:
+      "Largest space. Ceiling height 9m. Croquembouche must use flat boards — no trolleys at height. VIP entry from Heritage Lane.",
+    isActive: true,
   },
   {
-    id: "r4", name: "The Courtyard", floor: "Ground Floor", style: "Courtyard",
-    capacity: 200, cocktailCapacity: 300,
-    area: 320, features: ["Outdoor", "Retractable Awning", "Garden Views", "Bar Cart", "Heating"],
-    notes: "Semi-outdoor. Retractable awning covers 70% — check weather 48h prior. Generator for AV in outdoor events.", isActive: true,
+    id: "r4",
+    name: "The Courtyard",
+    floor: "Ground Floor",
+    style: "Courtyard",
+    capacity: 200,
+    cocktailCapacity: 300,
+    area: 320,
+    features: [
+      "Outdoor",
+      "Retractable Awning",
+      "Garden Views",
+      "Bar Cart",
+      "Heating",
+    ],
+    notes:
+      "Semi-outdoor. Retractable awning covers 70% — check weather 48h prior. Generator for AV in outdoor events.",
+    isActive: true,
   },
   {
-    id: "r5", name: "River Terrace", floor: "Level 3", style: "Terrace",
-    capacity: 120, cocktailCapacity: 180,
-    area: 200, features: ["Outdoor", "River Views", "Bar", "Heating Lamps", "String Lights"],
-    notes: "Rooftop-style terrace. Access via Lift 2 only (service lift too small for chafing dishes). Wind exposure — check BOM forecast.", isActive: true,
+    id: "r5",
+    name: "River Terrace",
+    floor: "Level 3",
+    style: "Terrace",
+    capacity: 120,
+    cocktailCapacity: 180,
+    area: 200,
+    features: [
+      "Outdoor",
+      "River Views",
+      "Bar",
+      "Heating Lamps",
+      "String Lights",
+    ],
+    notes:
+      "Rooftop-style terrace. Access via Lift 2 only (service lift too small for chafing dishes). Wind exposure — check BOM forecast.",
+    isActive: true,
   },
 ];
 
 const SAMPLE_STAFF: StaffMember[] = [
-  { id: "s1", staffNumber: "#0001", name: "Marco Ricci",   role: "Head Chef",        phone: "0412 000 001", shiftStart: "05:00", shiftEnd: "14:00", functionIds: ["f1","f2","f3"], teamLeadFor: "Hot Kitchen",   section: "Hot Kitchen" },
-  { id: "s2", staffNumber: "#0002", name: "Sarah Chen",    role: "Sous Chef",        phone: "0412 000 002", shiftStart: "07:00", shiftEnd: "16:00", functionIds: ["f1","f3"],      teamLeadFor: "Cold Larder",   section: "Cold Larder" },
-  { id: "s3", staffNumber: "#0047", name: "Jake Morrison", role: "Casual",           phone: "0412 000 047", shiftStart: "09:00", shiftEnd: "17:00", functionIds: ["f1","f2","f3"],                                section: "Function Team" },
-  { id: "s4", staffNumber: "#0003", name: "Amara Osei",    role: "Pastry Chef",      phone: "0412 000 003", shiftStart: "06:00", shiftEnd: "15:00", functionIds: ["f1","f2","f3"], teamLeadFor: "Pastry",        section: "Pastry" },
-  { id: "s5", staffNumber: "#0063", name: "Liam Walsh",    role: "Casual",           phone: "0412 000 063", shiftStart: "10:00", shiftEnd: "18:00", functionIds: ["f1","f2","f3"],                                section: "Function Team" },
-  { id: "s6", staffNumber: "#0012", name: "David Park",    role: "Function Captain", phone: "0412 000 012", shiftStart: "08:00", shiftEnd: "22:00", functionIds: ["f1","f2","f3"], teamLeadFor: "Function Team", section: "Function Team" },
+  {
+    id: "s1",
+    staffNumber: "#0001",
+    name: "Marco Ricci",
+    role: "Head Chef",
+    phone: "0412 000 001",
+    shiftStart: "05:00",
+    shiftEnd: "14:00",
+    functionIds: ["f1", "f2", "f3"],
+    teamLeadFor: "Hot Kitchen",
+    section: "Hot Kitchen",
+  },
+  {
+    id: "s2",
+    staffNumber: "#0002",
+    name: "Sarah Chen",
+    role: "Sous Chef",
+    phone: "0412 000 002",
+    shiftStart: "07:00",
+    shiftEnd: "16:00",
+    functionIds: ["f1", "f3"],
+    teamLeadFor: "Cold Larder",
+    section: "Cold Larder",
+  },
+  {
+    id: "s3",
+    staffNumber: "#0047",
+    name: "Jake Morrison",
+    role: "Casual",
+    phone: "0412 000 047",
+    shiftStart: "09:00",
+    shiftEnd: "17:00",
+    functionIds: ["f1", "f2", "f3"],
+    section: "Function Team",
+  },
+  {
+    id: "s4",
+    staffNumber: "#0003",
+    name: "Amara Osei",
+    role: "Pastry Chef",
+    phone: "0412 000 003",
+    shiftStart: "06:00",
+    shiftEnd: "15:00",
+    functionIds: ["f1", "f2", "f3"],
+    teamLeadFor: "Pastry",
+    section: "Pastry",
+  },
+  {
+    id: "s5",
+    staffNumber: "#0063",
+    name: "Liam Walsh",
+    role: "Casual",
+    phone: "0412 000 063",
+    shiftStart: "10:00",
+    shiftEnd: "18:00",
+    functionIds: ["f1", "f2", "f3"],
+    section: "Function Team",
+  },
+  {
+    id: "s6",
+    staffNumber: "#0012",
+    name: "David Park",
+    role: "Function Captain",
+    phone: "0412 000 012",
+    shiftStart: "08:00",
+    shiftEnd: "22:00",
+    functionIds: ["f1", "f2", "f3"],
+    teamLeadFor: "Function Team",
+    section: "Function Team",
+  },
 ];
 
 const SAMPLE_FUNCTIONS: KitchenFunction[] = [
@@ -215,11 +399,31 @@ const SAMPLE_FUNCTIONS: KitchenFunction[] = [
     guestCount: 280,
     status: "upcoming",
     dietaryRequirements: [
-      { name: "Gluten Free", count: 12, note: "Separate plating — GF label on pass. No croutons, GF gratin." },
-      { name: "Vegan", count: 4, note: "Portobello mushroom main. Panna cotta — coconut milk set, check berry coulis." },
-      { name: "Nut Allergy", count: 3, note: "SEVERE — no shared boards. Check truffle gratin (contains pine nuts). Epinephrine on site." },
-      { name: "Dairy Free", count: 2, note: "No béarnaise. DF margarine sub. Panna cotta coconut milk — confirm with Pastry." },
-      { name: "Shellfish Allergy", count: 1, note: "No prawn cocktail. Replace with smoked salmon alternative — confirm with Head Chef." },
+      {
+        name: "Gluten Free",
+        count: 12,
+        note: "Separate plating — GF label on pass. No croutons, GF gratin.",
+      },
+      {
+        name: "Vegan",
+        count: 4,
+        note: "Portobello mushroom main. Panna cotta — coconut milk set, check berry coulis.",
+      },
+      {
+        name: "Nut Allergy",
+        count: 3,
+        note: "SEVERE — no shared boards. Check truffle gratin (contains pine nuts). Epinephrine on site.",
+      },
+      {
+        name: "Dairy Free",
+        count: 2,
+        note: "No béarnaise. DF margarine sub. Panna cotta coconut milk — confirm with Pastry.",
+      },
+      {
+        name: "Shellfish Allergy",
+        count: 1,
+        note: "No prawn cocktail. Replace with smoked salmon alternative — confirm with Head Chef.",
+      },
     ],
     serviceTimes: {
       entree: "12:00",
@@ -238,17 +442,83 @@ const SAMPLE_FUNCTIONS: KitchenFunction[] = [
     ],
     teamIds: ["s1", "s2", "s3", "s6"],
     timeline: [
-      { id: "t1",  time: "06:00", task: "KITCHEN OPEN — Mise en place. All stations set, benches clear, HACCP sheets started. Cold room temp check.", category: "setup", completed: true },
-      { id: "t2",  time: "08:00", task: "Eye fillet: trim sinew, truss, portion 220g × 280. Season. Hold chilled on trays. GF gratin trays labelled.", category: "setup", completed: true },
-      { id: "t3",  time: "10:00", task: "Béarnaise reduction on. Gratin into deck oven 180°C/45min. Marie Rose & cocktail sauce bottled. Allergen alternates prepped.", category: "setup", completed: false },
-      { id: "t4",  time: "11:30", task: "VENUE CHECK — Ballroom A: crockery polished, mise en place on pass, lamps on. Table numbers confirmed vs seating chart.", category: "venue", completed: false },
-      { id: "t5",  time: "11:45", task: "PRE-SERVICE BRIEF — All team. Runner sections confirmed. Allergen plan reviewed. Kitchen radio comms check. Head Chef to sign off.", category: "brief", completed: false },
-      { id: "t6",  time: "12:00", task: "GUESTS ARRIVE — Ballroom A, Level 1. Function Captain David Park at entrance. Dietary alternates on separate tray — labelled & ready.", category: "service", completed: false },
-      { id: "t7",  time: "12:00", task: "ENTRÉE AWAY — Prawn cocktail × 268 standard + 1 × salmon (shellfish alt). Fire all simultaneously. Garnish: lemon wedge, paprika dust.", category: "service", completed: false },
-      { id: "t8",  time: "12:35", task: "FIRE MAINS — Sear fillet clarified butter all sides. Finish 180°C/54°C core. Rest 3min tented. GF plates: no truffle crouton.", category: "service", completed: false },
-      { id: "t9",  time: "13:30", task: "DESSERT AWAY — Panna cotta × 276 standard + 4 × poached pear (V alt). Garnish: berry coulis, micro herbs. GF: no shortbread.", category: "service", completed: false },
-      { id: "t10", time: "14:30", task: "Last covers cleared. Pass broken down. Leftover food labelled & chilled for HACCP. Function Captain signs off room with Events.", category: "close", completed: false },
-      { id: "t11", time: "15:00", task: "KITCHEN CLEAR — All surfaces sanitised. HACCP sheets completed & signed off by Head Chef. Waste logged.", category: "close", completed: false },
+      {
+        id: "t1",
+        time: "06:00",
+        task: "KITCHEN OPEN — Mise en place. All stations set, benches clear, HACCP sheets started. Cold room temp check.",
+        category: "setup",
+        completed: true,
+      },
+      {
+        id: "t2",
+        time: "08:00",
+        task: "Eye fillet: trim sinew, truss, portion 220g × 280. Season. Hold chilled on trays. GF gratin trays labelled.",
+        category: "setup",
+        completed: true,
+      },
+      {
+        id: "t3",
+        time: "10:00",
+        task: "Béarnaise reduction on. Gratin into deck oven 180°C/45min. Marie Rose & cocktail sauce bottled. Allergen alternates prepped.",
+        category: "setup",
+        completed: false,
+      },
+      {
+        id: "t4",
+        time: "11:30",
+        task: "VENUE CHECK — Ballroom A: crockery polished, mise en place on pass, lamps on. Table numbers confirmed vs seating chart.",
+        category: "venue",
+        completed: false,
+      },
+      {
+        id: "t5",
+        time: "11:45",
+        task: "PRE-SERVICE BRIEF — All team. Runner sections confirmed. Allergen plan reviewed. Kitchen radio comms check. Head Chef to sign off.",
+        category: "brief",
+        completed: false,
+      },
+      {
+        id: "t6",
+        time: "12:00",
+        task: "GUESTS ARRIVE — Ballroom A, Level 1. Function Captain David Park at entrance. Dietary alternates on separate tray — labelled & ready.",
+        category: "service",
+        completed: false,
+      },
+      {
+        id: "t7",
+        time: "12:00",
+        task: "ENTRÉE AWAY — Prawn cocktail × 268 standard + 1 × salmon (shellfish alt). Fire all simultaneously. Garnish: lemon wedge, paprika dust.",
+        category: "service",
+        completed: false,
+      },
+      {
+        id: "t8",
+        time: "12:35",
+        task: "FIRE MAINS — Sear fillet clarified butter all sides. Finish 180°C/54°C core. Rest 3min tented. GF plates: no truffle crouton.",
+        category: "service",
+        completed: false,
+      },
+      {
+        id: "t9",
+        time: "13:30",
+        task: "DESSERT AWAY — Panna cotta × 276 standard + 4 × poached pear (V alt). Garnish: berry coulis, micro herbs. GF: no shortbread.",
+        category: "service",
+        completed: false,
+      },
+      {
+        id: "t10",
+        time: "14:30",
+        task: "Last covers cleared. Pass broken down. Leftover food labelled & chilled for HACCP. Function Captain signs off room with Events.",
+        category: "close",
+        completed: false,
+      },
+      {
+        id: "t11",
+        time: "15:00",
+        task: "KITCHEN CLEAR — All surfaces sanitised. HACCP sheets completed & signed off by Head Chef. Waste logged.",
+        category: "close",
+        completed: false,
+      },
     ],
   },
   {
@@ -263,9 +533,21 @@ const SAMPLE_FUNCTIONS: KitchenFunction[] = [
     guestCount: 18,
     status: "upcoming",
     dietaryRequirements: [
-      { name: "Vegetarian", count: 2, note: "Mushroom risotto main. Antipasto: remove prosciutto & salami. EVOO & giardiniera OK." },
-      { name: "Gluten Free", count: 1, note: "No grissini on platter. GF bread roll available. Confirm fondant — use GF flour sub." },
-      { name: "Halal", count: 1, note: "No prosciutto, no salami. Replace with halal chicken/roasted capsicum on platter. Confirm with Events Manager." },
+      {
+        name: "Vegetarian",
+        count: 2,
+        note: "Mushroom risotto main. Antipasto: remove prosciutto & salami. EVOO & giardiniera OK.",
+      },
+      {
+        name: "Gluten Free",
+        count: 1,
+        note: "No grissini on platter. GF bread roll available. Confirm fondant — use GF flour sub.",
+      },
+      {
+        name: "Halal",
+        count: 1,
+        note: "No prosciutto, no salami. Replace with halal chicken/roasted capsicum on platter. Confirm with Events Manager.",
+      },
     ],
     serviceTimes: {
       entree: "13:00",
@@ -284,15 +566,69 @@ const SAMPLE_FUNCTIONS: KitchenFunction[] = [
     ],
     teamIds: ["s1", "s3", "s6"],
     timeline: [
-      { id: "t12", time: "09:00", task: "KITCHEN OPEN — Fondant batter made & chilled. Chicken trimmed & portioned 200g × 18 + 2 spares. Mushroom risotto base on.", category: "setup", completed: true },
-      { id: "t13", time: "10:00", task: "Dietary alternates: GF fondant batter made (separate bowl, labelled). Halal antipasto tray prepped & wrapped. Vegetarian risotto portioned.", category: "setup", completed: false },
-      { id: "t14", time: "12:30", task: "VENUE CHECK — Suite 3: white linen runner, polished crockery, 5-piece cutlery, water goblet. Client seating cards per Events list.", category: "venue", completed: false },
-      { id: "t15", time: "12:45", task: "PRE-SERVICE BRIEF — 3 staff: Function Captain David Park, plus runners. Allergen seats confirmed (GF seat 4, V seats 7 & 12, Halal seat 15).", category: "brief", completed: false },
-      { id: "t16", time: "12:50", task: "Function Captain greets client in Level 2 lobby. Welcome drinks poured. Still & sparkling water on table.", category: "venue", completed: false },
-      { id: "t17", time: "13:00", task: "CLIENT SEATED — Suite 3, Level 2. Antipasto platters pre-set on table. Halal platter to seat 15, V platter centre.", category: "service", completed: false },
-      { id: "t18", time: "13:25", task: "FIRE MAINS — Chicken sear skin-down 3min (do not move), flip, 180°C/74°C core. Rest 5min. Risotto reheated, adjust seasoning.", category: "service", completed: false },
-      { id: "t19", time: "14:05", task: "FIRE DESSERT — Fondants 200°C/8min to order. Jiggly centre only. GF fondant in separate ramekin (clearly marked). Plate immediately.", category: "service", completed: false },
-      { id: "t20", time: "14:30", task: "SERVICE COMPLETE — Room cleared. Client farewell. HACCP sheets signed. Suite 3 reset for next booking.", category: "close", completed: false },
+      {
+        id: "t12",
+        time: "09:00",
+        task: "KITCHEN OPEN — Fondant batter made & chilled. Chicken trimmed & portioned 200g × 18 + 2 spares. Mushroom risotto base on.",
+        category: "setup",
+        completed: true,
+      },
+      {
+        id: "t13",
+        time: "10:00",
+        task: "Dietary alternates: GF fondant batter made (separate bowl, labelled). Halal antipasto tray prepped & wrapped. Vegetarian risotto portioned.",
+        category: "setup",
+        completed: false,
+      },
+      {
+        id: "t14",
+        time: "12:30",
+        task: "VENUE CHECK — Suite 3: white linen runner, polished crockery, 5-piece cutlery, water goblet. Client seating cards per Events list.",
+        category: "venue",
+        completed: false,
+      },
+      {
+        id: "t15",
+        time: "12:45",
+        task: "PRE-SERVICE BRIEF — 3 staff: Function Captain David Park, plus runners. Allergen seats confirmed (GF seat 4, V seats 7 & 12, Halal seat 15).",
+        category: "brief",
+        completed: false,
+      },
+      {
+        id: "t16",
+        time: "12:50",
+        task: "Function Captain greets client in Level 2 lobby. Welcome drinks poured. Still & sparkling water on table.",
+        category: "venue",
+        completed: false,
+      },
+      {
+        id: "t17",
+        time: "13:00",
+        task: "CLIENT SEATED — Suite 3, Level 2. Antipasto platters pre-set on table. Halal platter to seat 15, V platter centre.",
+        category: "service",
+        completed: false,
+      },
+      {
+        id: "t18",
+        time: "13:25",
+        task: "FIRE MAINS — Chicken sear skin-down 3min (do not move), flip, 180°C/74°C core. Rest 5min. Risotto reheated, adjust seasoning.",
+        category: "service",
+        completed: false,
+      },
+      {
+        id: "t19",
+        time: "14:05",
+        task: "FIRE DESSERT — Fondants 200°C/8min to order. Jiggly centre only. GF fondant in separate ramekin (clearly marked). Plate immediately.",
+        category: "service",
+        completed: false,
+      },
+      {
+        id: "t20",
+        time: "14:30",
+        task: "SERVICE COMPLETE — Room cleared. Client farewell. HACCP sheets signed. Suite 3 reset for next booking.",
+        category: "close",
+        completed: false,
+      },
     ],
   },
   {
@@ -307,12 +643,36 @@ const SAMPLE_FUNCTIONS: KitchenFunction[] = [
     guestCount: 450,
     status: "upcoming",
     dietaryRequirements: [
-      { name: "Gluten Free", count: 28, note: "Wellington: deconstructed fillet + duxelles, no filo. GF trays clearly labelled. Separate pass section for GF." },
-      { name: "Vegan", count: 12, note: "Mushroom Wellington (V, GF). No bisque — tomato consommé. No wagyu amuse — beet tartare. Check croquembouche (contains egg)." },
-      { name: "Nut Allergy", count: 8, note: "SEVERE — check all sauces. Truffle oil OK. Pine nuts in duxelles — REMOVE for nut allergy plates. Epinephrine on site, notify Function Captain." },
-      { name: "Dairy Free", count: 6, note: "No crème anglaise, no butter sauces. DF margarine for searing. Bisque: coconut cream sub. Croquembouche: no crème pât — sorbet alt." },
-      { name: "Shellfish Allergy", count: 4, note: "No scallop entrée — mushroom bruschetta alt. No bisque — tomato consommé. Check Madeira jus (shellfish-free stock confirmed)." },
-      { name: "Halal", count: 2, note: "Halal beef fillet confirmed with supplier. No alcohol sauces (brandy bisque replaced with tomato consommé). Confirm with Head Chef." },
+      {
+        name: "Gluten Free",
+        count: 28,
+        note: "Wellington: deconstructed fillet + duxelles, no filo. GF trays clearly labelled. Separate pass section for GF.",
+      },
+      {
+        name: "Vegan",
+        count: 12,
+        note: "Mushroom Wellington (V, GF). No bisque — tomato consommé. No wagyu amuse — beet tartare. Check croquembouche (contains egg).",
+      },
+      {
+        name: "Nut Allergy",
+        count: 8,
+        note: "SEVERE — check all sauces. Truffle oil OK. Pine nuts in duxelles — REMOVE for nut allergy plates. Epinephrine on site, notify Function Captain.",
+      },
+      {
+        name: "Dairy Free",
+        count: 6,
+        note: "No crème anglaise, no butter sauces. DF margarine for searing. Bisque: coconut cream sub. Croquembouche: no crème pât — sorbet alt.",
+      },
+      {
+        name: "Shellfish Allergy",
+        count: 4,
+        note: "No scallop entrée — mushroom bruschetta alt. No bisque — tomato consommé. Check Madeira jus (shellfish-free stock confirmed).",
+      },
+      {
+        name: "Halal",
+        count: 2,
+        note: "Halal beef fillet confirmed with supplier. No alcohol sauces (brandy bisque replaced with tomato consommé). Confirm with Head Chef.",
+      },
     ],
     serviceTimes: {
       amuse: "19:00",
@@ -336,21 +696,111 @@ const SAMPLE_FUNCTIONS: KitchenFunction[] = [
     ],
     teamIds: ["s1", "s2", "s4", "s5", "s6"],
     timeline: [
-      { id: "t21", time: "07:00", task: "KITCHEN OPEN — Wellington: sear fillet smoking pan 30sec/side. Deep Maillard crust. Chill to 4°C before wrapping. Duxelles on (no pine nuts for nut allergy batch).", category: "setup", completed: false },
-      { id: "t22", time: "09:00", task: "Duxelles reduce bone dry — zero moisture or pastry weeps. Wellingtons wrapped filo, seam-down, chilled. Allergen batch labelled & separated.", category: "setup", completed: false },
-      { id: "t23", time: "10:00", task: "Pastry: choux puffs baked 200°C/18min — NO peeking. Cool on rack. Fill crème pât cooled < 5°C. GF fondant batter prepared (separate bowl).", category: "setup", completed: false },
-      { id: "t24", time: "13:00", task: "Bisque: roast lobster shells 220°C/20min. Sweat mirepoix, brandy flambe, add stock, reduce by 1/3. Strain fine chinois. Taste & season.", category: "setup", completed: false },
-      { id: "t25", time: "15:00", task: "Scallops dry on paper towel minimum 2h — CRITICAL for sear. Cauliflower purée blended smooth, seasoned. Vegan amuse (beet tartare) prepped.", category: "setup", completed: false },
-      { id: "t26", time: "17:00", task: "VENUE CHECK — Grand Ballroom: 53 rounds set (50 × 9 + 3 VIP × 10). Charger plates, gold overlay, 4-glass set, menu & name cards on VIP tables.", category: "venue", completed: false },
-      { id: "t27", time: "18:00", task: "PRE-SERVICE BRIEF — Function Captain David Park leads. Full allergen seat map reviewed. Runner sections × 5 (90 covers each). Kitchen radio test. Head Chef sign-off.", category: "brief", completed: false },
-      { id: "t28", time: "18:30", task: "Croquembouche towers placed: 15 towers × 30 pax. Minimum 2 people per tower — carry flat board. Spun toffee facing guests. Candelabras lit.", category: "venue", completed: false },
-      { id: "t29", time: "19:00", task: "GUESTS ARRIVE — Grand Ballroom, Ground Floor. Allergen alternates on separate labelled tray at pass. Amuse-bouche away: wagyu × 438, beet × 12 (V/GF).", category: "service", completed: false },
-      { id: "t30", time: "19:30", task: "ENTRÉE AWAY — Scallops: sear smoking clarified butter 90sec each side, do NOT move. Alt plates (mushroom bruschetta) fired simultaneously. 5-min window per 90 covers.", category: "service", completed: false },
-      { id: "t31", time: "20:00", task: "SOUP COURSE AWAY — Bisque finish with 35% cream, 75°C+. Alt: tomato consommé for V/shellfish/halal (22 covers). Serve simultaneously.", category: "service", completed: false },
-      { id: "t32", time: "20:30", task: "FIRE MAINS — Wellingtons: 220°C/12min to 54°C core. Rest 5min tented. GF deconstructed batch (28): fillet + duxelles, no filo, separately plated.", category: "service", completed: false },
-      { id: "t33", time: "21:45", task: "DESSERT AWAY — Croquembouche portioned tableside by Pastry Chef Amara Osei. GF fondant (28) fired simultaneously. DF mango sorbet (6) pre-scooped.", category: "service", completed: false },
-      { id: "t34", time: "22:30", task: "Last covers cleared. Pass broken down. Leftovers labelled & chilled. Function Captain signs off room with Events Manager.", category: "close", completed: false },
-      { id: "t35", time: "23:00", task: "KITCHEN CLEAR — All surfaces sanitised. HACCP sheets completed & signed by Head Chef. Waste logged. Cold room final temp check.", category: "close", completed: false },
+      {
+        id: "t21",
+        time: "07:00",
+        task: "KITCHEN OPEN — Wellington: sear fillet smoking pan 30sec/side. Deep Maillard crust. Chill to 4°C before wrapping. Duxelles on (no pine nuts for nut allergy batch).",
+        category: "setup",
+        completed: false,
+      },
+      {
+        id: "t22",
+        time: "09:00",
+        task: "Duxelles reduce bone dry — zero moisture or pastry weeps. Wellingtons wrapped filo, seam-down, chilled. Allergen batch labelled & separated.",
+        category: "setup",
+        completed: false,
+      },
+      {
+        id: "t23",
+        time: "10:00",
+        task: "Pastry: choux puffs baked 200°C/18min — NO peeking. Cool on rack. Fill crème pât cooled < 5°C. GF fondant batter prepared (separate bowl).",
+        category: "setup",
+        completed: false,
+      },
+      {
+        id: "t24",
+        time: "13:00",
+        task: "Bisque: roast lobster shells 220°C/20min. Sweat mirepoix, brandy flambe, add stock, reduce by 1/3. Strain fine chinois. Taste & season.",
+        category: "setup",
+        completed: false,
+      },
+      {
+        id: "t25",
+        time: "15:00",
+        task: "Scallops dry on paper towel minimum 2h — CRITICAL for sear. Cauliflower purée blended smooth, seasoned. Vegan amuse (beet tartare) prepped.",
+        category: "setup",
+        completed: false,
+      },
+      {
+        id: "t26",
+        time: "17:00",
+        task: "VENUE CHECK — Grand Ballroom: 53 rounds set (50 × 9 + 3 VIP × 10). Charger plates, gold overlay, 4-glass set, menu & name cards on VIP tables.",
+        category: "venue",
+        completed: false,
+      },
+      {
+        id: "t27",
+        time: "18:00",
+        task: "PRE-SERVICE BRIEF — Function Captain David Park leads. Full allergen seat map reviewed. Runner sections × 5 (90 covers each). Kitchen radio test. Head Chef sign-off.",
+        category: "brief",
+        completed: false,
+      },
+      {
+        id: "t28",
+        time: "18:30",
+        task: "Croquembouche towers placed: 15 towers × 30 pax. Minimum 2 people per tower — carry flat board. Spun toffee facing guests. Candelabras lit.",
+        category: "venue",
+        completed: false,
+      },
+      {
+        id: "t29",
+        time: "19:00",
+        task: "GUESTS ARRIVE — Grand Ballroom, Ground Floor. Allergen alternates on separate labelled tray at pass. Amuse-bouche away: wagyu × 438, beet × 12 (V/GF).",
+        category: "service",
+        completed: false,
+      },
+      {
+        id: "t30",
+        time: "19:30",
+        task: "ENTRÉE AWAY — Scallops: sear smoking clarified butter 90sec each side, do NOT move. Alt plates (mushroom bruschetta) fired simultaneously. 5-min window per 90 covers.",
+        category: "service",
+        completed: false,
+      },
+      {
+        id: "t31",
+        time: "20:00",
+        task: "SOUP COURSE AWAY — Bisque finish with 35% cream, 75°C+. Alt: tomato consommé for V/shellfish/halal (22 covers). Serve simultaneously.",
+        category: "service",
+        completed: false,
+      },
+      {
+        id: "t32",
+        time: "20:30",
+        task: "FIRE MAINS — Wellingtons: 220°C/12min to 54°C core. Rest 5min tented. GF deconstructed batch (28): fillet + duxelles, no filo, separately plated.",
+        category: "service",
+        completed: false,
+      },
+      {
+        id: "t33",
+        time: "21:45",
+        task: "DESSERT AWAY — Croquembouche portioned tableside by Pastry Chef Amara Osei. GF fondant (28) fired simultaneously. DF mango sorbet (6) pre-scooped.",
+        category: "service",
+        completed: false,
+      },
+      {
+        id: "t34",
+        time: "22:30",
+        task: "Last covers cleared. Pass broken down. Leftovers labelled & chilled. Function Captain signs off room with Events Manager.",
+        category: "close",
+        completed: false,
+      },
+      {
+        id: "t35",
+        time: "23:00",
+        task: "KITCHEN CLEAR — All surfaces sanitised. HACCP sheets completed & signed by Head Chef. Waste logged. Cold room final temp check.",
+        category: "close",
+        completed: false,
+      },
     ],
   },
   {
@@ -365,9 +815,21 @@ const SAMPLE_FUNCTIONS: KitchenFunction[] = [
     guestCount: 120,
     status: "upcoming",
     dietaryRequirements: [
-      { name: "Gluten Free", count: 8, note: "GF label on each chafing dish. Separate GF rolls on platter. Confirm sauces are GF." },
-      { name: "Vegan", count: 5, note: "Roasted vegetable tray and lentil salad clearly labelled VGN. No butter on V dishes." },
-      { name: "Halal", count: 6, note: "Halal proteins confirmed with supplier. Separate halal serving tongs. No pork on halal dishes." },
+      {
+        name: "Gluten Free",
+        count: 8,
+        note: "GF label on each chafing dish. Separate GF rolls on platter. Confirm sauces are GF.",
+      },
+      {
+        name: "Vegan",
+        count: 5,
+        note: "Roasted vegetable tray and lentil salad clearly labelled VGN. No butter on V dishes.",
+      },
+      {
+        name: "Halal",
+        count: 6,
+        note: "Halal proteins confirmed with supplier. Separate halal serving tongs. No pork on halal dishes.",
+      },
     ],
     serviceEvents: [
       { time: "11:30", label: "Buffet Open" },
@@ -381,12 +843,48 @@ const SAMPLE_FUNCTIONS: KitchenFunction[] = [
     ],
     teamIds: [],
     timeline: [
-      { id: "f4t1", time: "08:00", task: "KITCHEN OPEN — All buffet proteins prepped. Slow-roast rump cap into oven 140°C. Salads dressed just before service.", category: "setup", completed: false },
-      { id: "f4t2", time: "10:30", task: "Chafing dishes set and water pans filled. GF and Halal labels placed. Carving station board, knife, and fork set.", category: "venue", completed: false },
-      { id: "f4t3", time: "11:15", task: "PRE-SERVICE BRIEF — All team. Dietary labels double-checked. Buffet replenishment plan confirmed (every 20 min).", category: "brief", completed: false },
-      { id: "f4t4", time: "11:30", task: "BUFFET OPEN — Guests invited to serve. Carving station staffed by Function Captain.", category: "service", completed: false },
-      { id: "f4t5", time: "13:00", task: "Buffet replenishment check — refill all trays below 1/3 full. Fresh salads from cool room.", category: "service", completed: false },
-      { id: "f4t6", time: "14:30", task: "BUFFET CLOSED — Remove food, cover and label all leftovers for HACCP. Dessert station cleared.", category: "close", completed: false },
+      {
+        id: "f4t1",
+        time: "08:00",
+        task: "KITCHEN OPEN — All buffet proteins prepped. Slow-roast rump cap into oven 140°C. Salads dressed just before service.",
+        category: "setup",
+        completed: false,
+      },
+      {
+        id: "f4t2",
+        time: "10:30",
+        task: "Chafing dishes set and water pans filled. GF and Halal labels placed. Carving station board, knife, and fork set.",
+        category: "venue",
+        completed: false,
+      },
+      {
+        id: "f4t3",
+        time: "11:15",
+        task: "PRE-SERVICE BRIEF — All team. Dietary labels double-checked. Buffet replenishment plan confirmed (every 20 min).",
+        category: "brief",
+        completed: false,
+      },
+      {
+        id: "f4t4",
+        time: "11:30",
+        task: "BUFFET OPEN — Guests invited to serve. Carving station staffed by Function Captain.",
+        category: "service",
+        completed: false,
+      },
+      {
+        id: "f4t5",
+        time: "13:00",
+        task: "Buffet replenishment check — refill all trays below 1/3 full. Fresh salads from cool room.",
+        category: "service",
+        completed: false,
+      },
+      {
+        id: "f4t6",
+        time: "14:30",
+        task: "BUFFET CLOSED — Remove food, cover and label all leftovers for HACCP. Dessert station cleared.",
+        category: "close",
+        completed: false,
+      },
     ],
   },
   {
@@ -401,9 +899,21 @@ const SAMPLE_FUNCTIONS: KitchenFunction[] = [
     guestCount: 200,
     status: "upcoming",
     dietaryRequirements: [
-      { name: "Gluten Free", count: 15, note: "GF canapés on separate tray with blue label. Confirm all fritter batters and pastry bases." },
-      { name: "Vegan", count: 10, note: "V canapés on green-labelled tray. No butter or egg wash on V items." },
-      { name: "Nut Allergy", count: 3, note: "SEVERE — check satay sauce contains peanuts. Separate tong for nut-free tray." },
+      {
+        name: "Gluten Free",
+        count: 15,
+        note: "GF canapés on separate tray with blue label. Confirm all fritter batters and pastry bases.",
+      },
+      {
+        name: "Vegan",
+        count: 10,
+        note: "V canapés on green-labelled tray. No butter or egg wash on V items.",
+      },
+      {
+        name: "Nut Allergy",
+        count: 3,
+        note: "SEVERE — check satay sauce contains peanuts. Separate tong for nut-free tray.",
+      },
     ],
     serviceEvents: [
       { time: "18:00", label: "Canapés Service — Round 1" },
@@ -419,22 +929,65 @@ const SAMPLE_FUNCTIONS: KitchenFunction[] = [
     ],
     teamIds: [],
     timeline: [
-      { id: "f5t1", time: "14:00", task: "KITCHEN OPEN — Sliders prepped & chilled, satay threaded. Blini baked & cooled. GF & V trays labelled separately.", category: "setup", completed: false },
-      { id: "f5t2", time: "16:30", task: "VENUE CHECK — Rooftop Terrace: cocktail tables, linen, candelabras, bar set. Canapé platters & tongs staged.", category: "venue", completed: false },
-      { id: "f5t3", time: "17:45", task: "PRE-SERVICE BRIEF — Runners brief: 3 rounds of 10 platters. GF/V/nut-free trays flagged. Pass sequence agreed.", category: "brief", completed: false },
-      { id: "f5t4", time: "18:00", task: "CANAPÉS ROUND 1 — Prawn skewers & salmon blini. All runners away simultaneously. Monitor replenishment.", category: "service", completed: false },
-      { id: "f5t5", time: "19:00", task: "CANAPÉS ROUND 2 — Wagyu sliders & tofu satay. Fire sliders to order — 3 min in salamander. GF tray first.", category: "service", completed: false },
-      { id: "f5t6", time: "20:00", task: "CANAPÉS ROUND 3 — Remaining cold selection. Clear all empty platters. Dessert canapés if ordered.", category: "service", completed: false },
-      { id: "f5t7", time: "21:00", task: "SERVICE CLOSE — All platters returned. Leftovers labelled & chilled. HACCP sheets signed. Rooftop cleared.", category: "close", completed: false },
+      {
+        id: "f5t1",
+        time: "14:00",
+        task: "KITCHEN OPEN — Sliders prepped & chilled, satay threaded. Blini baked & cooled. GF & V trays labelled separately.",
+        category: "setup",
+        completed: false,
+      },
+      {
+        id: "f5t2",
+        time: "16:30",
+        task: "VENUE CHECK — Rooftop Terrace: cocktail tables, linen, candelabras, bar set. Canapé platters & tongs staged.",
+        category: "venue",
+        completed: false,
+      },
+      {
+        id: "f5t3",
+        time: "17:45",
+        task: "PRE-SERVICE BRIEF — Runners brief: 3 rounds of 10 platters. GF/V/nut-free trays flagged. Pass sequence agreed.",
+        category: "brief",
+        completed: false,
+      },
+      {
+        id: "f5t4",
+        time: "18:00",
+        task: "CANAPÉS ROUND 1 — Prawn skewers & salmon blini. All runners away simultaneously. Monitor replenishment.",
+        category: "service",
+        completed: false,
+      },
+      {
+        id: "f5t5",
+        time: "19:00",
+        task: "CANAPÉS ROUND 2 — Wagyu sliders & tofu satay. Fire sliders to order — 3 min in salamander. GF tray first.",
+        category: "service",
+        completed: false,
+      },
+      {
+        id: "f5t6",
+        time: "20:00",
+        task: "CANAPÉS ROUND 3 — Remaining cold selection. Clear all empty platters. Dessert canapés if ordered.",
+        category: "service",
+        completed: false,
+      },
+      {
+        id: "f5t7",
+        time: "21:00",
+        task: "SERVICE CLOSE — All platters returned. Leftovers labelled & chilled. HACCP sheets signed. Rooftop cleared.",
+        category: "close",
+        completed: false,
+      },
     ],
   },
 ];
 
 const SAMPLE_PREP: PrepItem[] = [
-
   // ── f1 Harrison Wedding Luncheon — 280 guests ───────────────────────────
   {
-    id: "p1", functionId: "f1", category: "Sides",
+    id: "p1",
+    functionId: "f1",
+    category: "Sides",
     team: "Hot Kitchen",
     dish: "Potato Gratin",
     quantity: "300 portions · 60g each",
@@ -444,7 +997,9 @@ const SAMPLE_PREP: PrepItem[] = [
     completed: true,
   },
   {
-    id: "p2", functionId: "f1", category: "Sides",
+    id: "p2",
+    functionId: "f1",
+    category: "Sides",
     team: "Hot Kitchen",
     dish: "Pea Purée",
     quantity: "300 portions · 3L total",
@@ -454,7 +1009,9 @@ const SAMPLE_PREP: PrepItem[] = [
     completed: false,
   },
   {
-    id: "p3", functionId: "f1", category: "Proteins",
+    id: "p3",
+    functionId: "f1",
+    category: "Proteins",
     team: "Butchery",
     dish: "Beef Short Ribs — Slow Cooked",
     quantity: "300 portions · 180g each",
@@ -464,7 +1021,9 @@ const SAMPLE_PREP: PrepItem[] = [
     completed: true,
   },
   {
-    id: "p4", functionId: "f1", category: "Sauces",
+    id: "p4",
+    functionId: "f1",
+    category: "Sauces",
     team: "Hot Kitchen",
     dish: "Red Wine Jus",
     quantity: "4L total",
@@ -474,7 +1033,9 @@ const SAMPLE_PREP: PrepItem[] = [
     completed: false,
   },
   {
-    id: "p5", functionId: "f1", category: "Dietary — Entrée",
+    id: "p5",
+    functionId: "f1",
+    category: "Dietary — Entrée",
     team: "Cold Larder",
     dish: "Cumin Roasted Seasonal Vegetables",
     quantity: "20 portions · V, GF, DF",
@@ -484,7 +1045,9 @@ const SAMPLE_PREP: PrepItem[] = [
     completed: false,
   },
   {
-    id: "p6", functionId: "f1", category: "Dietary — Main",
+    id: "p6",
+    functionId: "f1",
+    category: "Dietary — Main",
     team: "Hot Kitchen",
     dish: "Turmeric Cauliflower Steak",
     quantity: "20 portions · 300g each · V, GF, DF",
@@ -494,7 +1057,9 @@ const SAMPLE_PREP: PrepItem[] = [
     completed: false,
   },
   {
-    id: "p7", functionId: "f1", category: "Dietary — Dessert",
+    id: "p7",
+    functionId: "f1",
+    category: "Dietary — Dessert",
     team: "Pastry",
     dish: "Keke Vegan Coconut Opera Cake",
     quantity: "20 portions · V, GF, DF",
@@ -504,7 +1069,9 @@ const SAMPLE_PREP: PrepItem[] = [
     completed: true,
   },
   {
-    id: "p8", functionId: "f1", category: "Room Setup",
+    id: "p8",
+    functionId: "f1",
+    category: "Room Setup",
     team: "Function Team",
     dish: "Ballroom A — Tables, Linen & Crockery",
     quantity: "35 rounds · 280 covers · 35 tablecloths · 280 napkins",
@@ -516,7 +1083,9 @@ const SAMPLE_PREP: PrepItem[] = [
 
   // ── f2 Corporate Boardroom Lunch — 18 guests ────────────────────────────
   {
-    id: "p9", functionId: "f2", category: "Starters",
+    id: "p9",
+    functionId: "f2",
+    category: "Starters",
     team: "Cold Larder",
     dish: "Cheese Board",
     quantity: "3 cheeses · chef selection · serves 18",
@@ -526,7 +1095,9 @@ const SAMPLE_PREP: PrepItem[] = [
     completed: false,
   },
   {
-    id: "p10", functionId: "f2", category: "Proteins",
+    id: "p10",
+    functionId: "f2",
+    category: "Proteins",
     team: "Hot Kitchen",
     dish: "Chicken Supreme",
     quantity: "20 portions · 200g each",
@@ -536,7 +1107,9 @@ const SAMPLE_PREP: PrepItem[] = [
     completed: true,
   },
   {
-    id: "p11", functionId: "f2", category: "Pastry",
+    id: "p11",
+    functionId: "f2",
+    category: "Pastry",
     team: "Pastry",
     dish: "Chocolate Fondant",
     quantity: "20 portions + 4 spares",
@@ -546,7 +1119,9 @@ const SAMPLE_PREP: PrepItem[] = [
     completed: false,
   },
   {
-    id: "p12", functionId: "f2", category: "Room Setup",
+    id: "p12",
+    functionId: "f2",
+    category: "Room Setup",
     team: "Function Team",
     dish: "Suite 3 — Boardroom Setup",
     quantity: "18 covers · 1 boardroom table",
@@ -558,7 +1133,9 @@ const SAMPLE_PREP: PrepItem[] = [
 
   // ── f3 Gala Dinner — 450 guests ─────────────────────────────────────────
   {
-    id: "p13", functionId: "f3", category: "Proteins",
+    id: "p13",
+    functionId: "f3",
+    category: "Proteins",
     team: "Butchery",
     dish: "Beef Short Ribs — Slow Cooked",
     quantity: "450 portions · 180g each",
@@ -568,7 +1145,9 @@ const SAMPLE_PREP: PrepItem[] = [
     completed: true,
   },
   {
-    id: "p14", functionId: "f3", category: "Sauces",
+    id: "p14",
+    functionId: "f3",
+    category: "Sauces",
     team: "Hot Kitchen",
     dish: "Red Wine Jus",
     quantity: "12L total",
@@ -578,7 +1157,9 @@ const SAMPLE_PREP: PrepItem[] = [
     completed: false,
   },
   {
-    id: "p15", functionId: "f3", category: "Sides",
+    id: "p15",
+    functionId: "f3",
+    category: "Sides",
     team: "Hot Kitchen",
     dish: "Pea Purée",
     quantity: "450 portions · 5L total",
@@ -588,7 +1169,9 @@ const SAMPLE_PREP: PrepItem[] = [
     completed: false,
   },
   {
-    id: "p16", functionId: "f3", category: "Dietary — Main",
+    id: "p16",
+    functionId: "f3",
+    category: "Dietary — Main",
     team: "Hot Kitchen",
     dish: "Turmeric Cauliflower Steak",
     quantity: "20 portions · 300g each · V, GF, DF",
@@ -598,7 +1181,9 @@ const SAMPLE_PREP: PrepItem[] = [
     completed: false,
   },
   {
-    id: "p17", functionId: "f3", category: "Dietary — Dessert",
+    id: "p17",
+    functionId: "f3",
+    category: "Dietary — Dessert",
     team: "Pastry",
     dish: "Keke Vegan Coconut Opera Cake",
     quantity: "20 portions · V, GF, DF",
@@ -608,7 +1193,9 @@ const SAMPLE_PREP: PrepItem[] = [
     completed: true,
   },
   {
-    id: "p18", functionId: "f3", category: "Room Setup",
+    id: "p18",
+    functionId: "f3",
+    category: "Room Setup",
     team: "Function Team",
     dish: "Grand Ballroom — Gala Setup",
     quantity: "53 rounds · 450 covers · gold charger plates · 4 glasses/cover",
@@ -619,7 +1206,12 @@ const SAMPLE_PREP: PrepItem[] = [
   },
 ];
 
-export const MANAGER_ROLES = ["Head Chef", "Sous Chef", "Pastry Chef", "Function Captain"] as const;
+export const MANAGER_ROLES = [
+  "Head Chef",
+  "Sous Chef",
+  "Pastry Chef",
+  "Function Captain",
+] as const;
 
 function isoDateOffset(offsetDays: number): string {
   const d = new Date();
@@ -630,16 +1222,43 @@ function isoDateOffset(offsetDays: number): string {
 // ── Auto-prep generation ──────────────────────────────────────────────────────
 function courseToTeam(course: string): PrepTeam {
   const c = course.toLowerCase();
-  if (c.includes("dessert") || c.includes("pâtisserie") || c.includes("patisserie") || c.includes("sweet")) return "Pastry";
-  if (c.includes("amuse") || c.includes("entrée") || c.includes("entree") || c.includes("starter") || c.includes("salad") || c.includes("seafood")) return "Cold Larder";
-  if (c.includes("main") || c.includes("protein") || c.includes("meat") || c.includes("fish") || c.includes("roast")) return "Hot Kitchen";
+  if (
+    c.includes("dessert") ||
+    c.includes("pâtisserie") ||
+    c.includes("patisserie") ||
+    c.includes("sweet")
+  )
+    return "Pastry";
+  if (
+    c.includes("amuse") ||
+    c.includes("entrée") ||
+    c.includes("entree") ||
+    c.includes("starter") ||
+    c.includes("salad") ||
+    c.includes("seafood")
+  )
+    return "Cold Larder";
+  if (
+    c.includes("main") ||
+    c.includes("protein") ||
+    c.includes("meat") ||
+    c.includes("fish") ||
+    c.includes("roast")
+  )
+    return "Hot Kitchen";
   if (c.includes("butch") || c.includes("portion")) return "Butchery";
   return "Function Team";
 }
 
-function parseMenuLineSimple(line: string): { course: string; dish: string; desc: string; tags: string[] } {
+function parseMenuLineSimple(line: string): {
+  course: string;
+  dish: string;
+  desc: string;
+  tags: string[];
+} {
   const colonIdx = line.indexOf(":");
-  if (colonIdx === -1) return { course: "", dish: line.trim(), desc: "", tags: [] };
+  if (colonIdx === -1)
+    return { course: "", dish: line.trim(), desc: "", tags: [] };
   const course = line.slice(0, colonIdx).trim();
   const rest = line.slice(colonIdx + 1).trim();
   const parts = rest.split("|").map((p) => p.trim());
@@ -647,7 +1266,9 @@ function parseMenuLineSimple(line: string): { course: string; dish: string; desc
   const dashIdx = mainPart.indexOf(" — ");
   const dish = dashIdx === -1 ? mainPart : mainPart.slice(0, dashIdx).trim();
   const desc = dashIdx === -1 ? "" : mainPart.slice(dashIdx + 3).trim();
-  const tags = parts.slice(1).filter((t) => !t.toLowerCase().startsWith("alt:"));
+  const tags = parts
+    .slice(1)
+    .filter((t) => !t.toLowerCase().startsWith("alt:"));
   return { course, dish, desc, tags };
 }
 
@@ -660,11 +1281,38 @@ function deadlineForCourse(course: string, fn: KitchenFunction): string {
     return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
   };
   // Use 30 min before the relevant service time for all courses
-  if ((c.includes("dessert") || c.includes("sweet") || c.includes("pâtisserie")) && st?.dessert) return subtractMins(st.dessert, 30);
-  if ((c.includes("main") || c.includes("protein") || c.includes("meat") || c.includes("fish") || c.includes("roast")) && st?.main) return subtractMins(st.main, 30);
-  if ((c.includes("entrée") || c.includes("entree") || c.includes("starter") || c.includes("salad") || c.includes("seafood")) && st?.entree) return subtractMins(st.entree, 30);
-  if ((c.includes("amuse") || c.includes("canapé") || c.includes("canape")) && st?.amuse) return subtractMins(st.amuse, 30);
-  if (c.includes("soup") && (st?.entree ?? st?.main)) return subtractMins(st?.entree ?? st!.main!, 30);
+  if (
+    (c.includes("dessert") ||
+      c.includes("sweet") ||
+      c.includes("pâtisserie")) &&
+    st?.dessert
+  )
+    return subtractMins(st.dessert, 30);
+  if (
+    (c.includes("main") ||
+      c.includes("protein") ||
+      c.includes("meat") ||
+      c.includes("fish") ||
+      c.includes("roast")) &&
+    st?.main
+  )
+    return subtractMins(st.main, 30);
+  if (
+    (c.includes("entrée") ||
+      c.includes("entree") ||
+      c.includes("starter") ||
+      c.includes("salad") ||
+      c.includes("seafood")) &&
+    st?.entree
+  )
+    return subtractMins(st.entree, 30);
+  if (
+    (c.includes("amuse") || c.includes("canapé") || c.includes("canape")) &&
+    st?.amuse
+  )
+    return subtractMins(st.amuse, 30);
+  if (c.includes("soup") && (st?.entree ?? st?.main))
+    return subtractMins(st?.entree ?? st!.main!, 30);
   return subtractMins(fn.startTime, 30);
 }
 
@@ -681,10 +1329,23 @@ export function generatePrepFromMenu(fn: KitchenFunction): PrepItem[] {
     if (desc) noteParts.push(desc);
     if (tags.length > 0) noteParts.push(`Dietary: ${tags.join(", ")}`);
     const altMatch = line.match(/Alt:\s*([^|]+)/i);
-    if (altMatch) noteParts.push(`Alt: ${altMatch[1].trim()} — prepare alternates, label separately`);
-    const storageHint = dish.toLowerCase().match(/beef|lamb|pork|duck|venison|chicken|loin|fillet|prawn|scallop|oyster|ocean trout/) ? "meat fridge" :
-                        dish.toLowerCase().match(/cream|mousse|panna cotta|tart|gateau|cake|brûlée/) ? "pastry cool room" :
-                        dish.toLowerCase().match(/salad|dressed|vegetable|garnish/) ? "cold larder cool room" : null;
+    if (altMatch)
+      noteParts.push(
+        `Alt: ${altMatch[1].trim()} — prepare alternates, label separately`,
+      );
+    const storageHint = dish
+      .toLowerCase()
+      .match(
+        /beef|lamb|pork|duck|venison|chicken|loin|fillet|prawn|scallop|oyster|ocean trout/,
+      )
+      ? "meat fridge"
+      : dish
+            .toLowerCase()
+            .match(/cream|mousse|panna cotta|tart|gateau|cake|brûlée/)
+        ? "pastry cool room"
+        : dish.toLowerCase().match(/salad|dressed|vegetable|garnish/)
+          ? "cold larder cool room"
+          : null;
     if (storageHint) noteParts.push(`Storage: ${storageHint}`);
     noteParts.push(`Ready by ${deadline} — 30 min before service`);
 
@@ -702,7 +1363,13 @@ export function generatePrepFromMenu(fn: KitchenFunction): PrepItem[] {
     });
 
     // Meat/protein mains also get a Butchery portioning task
-    if (team === "Hot Kitchen" && (course.toLowerCase().includes("main") || dish.toLowerCase().match(/fillet|beef|lamb|pork|chicken|duck|venison|ocean trout|loin/))) {
+    if (
+      team === "Hot Kitchen" &&
+      (course.toLowerCase().includes("main") ||
+        dish
+          .toLowerCase()
+          .match(/fillet|beef|lamb|pork|chicken|duck|venison|ocean trout|loin/))
+    ) {
       const butchDeadline = deadlineForCourse("main", fn);
       const portionGrams = fn.guestCount >= 80 ? 220 : 260;
       const totalKg = Math.ceil((fn.guestCount * portionGrams) / 1000);
@@ -739,7 +1406,10 @@ interface KitchenContextType {
   dismissBroadcast: (id: string) => void;
   togglePrepItem: (id: string) => void;
   toggleTimelineItem: (functionId: string, timelineId: string) => void;
-  updateFunction: (id: string, updates: Partial<Omit<KitchenFunction, "id" | "timeline">>) => void;
+  updateFunction: (
+    id: string,
+    updates: Partial<Omit<KitchenFunction, "id" | "timeline">>,
+  ) => void;
   addFunction: (fn: KitchenFunction) => void;
   deleteFunction: (id: string) => void;
   generatePrepItems: (fnId: string) => void;
@@ -773,23 +1443,35 @@ const STORAGE_KEY_MIGRATED = "@kitchen_supabase_migrated_v1";
 const STORAGE_KEY_ROOMS = "@kitchen_rooms_v1";
 
 export function KitchenProvider({ children }: { children: React.ReactNode }) {
-  const [functions, setFunctions] = useState<KitchenFunction[]>(SAMPLE_FUNCTIONS);
+  const [functions, setFunctions] =
+    useState<KitchenFunction[]>(SAMPLE_FUNCTIONS);
   const [prepItems, setPrepItems] = useState<PrepItem[]>(SAMPLE_PREP);
   const [staff, setStaff] = useState<StaffMember[]>(SAMPLE_STAFF);
   const [rooms, setRooms] = useState<KitchenRoom[]>(SAMPLE_ROOMS);
   const [sickStaffIds, setSickStaffIds] = useState<string[]>([]);
-  const [currentStaffId, setCurrentStaffIdState] = useState<string | null>(null);
+  const [currentStaffId, setCurrentStaffIdState] = useState<string | null>(
+    null,
+  );
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
-  const [broadcastMessage, setBroadcastState] = useState<BroadcastMessage | null>(null);
-  const [dismissedBroadcastId, setDismissedBroadcastId] = useState<string | null>(null);
+  const [broadcastMessage, setBroadcastState] =
+    useState<BroadcastMessage | null>(null);
+  const [dismissedBroadcastId, setDismissedBroadcastId] = useState<
+    string | null
+  >(null);
   const [hiddenFunctionIds, setHiddenFunctionIds] = useState<string[]>([]);
 
   const staffRef = useRef(staff);
   const currentStaffIdRef = useRef(currentStaffId);
   const functionsRef = useRef(functions);
-  useEffect(() => { staffRef.current = staff; }, [staff]);
-  useEffect(() => { currentStaffIdRef.current = currentStaffId; }, [currentStaffId]);
-  useEffect(() => { functionsRef.current = functions; }, [functions]);
+  useEffect(() => {
+    staffRef.current = staff;
+  }, [staff]);
+  useEffect(() => {
+    currentStaffIdRef.current = currentStaffId;
+  }, [currentStaffId]);
+  useEffect(() => {
+    functionsRef.current = functions;
+  }, [functions]);
 
   function isCallerManager(): boolean {
     if (staffRef.current.length === 0) return true;
@@ -800,7 +1482,11 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
   }
 
   const today = new Date();
-  const todayDate = today.toLocaleDateString("en-AU", { weekday: "long", day: "numeric", month: "long" });
+  const todayDate = today.toLocaleDateString("en-AU", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
 
   useEffect(() => {
     (async () => {
@@ -833,14 +1519,26 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
           AsyncStorage.getItem(STORAGE_KEY_HIDDEN),
           AsyncStorage.getItem(STORAGE_KEY_ROOMS),
         ]);
-        if (storedFunctions) { localFunctions = JSON.parse(storedFunctions); setFunctions(localFunctions); }
-        if (storedPrep) { localPrepItems = JSON.parse(storedPrep); setPrepItems(localPrepItems); }
+        if (storedFunctions) {
+          localFunctions = JSON.parse(storedFunctions);
+          setFunctions(localFunctions);
+        }
+        if (storedPrep) {
+          localPrepItems = JSON.parse(storedPrep);
+          setPrepItems(localPrepItems);
+        }
         if (storedCurrentStaff) setCurrentStaffIdState(storedCurrentStaff);
         if (storedNotifs) setNotificationsEnabled(storedNotifs === "true");
-        if (storedBroadcast) { localBroadcast = JSON.parse(storedBroadcast); setBroadcastState(localBroadcast); }
+        if (storedBroadcast) {
+          localBroadcast = JSON.parse(storedBroadcast);
+          setBroadcastState(localBroadcast);
+        }
         if (storedDismissed) setDismissedBroadcastId(storedDismissed);
         if (storedSick) setSickStaffIds(JSON.parse(storedSick));
-        if (storedStaffList) { localStaff = JSON.parse(storedStaffList); setStaff(localStaff); }
+        if (storedStaffList) {
+          localStaff = JSON.parse(storedStaffList);
+          setStaff(localStaff);
+        }
         if (storedHidden) setHiddenFunctionIds(JSON.parse(storedHidden));
         if (storedRooms) setRooms(JSON.parse(storedRooms));
       } catch {
@@ -863,14 +1561,26 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
             setPrepItems(remote.prepItems);
             if (remote.broadcast) setBroadcastState(remote.broadcast);
             await Promise.all([
-              AsyncStorage.setItem(STORAGE_KEY_FUNCTIONS, JSON.stringify(remote.functions)),
-              AsyncStorage.setItem(STORAGE_KEY_STAFF, JSON.stringify(remote.staff)),
-              AsyncStorage.setItem(STORAGE_KEY_PREP, JSON.stringify(remote.prepItems)),
+              AsyncStorage.setItem(
+                STORAGE_KEY_FUNCTIONS,
+                JSON.stringify(remote.functions),
+              ),
+              AsyncStorage.setItem(
+                STORAGE_KEY_STAFF,
+                JSON.stringify(remote.staff),
+              ),
+              AsyncStorage.setItem(
+                STORAGE_KEY_PREP,
+                JSON.stringify(remote.prepItems),
+              ),
             ]);
           } else {
             // Supabase is empty — check if we need to migrate local data up (one-time)
             const migrated = await AsyncStorage.getItem(STORAGE_KEY_MIGRATED);
-            if (!migrated && (localFunctions.length > 0 || localStaff.length > 0)) {
+            if (
+              !migrated &&
+              (localFunctions.length > 0 || localStaff.length > 0)
+            ) {
               await migrateToSupabase({
                 functions: localFunctions,
                 staff: localStaff,
@@ -887,12 +1597,15 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
     })();
   }, []);
 
-  const setCurrentStaff = useCallback((id: string | null, notificationsOn: boolean) => {
-    setCurrentStaffIdState(id);
-    setNotificationsEnabled(notificationsOn);
-    AsyncStorage.setItem(STORAGE_KEY_CURRENT_STAFF, id ?? "");
-    AsyncStorage.setItem(STORAGE_KEY_NOTIFS, String(notificationsOn));
-  }, []);
+  const setCurrentStaff = useCallback(
+    (id: string | null, notificationsOn: boolean) => {
+      setCurrentStaffIdState(id);
+      setNotificationsEnabled(notificationsOn);
+      AsyncStorage.setItem(STORAGE_KEY_CURRENT_STAFF, id ?? "");
+      AsyncStorage.setItem(STORAGE_KEY_NOTIFS, String(notificationsOn));
+    },
+    [],
+  );
 
   const setBroadcast = useCallback((msg: BroadcastMessage) => {
     if (!isCallerManager()) return;
@@ -923,7 +1636,7 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
     if (level !== "manager" && level !== "team_leader") return;
     setPrepItems((prev) => {
       const updated = prev.map((item) =>
-        item.id === id ? { ...item, completed: !item.completed } : item
+        item.id === id ? { ...item, completed: !item.completed } : item,
       );
       AsyncStorage.setItem(STORAGE_KEY_PREP, JSON.stringify(updated));
       if (isSupabaseConfigured()) {
@@ -934,45 +1647,63 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
-  const toggleTimelineItem = useCallback((functionId: string, timelineId: string) => {
-    setFunctions((prev) => {
-      const updated = prev.map((fn) =>
-        fn.id === functionId
-          ? { ...fn, timeline: fn.timeline.map((t) => t.id === timelineId ? { ...t, completed: !t.completed } : t) }
-          : fn
-      );
-      AsyncStorage.setItem(STORAGE_KEY_FUNCTIONS, JSON.stringify(updated));
-      if (isSupabaseConfigured()) {
-        const changed = updated.find((fn) => fn.id === functionId);
-        if (changed) upsertFunctionToSupabase(changed).catch(() => {});
-      }
-      return updated;
-    });
-  }, []);
+  const toggleTimelineItem = useCallback(
+    (functionId: string, timelineId: string) => {
+      setFunctions((prev) => {
+        const updated = prev.map((fn) =>
+          fn.id === functionId
+            ? {
+                ...fn,
+                timeline: fn.timeline.map((t) =>
+                  t.id === timelineId ? { ...t, completed: !t.completed } : t,
+                ),
+              }
+            : fn,
+        );
+        AsyncStorage.setItem(STORAGE_KEY_FUNCTIONS, JSON.stringify(updated));
+        if (isSupabaseConfigured()) {
+          const changed = updated.find((fn) => fn.id === functionId);
+          if (changed) upsertFunctionToSupabase(changed).catch(() => {});
+        }
+        return updated;
+      });
+    },
+    [],
+  );
 
-  const updateFunction = useCallback((id: string, updates: Partial<Omit<KitchenFunction, "id" | "timeline">>) => {
-    const callerLevel = (() => {
-      const cid = currentStaffIdRef.current;
-      if (!cid) return null;
-      const m = staffRef.current.find((x) => x.id === cid) ?? null;
-      return m ? getAccessLevel(m) : null;
-    })();
-    if (callerLevel !== "manager" && callerLevel !== "team_leader") return;
-    setFunctions((prev) => {
-      const updated = prev.map((fn) => fn.id === id ? { ...fn, ...updates } : fn);
-      AsyncStorage.setItem(STORAGE_KEY_FUNCTIONS, JSON.stringify(updated));
-      if (isSupabaseConfigured()) {
-        const changed = updated.find((fn) => fn.id === id);
-        if (changed) upsertFunctionToSupabase(changed).catch(() => {});
-      }
-      return updated;
-    });
-  }, []);
+  const updateFunction = useCallback(
+    (
+      id: string,
+      updates: Partial<Omit<KitchenFunction, "id" | "timeline">>,
+    ) => {
+      const callerLevel = (() => {
+        const cid = currentStaffIdRef.current;
+        if (!cid) return null;
+        const m = staffRef.current.find((x) => x.id === cid) ?? null;
+        return m ? getAccessLevel(m) : null;
+      })();
+      if (callerLevel !== "manager" && callerLevel !== "team_leader") return;
+      setFunctions((prev) => {
+        const updated = prev.map((fn) =>
+          fn.id === id ? { ...fn, ...updates } : fn,
+        );
+        AsyncStorage.setItem(STORAGE_KEY_FUNCTIONS, JSON.stringify(updated));
+        if (isSupabaseConfigured()) {
+          const changed = updated.find((fn) => fn.id === id);
+          if (changed) upsertFunctionToSupabase(changed).catch(() => {});
+        }
+        return updated;
+      });
+    },
+    [],
+  );
 
   const addFunction = useCallback((fn: KitchenFunction) => {
     if (!isCallerManager()) return;
     setFunctions((prev) => {
-      const updated = [...prev, fn].sort((a, b) => a.startTime.localeCompare(b.startTime));
+      const updated = [...prev, fn].sort((a, b) =>
+        a.startTime.localeCompare(b.startTime),
+      );
       AsyncStorage.setItem(STORAGE_KEY_FUNCTIONS, JSON.stringify(updated));
       return updated;
     });
@@ -987,7 +1718,9 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
           return updated;
         });
         if (isSupabaseConfigured()) {
-          Promise.all(generated.map((item) => upsertPrepItemToSupabase(item))).catch(() => {});
+          Promise.all(
+            generated.map((item) => upsertPrepItemToSupabase(item)),
+          ).catch(() => {});
         }
       }
     }
@@ -1007,7 +1740,9 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
       return updated;
     });
     if (isSupabaseConfigured()) {
-      Promise.all(generated.map((item) => upsertPrepItemToSupabase(item))).catch(() => {});
+      Promise.all(
+        generated.map((item) => upsertPrepItemToSupabase(item)),
+      ).catch(() => {});
     }
   }, []);
 
@@ -1024,7 +1759,9 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
   const markStaffSick = useCallback((staffId: string, sick: boolean) => {
     if (!isCallerManager()) return;
     setSickStaffIds((prev) => {
-      const updated = sick ? [...prev.filter((x) => x !== staffId), staffId] : prev.filter((x) => x !== staffId);
+      const updated = sick
+        ? [...prev.filter((x) => x !== staffId), staffId]
+        : prev.filter((x) => x !== staffId);
       AsyncStorage.setItem(STORAGE_KEY_SICK, JSON.stringify(updated));
       return updated;
     });
@@ -1040,18 +1777,23 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
     if (isSupabaseConfigured()) upsertStaffToSupabase(member).catch(() => {});
   }, []);
 
-  const updateStaff = useCallback((id: string, updates: Partial<StaffMember>) => {
-    if (!isCallerManager()) return;
-    setStaff((prev) => {
-      const updated = prev.map((m) => m.id === id ? { ...m, ...updates } : m);
-      AsyncStorage.setItem(STORAGE_KEY_STAFF, JSON.stringify(updated));
-      if (isSupabaseConfigured()) {
-        const changed = updated.find((m) => m.id === id);
-        if (changed) upsertStaffToSupabase(changed).catch(() => {});
-      }
-      return updated;
-    });
-  }, []);
+  const updateStaff = useCallback(
+    (id: string, updates: Partial<StaffMember>) => {
+      if (!isCallerManager()) return;
+      setStaff((prev) => {
+        const updated = prev.map((m) =>
+          m.id === id ? { ...m, ...updates } : m,
+        );
+        AsyncStorage.setItem(STORAGE_KEY_STAFF, JSON.stringify(updated));
+        if (isSupabaseConfigured()) {
+          const changed = updated.find((m) => m.id === id);
+          if (changed) upsertStaffToSupabase(changed).catch(() => {});
+        }
+        return updated;
+      });
+    },
+    [],
+  );
 
   const removeStaff = useCallback((id: string) => {
     if (!isCallerManager()) return;
@@ -1080,14 +1822,19 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
-  const updateRoom = useCallback((id: string, updates: Partial<KitchenRoom>) => {
-    if (!isCallerManager()) return;
-    setRooms((prev) => {
-      const updated = prev.map((r) => r.id === id ? { ...r, ...updates } : r);
-      AsyncStorage.setItem(STORAGE_KEY_ROOMS, JSON.stringify(updated));
-      return updated;
-    });
-  }, []);
+  const updateRoom = useCallback(
+    (id: string, updates: Partial<KitchenRoom>) => {
+      if (!isCallerManager()) return;
+      setRooms((prev) => {
+        const updated = prev.map((r) =>
+          r.id === id ? { ...r, ...updates } : r,
+        );
+        AsyncStorage.setItem(STORAGE_KEY_ROOMS, JSON.stringify(updated));
+        return updated;
+      });
+    },
+    [],
+  );
 
   const removeRoom = useCallback((id: string) => {
     if (!isCallerManager()) return;
@@ -1108,7 +1855,10 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
     setCurrentStaffIdState(null);
     Promise.all([
       AsyncStorage.setItem(STORAGE_KEY_STAFF, JSON.stringify(SAMPLE_STAFF)),
-      AsyncStorage.setItem(STORAGE_KEY_FUNCTIONS, JSON.stringify(SAMPLE_FUNCTIONS)),
+      AsyncStorage.setItem(
+        STORAGE_KEY_FUNCTIONS,
+        JSON.stringify(SAMPLE_FUNCTIONS),
+      ),
       AsyncStorage.setItem(STORAGE_KEY_PREP, JSON.stringify(SAMPLE_PREP)),
       AsyncStorage.setItem(STORAGE_KEY_ROOMS, JSON.stringify(SAMPLE_ROOMS)),
       AsyncStorage.setItem(STORAGE_KEY_SICK, JSON.stringify([])),
@@ -1168,16 +1918,25 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
           return nowMins <= h * 60 + m + 30;
         });
         if (toKeep.length === prev.length) return prev;
-        const removedIds = prev.filter((f) => !toKeep.find((k) => k.id === f.id)).map((f) => f.id);
+        const removedIds = prev
+          .filter((f) => !toKeep.find((k) => k.id === f.id))
+          .map((f) => f.id);
         AsyncStorage.setItem(STORAGE_KEY_FUNCTIONS, JSON.stringify(toKeep));
         // Cancel their scheduled notifications
         if (Platform.OS !== "web") {
-          removedIds.forEach((id) => Notifications.cancelScheduledNotificationAsync(`fn-30min-${id}`).catch(() => {}));
+          removedIds.forEach((id) =>
+            Notifications.cancelScheduledNotificationAsync(
+              `fn-30min-${id}`,
+            ).catch(() => {}),
+          );
         }
         // Clean up orphan prep items
         setPrepItems((prevPrep) => {
-          const updated = prevPrep.filter((p) => !removedIds.includes(p.functionId));
-          if (updated.length !== prevPrep.length) AsyncStorage.setItem(STORAGE_KEY_PREP, JSON.stringify(updated));
+          const updated = prevPrep.filter(
+            (p) => !removedIds.includes(p.functionId),
+          );
+          if (updated.length !== prevPrep.length)
+            AsyncStorage.setItem(STORAGE_KEY_PREP, JSON.stringify(updated));
           return updated;
         });
         return toKeep;
@@ -1194,13 +1953,18 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
     (async () => {
       // Cancel all existing function notifications then reschedule
       try {
-        const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+        const scheduled =
+          await Notifications.getAllScheduledNotificationsAsync();
         await Promise.all(
           scheduled
             .filter((n) => n.identifier.startsWith("fn-30min-"))
-            .map((n) => Notifications.cancelScheduledNotificationAsync(n.identifier))
+            .map((n) =>
+              Notifications.cancelScheduledNotificationAsync(n.identifier),
+            ),
         );
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
 
       if (!notificationsEnabled) return;
 
@@ -1222,9 +1986,13 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
               body: `${fn.name} · ${fn.room} · ${fn.guestCount} guests · starts ${fn.startTime}`,
               sound: true,
             },
-            trigger: { date: triggerDate } as Notifications.NotificationTriggerInput,
+            trigger: {
+              date: triggerDate,
+            } as Notifications.NotificationTriggerInput,
           });
-        } catch { /* ignore per-notification errors */ }
+        } catch {
+          /* ignore per-notification errors */
+        }
       }
     })();
   }, [notificationsEnabled, functions]);
@@ -1238,13 +2006,19 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
           if (type === "DELETE") {
             const id = oldId ?? fn.id;
             const updated = prev.filter((f) => f.id !== id);
-            if (updated.length !== prev.length) AsyncStorage.setItem(STORAGE_KEY_FUNCTIONS, JSON.stringify(updated));
+            if (updated.length !== prev.length)
+              AsyncStorage.setItem(
+                STORAGE_KEY_FUNCTIONS,
+                JSON.stringify(updated),
+              );
             return updated;
           }
           const exists = prev.find((f) => f.id === fn.id);
           const updated = exists
             ? prev.map((f) => (f.id === fn.id ? fn : f))
-            : [...prev, fn].sort((a, b) => a.startTime.localeCompare(b.startTime));
+            : [...prev, fn].sort((a, b) =>
+                a.startTime.localeCompare(b.startTime),
+              );
           AsyncStorage.setItem(STORAGE_KEY_FUNCTIONS, JSON.stringify(updated));
           return updated;
         });
@@ -1254,7 +2028,8 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
           if (type === "DELETE") {
             const id = oldId ?? member.id;
             const updated = prev.filter((m) => m.id !== id);
-            if (updated.length !== prev.length) AsyncStorage.setItem(STORAGE_KEY_STAFF, JSON.stringify(updated));
+            if (updated.length !== prev.length)
+              AsyncStorage.setItem(STORAGE_KEY_STAFF, JSON.stringify(updated));
             return updated;
           }
           const exists = prev.find((m) => m.id === member.id);
@@ -1270,7 +2045,8 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
           if (type === "DELETE") {
             const id = oldId ?? item.id;
             const updated = prev.filter((p) => p.id !== id);
-            if (updated.length !== prev.length) AsyncStorage.setItem(STORAGE_KEY_PREP, JSON.stringify(updated));
+            if (updated.length !== prev.length)
+              AsyncStorage.setItem(STORAGE_KEY_PREP, JSON.stringify(updated));
             return updated;
           }
           const exists = prev.find((p) => p.id === item.id);
@@ -1296,14 +2072,38 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
   return (
     <KitchenContext.Provider
       value={{
-        functions, prepItems, staff, rooms, sickStaffIds,
-        currentStaffId, notificationsEnabled,
-        broadcastMessage, dismissedBroadcastId,
-        setCurrentStaff, setBroadcast, clearBroadcast, dismissBroadcast,
-        togglePrepItem, toggleTimelineItem, updateFunction, addFunction, deleteFunction, generatePrepItems, markStaffSick,
-        addStaff, updateStaff, removeStaff, addRoom, updateRoom, removeRoom,
-        resetToSampleData, clearAllData, todayDate,
-        hiddenFunctionIds, hideFunction, showFunction,
+        functions,
+        prepItems,
+        staff,
+        rooms,
+        sickStaffIds,
+        currentStaffId,
+        notificationsEnabled,
+        broadcastMessage,
+        dismissedBroadcastId,
+        setCurrentStaff,
+        setBroadcast,
+        clearBroadcast,
+        dismissBroadcast,
+        togglePrepItem,
+        toggleTimelineItem,
+        updateFunction,
+        addFunction,
+        deleteFunction,
+        generatePrepItems,
+        markStaffSick,
+        addStaff,
+        updateStaff,
+        removeStaff,
+        addRoom,
+        updateRoom,
+        removeRoom,
+        resetToSampleData,
+        clearAllData,
+        todayDate,
+        hiddenFunctionIds,
+        hideFunction,
+        showFunction,
       }}
     >
       {children}

@@ -30,7 +30,8 @@ function validate(
     return "Please enter a valid email address.";
   if (!password) return "Please enter a password.";
   if (password.length < 8) return "Password must be at least 8 characters.";
-  if (!/[A-Z]/.test(password)) return "Password must include an upper-case letter.";
+  if (!/[A-Z]/.test(password))
+    return "Password must include an upper-case letter.";
   if (!/[0-9]/.test(password)) return "Password must include a number.";
   if (password !== confirm) return "Passwords do not match.";
   return null;
@@ -50,7 +51,12 @@ export default function RegisterScreen() {
   const [loading, setLoading] = useState(false);
 
   async function handleRegister() {
-    const validationError = validate(fullName.trim(), email.trim(), password, confirm);
+    const validationError = validate(
+      fullName.trim(),
+      email.trim(),
+      password,
+      confirm,
+    );
     if (validationError) {
       setError(validationError);
       return;
@@ -78,7 +84,12 @@ export default function RegisterScreen() {
 
   if (success) {
     return (
-      <View style={[s.root, { justifyContent: "center", alignItems: "center", padding: 32 }]}>
+      <View
+        style={[
+          s.root,
+          { justifyContent: "center", alignItems: "center", padding: 32 },
+        ]}
+      >
         {/* Ambient orbs */}
         <View style={s.orbTopRight} pointerEvents="none" />
         <View style={s.orbBottomLeft} pointerEvents="none" />
@@ -95,11 +106,14 @@ export default function RegisterScreen() {
           Check your email
         </Text>
         <Text style={[s.cardSub, { textAlign: "center", marginBottom: 32 }]}>
-          We sent a confirmation link to {email}. Click it to activate your account.
+          We sent a confirmation link to {email}. Click it to activate your
+          account.
         </Text>
         <Pressable
           onPress={() => router.replace("/auth/login")}
-          style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1, width: "100%" }]}
+          style={({ pressed }) => [
+            { opacity: pressed ? 0.7 : 1, width: "100%" },
+          ]}
         >
           <LinearGradient
             colors={["#3B82F6", "#06B6D4", "#818CF8"]}
@@ -174,7 +188,10 @@ export default function RegisterScreen() {
                   placeholder="Your name"
                   placeholderTextColor="#3A4250"
                   value={fullName}
-                  onChangeText={(t) => { setFullName(t); setError(null); }}
+                  onChangeText={(t) => {
+                    setFullName(t);
+                    setError(null);
+                  }}
                   autoComplete="name"
                   autoCapitalize="words"
                   returnKeyType="next"
@@ -188,7 +205,10 @@ export default function RegisterScreen() {
                   placeholder="you@example.com"
                   placeholderTextColor="#3A4250"
                   value={email}
-                  onChangeText={(t) => { setEmail(t); setError(null); }}
+                  onChangeText={(t) => {
+                    setEmail(t);
+                    setError(null);
+                  }}
                   keyboardType="email-address"
                   autoCapitalize="none"
                   autoCorrect={false}
@@ -205,7 +225,10 @@ export default function RegisterScreen() {
                     placeholder="Min 8 chars, 1 upper, 1 number"
                     placeholderTextColor="#3A4250"
                     value={password}
-                    onChangeText={(t) => { setPassword(t); setError(null); }}
+                    onChangeText={(t) => {
+                      setPassword(t);
+                      setError(null);
+                    }}
                     secureTextEntry={!showPassword}
                     autoComplete="new-password"
                     returnKeyType="next"
@@ -231,7 +254,10 @@ export default function RegisterScreen() {
                   placeholder="Repeat your password"
                   placeholderTextColor="#3A4250"
                   value={confirm}
-                  onChangeText={(t) => { setConfirm(t); setError(null); }}
+                  onChangeText={(t) => {
+                    setConfirm(t);
+                    setError(null);
+                  }}
                   secureTextEntry={!showPassword}
                   autoComplete="new-password"
                   returnKeyType="go"
@@ -245,7 +271,10 @@ export default function RegisterScreen() {
                   { label: "8+ characters", met: password.length >= 8 },
                   { label: "Upper-case", met: /[A-Z]/.test(password) },
                   { label: "Number", met: /[0-9]/.test(password) },
-                  { label: "Passwords match", met: confirm.length > 0 && password === confirm },
+                  {
+                    label: "Passwords match",
+                    met: confirm.length > 0 && password === confirm,
+                  },
                 ].map((r) => (
                   <View key={r.label} style={s.hintItem}>
                     <Feather
@@ -253,7 +282,9 @@ export default function RegisterScreen() {
                       size={11}
                       color={r.met ? "#22C55E" : "#2A3444"}
                     />
-                    <Text style={[s.hintText, r.met && s.hintTextMet]}>{r.label}</Text>
+                    <Text style={[s.hintText, r.met && s.hintTextMet]}>
+                      {r.label}
+                    </Text>
                   </View>
                 ))}
               </View>
@@ -261,7 +292,9 @@ export default function RegisterScreen() {
               <Pressable
                 onPress={handleRegister}
                 disabled={loading}
-                style={({ pressed }) => [{ opacity: pressed || loading ? 0.7 : 1 }]}
+                style={({ pressed }) => [
+                  { opacity: pressed || loading ? 0.7 : 1 },
+                ]}
               >
                 <LinearGradient
                   colors={["#3B82F6", "#06B6D4", "#818CF8"]}
@@ -330,7 +363,11 @@ const styles = (topInset: number) =>
       marginBottom: 24,
       alignSelf: "flex-start",
     },
-    backText: { fontSize: 14, fontFamily: "Inter_600SemiBold", color: "#3B82F6" },
+    backText: {
+      fontSize: 14,
+      fontFamily: "Inter_600SemiBold",
+      color: "#3B82F6",
+    },
     brand: { alignItems: "center", marginBottom: 28 },
     logoWrap: {
       marginBottom: 12,

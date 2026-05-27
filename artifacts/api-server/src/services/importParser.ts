@@ -15,48 +15,155 @@ import type { ParsedImportRow, KitchenFunctionRow } from "@workspace/db";
 
 // ─── Column name aliases ───────────────────────────────────────────────────
 const COLUMN_ALIASES: Record<string, string[]> = {
-  name:          ["function name", "event name", "booking name", "event", "function", "name", "subject", "title", "event title", "booking"],
-  date:          ["date", "event date", "function date", "booking date", "start date", "event day"],
-  startTime:     ["start time", "start", "time from", "begin time", "arrival time", "open time", "service start"],
-  endTime:       ["end time", "end", "time to", "finish time", "close time", "departure time", "service end"],
-  venue:         ["venue", "location", "property", "hotel", "site"],
-  room:          ["room", "room name", "space", "area", "ballroom", "hall", "suite", "venue space"],
-  floor:         ["floor", "level", "building", "section"],
-  pax:           ["pax", "covers", "guests", "guest count", "attendees", "persons", "numbers", "headcount", "guest numbers"],
-  menu:          ["menu", "food", "food & beverage", "f&b", "menu details", "catering", "food details", "meal"],
-  dietaryNotes:  ["dietary", "dietary notes", "dietary requirements", "dietary needs", "special meals", "special requirements", "allergens", "allergies", "diet"],
-  eventNotes:    ["notes", "event notes", "comments", "remarks", "special notes", "instructions", "additional notes", "client notes"],
-  functionType:  ["type", "function type", "event type", "booking type", "format", "style", "package"],
-  chefInCharge:  ["chef", "chef in charge", "executive chef", "head chef", "assigned chef", "cook"],
+  name: [
+    "function name",
+    "event name",
+    "booking name",
+    "event",
+    "function",
+    "name",
+    "subject",
+    "title",
+    "event title",
+    "booking",
+  ],
+  date: [
+    "date",
+    "event date",
+    "function date",
+    "booking date",
+    "start date",
+    "event day",
+  ],
+  startTime: [
+    "start time",
+    "start",
+    "time from",
+    "begin time",
+    "arrival time",
+    "open time",
+    "service start",
+  ],
+  endTime: [
+    "end time",
+    "end",
+    "time to",
+    "finish time",
+    "close time",
+    "departure time",
+    "service end",
+  ],
+  venue: ["venue", "location", "property", "hotel", "site"],
+  room: [
+    "room",
+    "room name",
+    "space",
+    "area",
+    "ballroom",
+    "hall",
+    "suite",
+    "venue space",
+  ],
+  floor: ["floor", "level", "building", "section"],
+  pax: [
+    "pax",
+    "covers",
+    "guests",
+    "guest count",
+    "attendees",
+    "persons",
+    "numbers",
+    "headcount",
+    "guest numbers",
+  ],
+  menu: [
+    "menu",
+    "food",
+    "food & beverage",
+    "f&b",
+    "menu details",
+    "catering",
+    "food details",
+    "meal",
+  ],
+  dietaryNotes: [
+    "dietary",
+    "dietary notes",
+    "dietary requirements",
+    "dietary needs",
+    "special meals",
+    "special requirements",
+    "allergens",
+    "allergies",
+    "diet",
+  ],
+  eventNotes: [
+    "notes",
+    "event notes",
+    "comments",
+    "remarks",
+    "special notes",
+    "instructions",
+    "additional notes",
+    "client notes",
+  ],
+  functionType: [
+    "type",
+    "function type",
+    "event type",
+    "booking type",
+    "format",
+    "style",
+    "package",
+  ],
+  chefInCharge: [
+    "chef",
+    "chef in charge",
+    "executive chef",
+    "head chef",
+    "assigned chef",
+    "cook",
+  ],
 };
 
 // ─── Canonical field labels & order ──────────────────────────────────────
 export const CANONICAL_LABELS: Record<string, string> = {
-  name:         "Event name",
-  date:         "Date",
-  startTime:    "Start time",
-  endTime:      "End time",
-  room:         "Room / Space",
-  floor:        "Floor / Level",
-  pax:          "Guest count",
-  menu:         "Menu",
+  name: "Event name",
+  date: "Date",
+  startTime: "Start time",
+  endTime: "End time",
+  room: "Room / Space",
+  floor: "Floor / Level",
+  pax: "Guest count",
+  menu: "Menu",
   dietaryNotes: "Dietary notes",
-  eventNotes:   "Notes",
+  eventNotes: "Notes",
   functionType: "Function type",
   chefInCharge: "Chef",
-  venue:        "Venue",
+  venue: "Venue",
 };
 
 export const CANONICAL_ORDER = [
-  "name", "date", "startTime", "endTime", "pax",
-  "room", "floor", "menu", "dietaryNotes",
-  "eventNotes", "functionType", "chefInCharge", "venue",
+  "name",
+  "date",
+  "startTime",
+  "endTime",
+  "pax",
+  "room",
+  "floor",
+  "menu",
+  "dietaryNotes",
+  "eventNotes",
+  "functionType",
+  "chefInCharge",
+  "venue",
 ] as const;
 
 // ─── Smart scoring helpers ─────────────────────────────────────────────────
 
 function levenshtein(a: string, b: string): number {
-  const m = a.length, n = b.length;
+  const m = a.length,
+    n = b.length;
   const dp: number[][] = Array.from({ length: m + 1 }, (_, i) =>
     Array.from({ length: n + 1 }, (_, j) => (i === 0 ? j : j === 0 ? i : 0)),
   );
@@ -64,23 +171,36 @@ function levenshtein(a: string, b: string): number {
     for (let j = 1; j <= n; j++) {
       const prev = dp[i - 1]!;
       const curr = dp[i]!;
-      curr[j] = a[i - 1] === b[j - 1]
-        ? (prev[j - 1] ?? 0)
-        : 1 + Math.min(prev[j] ?? Infinity, curr[j - 1] ?? Infinity, prev[j - 1] ?? Infinity);
+      curr[j] =
+        a[i - 1] === b[j - 1]
+          ? (prev[j - 1] ?? 0)
+          : 1 +
+            Math.min(
+              prev[j] ?? Infinity,
+              curr[j - 1] ?? Infinity,
+              prev[j - 1] ?? Infinity,
+            );
     }
   }
   return dp[m]![n] ?? Math.max(m, n);
 }
 
 function tokenize(s: string): string[] {
-  return s.toLowerCase().replace(/[^a-z0-9]/g, " ").split(/\s+/).filter(Boolean);
+  return s
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, " ")
+    .split(/\s+/)
+    .filter(Boolean);
 }
 
 function scoreHeader(
   header: string,
   canonical: string,
   aliases: string[],
-): { score: number; method: "exact" | "alias" | "smart" | "fuzzy" | "unmatched" } {
+): {
+  score: number;
+  method: "exact" | "alias" | "smart" | "fuzzy" | "unmatched";
+} {
   const norm = header.trim().toLowerCase();
 
   if (norm === canonical.toLowerCase()) return { score: 100, method: "exact" };
@@ -101,7 +221,8 @@ function scoreHeader(
     if (aliasTokens.length === 0) continue;
     const overlap = aliasTokens.filter((t) => headerTokens.has(t)).length;
     const ratio = overlap / Math.max(aliasTokens.length, headerTokens.size);
-    if (ratio > 0) bestTokenScore = Math.max(bestTokenScore, Math.round(ratio * 70));
+    if (ratio > 0)
+      bestTokenScore = Math.max(bestTokenScore, Math.round(ratio * 70));
   }
   if (bestTokenScore >= 50) return { score: bestTokenScore, method: "smart" };
 
@@ -147,7 +268,8 @@ export function scoreColumnMapping(
     if (overrides?.[canonical]) {
       const oh = overrides[canonical]!;
       results.push({
-        canonical, label,
+        canonical,
+        label,
         header: headers.includes(oh) ? oh : null,
         confidence: 100,
         method: "override",
@@ -163,17 +285,27 @@ export function scoreColumnMapping(
     const best = scores[0];
     if (!best || best.score < 40) {
       results.push({
-        canonical, label, header: null, confidence: 0, method: "unmatched",
-        alternatives: scores.filter((s) => s.score >= 20).slice(0, 3)
+        canonical,
+        label,
+        header: null,
+        confidence: 0,
+        method: "unmatched",
+        alternatives: scores
+          .filter((s) => s.score >= 20)
+          .slice(0, 3)
           .map((s) => ({ header: s.header, score: s.score })),
       });
     } else {
       results.push({
-        canonical, label,
+        canonical,
+        label,
         header: best.header,
         confidence: best.score,
         method: best.method,
-        alternatives: scores.slice(1).filter((s) => s.score >= 20).slice(0, 3)
+        alternatives: scores
+          .slice(1)
+          .filter((s) => s.score >= 20)
+          .slice(0, 3)
           .map((s) => ({ header: s.header, score: s.score })),
       });
     }
@@ -182,21 +314,33 @@ export function scoreColumnMapping(
 }
 
 // ─── Source system detection ───────────────────────────────────────────────
-export type SourceSystem = "moments_explorer" | "delphi" | "opera" | "ivvy" | "priava" | "tripleseat" | "generic";
+export type SourceSystem =
+  | "moments_explorer"
+  | "delphi"
+  | "opera"
+  | "ivvy"
+  | "priava"
+  | "tripleseat"
+  | "generic";
 
-export function detectSourceSystem(filename: string, headers: string[]): SourceSystem {
+export function detectSourceSystem(
+  filename: string,
+  headers: string[],
+): SourceSystem {
   const lc = filename.toLowerCase();
-  if (lc.includes("moments"))    return "moments_explorer";
-  if (lc.includes("delphi"))     return "delphi";
-  if (lc.includes("opera"))      return "opera";
-  if (lc.includes("ivvy"))       return "ivvy";
-  if (lc.includes("priava"))     return "priava";
+  if (lc.includes("moments")) return "moments_explorer";
+  if (lc.includes("delphi")) return "delphi";
+  if (lc.includes("opera")) return "opera";
+  if (lc.includes("ivvy")) return "ivvy";
+  if (lc.includes("priava")) return "priava";
   if (lc.includes("tripleseat")) return "tripleseat";
 
   const headerStr = headers.join(" ").toLowerCase();
-  if (headerStr.includes("folio") || headerStr.includes("guestroom"))    return "opera";
-  if (headerStr.includes("prospect") || headerStr.includes("peak"))      return "delphi";
-  if (headerStr.includes("quote") && headerStr.includes("ivvy"))         return "ivvy";
+  if (headerStr.includes("folio") || headerStr.includes("guestroom"))
+    return "opera";
+  if (headerStr.includes("prospect") || headerStr.includes("peak"))
+    return "delphi";
+  if (headerStr.includes("quote") && headerStr.includes("ivvy")) return "ivvy";
 
   return "generic";
 }
@@ -290,23 +434,44 @@ function parsePax(value: string | undefined): number | undefined {
 }
 
 // ─── Function type detection ───────────────────────────────────────────────
-const FUNCTION_TYPES = ["A-la-carte", "Buffet", "Cocktail", "Canapés", "Canapés + A-la-carte", "School Ball", "Set Menu", "High Tea"] as const;
-type FunctionType = typeof FUNCTION_TYPES[number];
+const FUNCTION_TYPES = [
+  "A-la-carte",
+  "Buffet",
+  "Cocktail",
+  "Canapés",
+  "Canapés + A-la-carte",
+  "School Ball",
+  "Set Menu",
+  "High Tea",
+] as const;
+type FunctionType = (typeof FUNCTION_TYPES)[number];
 
-function detectFunctionType(raw: string | undefined, name: string, menu: string): FunctionType {
+function detectFunctionType(
+  raw: string | undefined,
+  name: string,
+  menu: string,
+): FunctionType {
   const combined = `${raw || ""} ${name} ${menu}`.toLowerCase();
-  if (combined.includes("buffet"))                            return "Buffet";
-  if (combined.includes("cocktail"))                         return "Cocktail";
-  if (combined.includes("canape") || combined.includes("canapé")) return "Canapés";
-  if (combined.includes("school ball") || combined.includes("formal")) return "School Ball";
-  if (combined.includes("set menu"))                         return "Set Menu";
-  if (combined.includes("high tea") || combined.includes("afternoon tea")) return "High Tea";
-  if (combined.includes("a la carte") || combined.includes("a-la-carte")) return "A-la-carte";
+  if (combined.includes("buffet")) return "Buffet";
+  if (combined.includes("cocktail")) return "Cocktail";
+  if (combined.includes("canape") || combined.includes("canapé"))
+    return "Canapés";
+  if (combined.includes("school ball") || combined.includes("formal"))
+    return "School Ball";
+  if (combined.includes("set menu")) return "Set Menu";
+  if (combined.includes("high tea") || combined.includes("afternoon tea"))
+    return "High Tea";
+  if (combined.includes("a la carte") || combined.includes("a-la-carte"))
+    return "A-la-carte";
   return "A-la-carte";
 }
 
 // ─── Dietary parsing ──────────────────────────────────────────────────────
-interface DietaryReq { name: string; count: number; note?: string }
+interface DietaryReq {
+  name: string;
+  count: number;
+  note?: string;
+}
 
 function parseDietary(notes: string | undefined): DietaryReq[] {
   if (!notes) return [];
@@ -314,15 +479,15 @@ function parseDietary(notes: string | undefined): DietaryReq[] {
   const text = String(notes);
 
   const patterns: [RegExp, string][] = [
-    [/(\d+)\s*x?\s*(gluten[- ]?free|gf\b)/gi,     "Gluten Free"],
-    [/(\d+)\s*x?\s*(vegan|vgn)/gi,                  "Vegan"],
-    [/(\d+)\s*x?\s*(vegetarian|vgt|veg\b)/gi,       "Vegetarian"],
-    [/(\d+)\s*x?\s*(dairy[- ]?free|df\b)/gi,        "Dairy Free"],
-    [/(\d+)\s*x?\s*(nut[- ]?free|nut allerg)/gi,    "Nut Free"],
-    [/(\d+)\s*x?\s*(shellfish|seafood allerg)/gi,   "Shellfish Allergy"],
-    [/(\d+)\s*x?\s*(halal)/gi,                      "Halal"],
-    [/(\d+)\s*x?\s*(kosher)/gi,                     "Kosher"],
-    [/(\d+)\s*x?\s*(egg[- ]?free)/gi,               "Egg Free"],
+    [/(\d+)\s*x?\s*(gluten[- ]?free|gf\b)/gi, "Gluten Free"],
+    [/(\d+)\s*x?\s*(vegan|vgn)/gi, "Vegan"],
+    [/(\d+)\s*x?\s*(vegetarian|vgt|veg\b)/gi, "Vegetarian"],
+    [/(\d+)\s*x?\s*(dairy[- ]?free|df\b)/gi, "Dairy Free"],
+    [/(\d+)\s*x?\s*(nut[- ]?free|nut allerg)/gi, "Nut Free"],
+    [/(\d+)\s*x?\s*(shellfish|seafood allerg)/gi, "Shellfish Allergy"],
+    [/(\d+)\s*x?\s*(halal)/gi, "Halal"],
+    [/(\d+)\s*x?\s*(kosher)/gi, "Kosher"],
+    [/(\d+)\s*x?\s*(egg[- ]?free)/gi, "Egg Free"],
   ];
 
   for (const [pattern, name] of patterns) {
@@ -353,13 +518,19 @@ function generateTimeline(
   functionType: FunctionType,
   dietaryReqs: DietaryReq[],
 ): KitchenFunctionRow["timeline"] {
-  const items: Array<{ id: string; time: string; task: string; category: string; completed: boolean }> = [];
+  const items: Array<{
+    id: string;
+    time: string;
+    task: string;
+    category: string;
+    completed: boolean;
+  }> = [];
 
   function addMins(time: string, mins: number): string {
     if (!time) return "";
     const [h, m] = time.split(":").map(Number);
     const total = h * 60 + m + mins;
-    const nh = Math.floor(((total % 1440) + 1440) % 1440 / 60);
+    const nh = Math.floor((((total % 1440) + 1440) % 1440) / 60);
     const nm = ((total % 1440) + 1440) % 60;
     return `${String(nh).padStart(2, "0")}:${String(nm).padStart(2, "0")}`;
   }
@@ -374,21 +545,84 @@ function generateTimeline(
   let idx = 1;
   const tid = () => `t${Date.now()}_${idx++}`;
 
-  items.push({ id: tid(), time: kitchenOpen, task: `KITCHEN OPEN — Mise en place. All stations set, HACCP sheets started. Cold room temp check.`, category: "setup", completed: false });
-  items.push({ id: tid(), time: prepStart, task: `Prep commenced — ${functionType} for ${guestCount} covers. All dietary alternates clearly labelled and separated.${hasDietary ? " " + dietaryReqs.map((d) => `${d.count} × ${d.name}`).join(", ") + "." : ""}`, category: "setup", completed: false });
-  items.push({ id: tid(), time: venueCheck, task: `VENUE CHECK — Room set, crockery polished, mise en place on pass.${large ? " Table numbers confirmed vs seating chart." : ""}`, category: "venue", completed: false });
-  items.push({ id: tid(), time: brief, task: `PRE-SERVICE BRIEF — All team. ${hasDietary ? "Allergen plan reviewed. " : ""}Kitchen radio comms check. Head Chef to sign off.`, category: "brief", completed: false });
-  items.push({ id: tid(), time: startTime, task: `GUESTS ARRIVE — ${functionType} service begins. ${guestCount} covers. ${hasDietary ? "Dietary alternates on separate tray — labelled & ready." : ""}`, category: "service", completed: false });
+  items.push({
+    id: tid(),
+    time: kitchenOpen,
+    task: `KITCHEN OPEN — Mise en place. All stations set, HACCP sheets started. Cold room temp check.`,
+    category: "setup",
+    completed: false,
+  });
+  items.push({
+    id: tid(),
+    time: prepStart,
+    task: `Prep commenced — ${functionType} for ${guestCount} covers. All dietary alternates clearly labelled and separated.${hasDietary ? " " + dietaryReqs.map((d) => `${d.count} × ${d.name}`).join(", ") + "." : ""}`,
+    category: "setup",
+    completed: false,
+  });
+  items.push({
+    id: tid(),
+    time: venueCheck,
+    task: `VENUE CHECK — Room set, crockery polished, mise en place on pass.${large ? " Table numbers confirmed vs seating chart." : ""}`,
+    category: "venue",
+    completed: false,
+  });
+  items.push({
+    id: tid(),
+    time: brief,
+    task: `PRE-SERVICE BRIEF — All team. ${hasDietary ? "Allergen plan reviewed. " : ""}Kitchen radio comms check. Head Chef to sign off.`,
+    category: "brief",
+    completed: false,
+  });
+  items.push({
+    id: tid(),
+    time: startTime,
+    task: `GUESTS ARRIVE — ${functionType} service begins. ${guestCount} covers. ${hasDietary ? "Dietary alternates on separate tray — labelled & ready." : ""}`,
+    category: "service",
+    completed: false,
+  });
 
   if (functionType === "Buffet") {
-    items.push({ id: tid(), time: addMins(endTime, -30), task: `BUFFET CLOSING — Begin clearing stations. Replenish if required. Signal to close.`, category: "service", completed: false });
+    items.push({
+      id: tid(),
+      time: addMins(endTime, -30),
+      task: `BUFFET CLOSING — Begin clearing stations. Replenish if required. Signal to close.`,
+      category: "service",
+      completed: false,
+    });
   } else {
-    const mid = addMins(startTime, Math.floor((parseInt(endTime.split(":")[0]) * 60 + parseInt(endTime.split(":")[1]) - parseInt(startTime.split(":")[0]) * 60 - parseInt(startTime.split(":")[1])) / 2));
-    items.push({ id: tid(), time: mid, task: `MAIN SERVICE — All covers on pass. Quality check before away.${hasDietary ? " Dietary plates confirmed and labelled." : ""}`, category: "service", completed: false });
+    const mid = addMins(
+      startTime,
+      Math.floor(
+        (parseInt(endTime.split(":")[0]) * 60 +
+          parseInt(endTime.split(":")[1]) -
+          parseInt(startTime.split(":")[0]) * 60 -
+          parseInt(startTime.split(":")[1])) /
+          2,
+      ),
+    );
+    items.push({
+      id: tid(),
+      time: mid,
+      task: `MAIN SERVICE — All covers on pass. Quality check before away.${hasDietary ? " Dietary plates confirmed and labelled." : ""}`,
+      category: "service",
+      completed: false,
+    });
   }
 
-  items.push({ id: tid(), time: addMins(endTime, -15), task: `Last covers cleared. Pass broken down. Leftover food labelled & chilled.`, category: "close", completed: false });
-  items.push({ id: tid(), time: endTime, task: `KITCHEN CLEAR — All surfaces sanitised. HACCP sheets completed & signed. Waste logged.`, category: "close", completed: false });
+  items.push({
+    id: tid(),
+    time: addMins(endTime, -15),
+    task: `Last covers cleared. Pass broken down. Leftover food labelled & chilled.`,
+    category: "close",
+    completed: false,
+  });
+  items.push({
+    id: tid(),
+    time: endTime,
+    task: `KITCHEN CLEAR — All surfaces sanitised. HACCP sheets completed & signed. Waste logged.`,
+    category: "close",
+    completed: false,
+  });
 
   return items;
 }
@@ -401,12 +635,22 @@ export function convertRowToFunction(
 ): Omit<KitchenFunctionRow, "createdAt" | "updatedAt"> {
   const id = `import_${importJobId}_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
   const startTime = parseTime(row.startTime) || "09:00";
-  const endTime   = parseTime(row.endTime)   || "17:00";
+  const endTime = parseTime(row.endTime) || "17:00";
   const guestCount = parsePax(row.pax?.toString()) || 0;
   const menu = row.menu ? [row.menu] : [];
-  const functionType = detectFunctionType(row.functionType, row.name, menu.join(" "));
+  const functionType = detectFunctionType(
+    row.functionType,
+    row.name,
+    menu.join(" "),
+  );
   const dietaryRequirements = parseDietary(row.dietaryNotes);
-  const timeline = generateTimeline(startTime, endTime, guestCount, functionType, dietaryRequirements);
+  const timeline = generateTimeline(
+    startTime,
+    endTime,
+    guestCount,
+    functionType,
+    dietaryRequirements,
+  );
 
   // Venue/room split: "Ballroom A — Level 1" or "Level 1 / Ballroom A"
   let room = row.room || row.venue || "";
@@ -444,8 +688,16 @@ export function convertRowToFunction(
 }
 
 // ─── Validation ────────────────────────────────────────────────────────────
-export interface ValidationError { row: number; field: string; message: string }
-export interface ValidationWarning { row: number; field: string; message: string }
+export interface ValidationError {
+  row: number;
+  field: string;
+  message: string;
+}
+export interface ValidationWarning {
+  row: number;
+  field: string;
+  message: string;
+}
 
 export function validateRow(
   row: ParsedImportRow,
@@ -456,26 +708,47 @@ export function validateRow(
   const warnings: ValidationWarning[] = [];
 
   if (!row.name?.trim()) {
-    errors.push({ row: rowIndex, field: "name", message: "Event name is required" });
+    errors.push({
+      row: rowIndex,
+      field: "name",
+      message: "Event name is required",
+    });
   }
 
   if (!row.startTime || !parseTime(row.startTime)) {
-    warnings.push({ row: rowIndex, field: "startTime", message: "Start time missing or could not be parsed — defaulting to 09:00" });
+    warnings.push({
+      row: rowIndex,
+      field: "startTime",
+      message:
+        "Start time missing or could not be parsed — defaulting to 09:00",
+    });
   }
 
   if (!row.endTime || !parseTime(row.endTime)) {
-    warnings.push({ row: rowIndex, field: "endTime", message: "End time missing or could not be parsed — defaulting to 17:00" });
+    warnings.push({
+      row: rowIndex,
+      field: "endTime",
+      message: "End time missing or could not be parsed — defaulting to 17:00",
+    });
   }
 
   if (row.pax !== undefined && row.pax !== null) {
     const n = Number(row.pax);
     if (isNaN(n) || n < 1 || n > 10000) {
-      warnings.push({ row: rowIndex, field: "pax", message: `Pax count ${row.pax} looks unusual — please verify` });
+      warnings.push({
+        row: rowIndex,
+        field: "pax",
+        message: `Pax count ${row.pax} looks unusual — please verify`,
+      });
     }
   }
 
   if (row.name && existingNames.has(row.name.trim().toLowerCase())) {
-    warnings.push({ row: rowIndex, field: "name", message: `Duplicate event name: "${row.name}" — will be imported anyway` });
+    warnings.push({
+      row: rowIndex,
+      field: "name",
+      message: `Duplicate event name: "${row.name}" — will be imported anyway`,
+    });
   }
 
   return { errors, warnings };
@@ -494,17 +767,17 @@ export function mapRawRow(
   }
 
   return {
-    name:         get("name")          || "(Unnamed Event)",
-    date:         get("date"),
-    startTime:    get("startTime"),
-    endTime:      get("endTime"),
-    venue:        get("venue"),
-    room:         get("room"),
-    floor:        get("floor"),
-    pax:          get("pax") ? parsePax(get("pax")) : undefined,
-    menu:         get("menu"),
+    name: get("name") || "(Unnamed Event)",
+    date: get("date"),
+    startTime: get("startTime"),
+    endTime: get("endTime"),
+    venue: get("venue"),
+    room: get("room"),
+    floor: get("floor"),
+    pax: get("pax") ? parsePax(get("pax")) : undefined,
+    menu: get("menu"),
     dietaryNotes: get("dietaryNotes"),
-    eventNotes:   get("eventNotes"),
+    eventNotes: get("eventNotes"),
     functionType: get("functionType"),
     chefInCharge: get("chefInCharge"),
   };

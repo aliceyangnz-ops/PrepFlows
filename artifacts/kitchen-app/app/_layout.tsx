@@ -64,7 +64,10 @@ function AuthGate() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="auth" options={{ headerShown: false, animation: "fade" }} />
+      <Stack.Screen
+        name="auth"
+        options={{ headerShown: false, animation: "fade" }}
+      />
       <Stack.Screen name="brief/[id]" options={{ headerShown: false }} />
       <Stack.Screen name="brief/today" options={{ headerShown: false }} />
       <Stack.Screen
@@ -75,8 +78,14 @@ function AuthGate() {
         name="import-events"
         options={{ headerShown: false, presentation: "card" }}
       />
-      <Stack.Screen name="manage" options={{ headerShown: false, presentation: "card" }} />
-      <Stack.Screen name="subscribe" options={{ headerShown: false, presentation: "card" }} />
+      <Stack.Screen
+        name="manage"
+        options={{ headerShown: false, presentation: "card" }}
+      />
+      <Stack.Screen
+        name="subscribe"
+        options={{ headerShown: false, presentation: "card" }}
+      />
       <Stack.Screen
         name="staff/[id]"
         options={{ headerShown: false, presentation: "card" }}
@@ -111,17 +120,17 @@ export default function RootLayout() {
         <QueryClientProvider client={queryClient}>
           <GestureHandlerRootView style={{ flex: 1 }}>
             <ThemeProvider>
-            <KeyboardProvider>
-              <AuthProvider>
-                <SubscriptionProvider>
-                  <TeamProvider>
-                    <KitchenProvider>
-                      <AuthGate />
-                    </KitchenProvider>
-                  </TeamProvider>
-                </SubscriptionProvider>
-              </AuthProvider>
-            </KeyboardProvider>
+              <KeyboardProvider>
+                <AuthProvider>
+                  <SubscriptionProvider>
+                    <TeamProvider>
+                      <KitchenProvider>
+                        <AuthGate />
+                      </KitchenProvider>
+                    </TeamProvider>
+                  </SubscriptionProvider>
+                </AuthProvider>
+              </KeyboardProvider>
             </ThemeProvider>
           </GestureHandlerRootView>
         </QueryClientProvider>

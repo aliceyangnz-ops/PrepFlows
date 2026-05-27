@@ -14,7 +14,10 @@ import { Router } from "express";
 import { eq } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
 import { db, connectorConfigsTable } from "@workspace/db";
-import { CONNECTOR_SOURCES, CONNECTOR_DISPLAY_NAMES } from "@workspace/connector-core";
+import {
+  CONNECTOR_SOURCES,
+  CONNECTOR_DISPLAY_NAMES,
+} from "@workspace/connector-core";
 
 const router = Router();
 
@@ -22,7 +25,10 @@ const router = Router();
 
 router.get("/connectors", async (req, res) => {
   try {
-    const rows = await db.select().from(connectorConfigsTable).orderBy(connectorConfigsTable.createdAt);
+    const rows = await db
+      .select()
+      .from(connectorConfigsTable)
+      .orderBy(connectorConfigsTable.createdAt);
     // Strip API key
     const safe = rows.map(({ apiKeyEncrypted: _, ...r }) => r);
     res.json({ connectors: safe });
@@ -64,13 +70,16 @@ router.get("/connectors/:id", async (req, res) => {
 // ── Create connector ──────────────────────────────────────────────────────────
 
 router.post("/connectors", async (req, res) => {
-  const { name, source, apiEndpoint, apiKey, webhookSecret, schedule } = req.body as Record<string, string>;
+  const { name, source, apiEndpoint, apiKey, webhookSecret, schedule } =
+    req.body as Record<string, string>;
 
   if (!name || !source) {
     return res.status(400).json({ error: "name and source are required" });
   }
   if (!CONNECTOR_SOURCES.includes(source as never)) {
-    return res.status(400).json({ error: `Invalid source. Must be one of: ${CONNECTOR_SOURCES.join(", ")}` });
+    return res.status(400).json({
+      error: `Invalid source. Must be one of: ${CONNECTOR_SOURCES.join(", ")}`,
+    });
   }
 
   try {
@@ -84,9 +93,9 @@ router.post("/connectors", async (req, res) => {
         name,
         source: source as never,
         status: "unconfigured",
-        apiEndpoint:     apiEndpoint   || null,
-        apiKeyEncrypted: apiKey        || null,
-        webhookSecret:   webhookSecret || null,
+        apiEndpoint: apiEndpoint || null,
+        apiKeyEncrypted: apiKey || null,
+        webhookSecret: webhookSecret || null,
         webhookPath,
         schedule: schedule || null,
       })
@@ -104,7 +113,14 @@ router.post("/connectors", async (req, res) => {
 
 router.patch("/connectors/:id", async (req, res) => {
   const updates = req.body as Record<string, unknown>;
-  const allowed = ["name", "status", "apiEndpoint", "apiKey", "webhookSecret", "schedule"];
+  const allowed = [
+    "name",
+    "status",
+    "apiEndpoint",
+    "apiKey",
+    "webhookSecret",
+    "schedule",
+  ];
 
   try {
     const setValues: Record<string, unknown> = { updatedAt: new Date() };
@@ -144,7 +160,8 @@ router.delete("/connectors/:id", async (req, res) => {
       .where(eq(connectorConfigsTable.id, req.params.id!))
       .returning({ id: connectorConfigsTable.id });
 
-    if (result.length === 0) return res.status(404).json({ error: "Not found" });
+    if (result.length === 0)
+      return res.status(404).json({ error: "Not found" });
     return res.json({ deleted: true });
   } catch (err) {
     req.log.error({ err }, "delete connector failed");

@@ -1,12 +1,12 @@
 import { Router, type IRouter } from "express";
-import healthRouter     from "./health.js";
-import importRouter     from "./import.js";
-import aiParseRouter    from "./aiParse.js";
+import healthRouter from "./health.js";
+import importRouter from "./import.js";
+import aiParseRouter from "./aiParse.js";
 import connectorsRouter from "./connectors.js";
-import syncRouter       from "./sync.js";
-import webhooksRouter   from "./webhooks.js";
-import stripeRouter     from "./stripe.js";
-import authRouter       from "./auth.js";
+import syncRouter from "./sync.js";
+import webhooksRouter from "./webhooks.js";
+import stripeRouter from "./stripe.js";
+import authRouter from "./auth.js";
 
 const router: IRouter = Router();
 

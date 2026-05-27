@@ -42,7 +42,7 @@ export async function requestNotificationPermission(): Promise<boolean> {
 
 export async function scheduleStaffNotifications(
   member: StaffMember,
-  assignedFunctions: KitchenFunction[]
+  assignedFunctions: KitchenFunction[],
 ): Promise<string[]> {
   if (Platform.OS === "web") return [];
 
@@ -64,7 +64,10 @@ export async function scheduleStaffNotifications(
           : `Your shift starts at ${member.shiftStart}. Have a great service!`,
         sound: true,
       },
-      trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: shiftWarning30 },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DATE,
+        date: shiftWarning30,
+      },
     });
     ids.push(id);
   }
@@ -79,14 +82,20 @@ export async function scheduleStaffNotifications(
           : "Your shift has started — good luck today!",
         sound: true,
       },
-      trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: shiftStart },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DATE,
+        date: shiftStart,
+      },
     });
     ids.push(id);
   }
 
   // ── Per-function alerts ───────────────────────────────────────────
   for (const fn of assignedFunctions) {
-    const fnStartMins = fn.startTime.split(":").map(Number).reduce((h, m) => h * 60 + m, 0);
+    const fnStartMins = fn.startTime
+      .split(":")
+      .map(Number)
+      .reduce((h, m) => h * 60 + m, 0);
     const nowMins = now.getHours() * 60 + now.getMinutes();
 
     // 60-minute warning
@@ -98,7 +107,10 @@ export async function scheduleStaffNotifications(
           body: `${fn.guestCount} guests · ${fn.room} · Service at ${fn.startTime}. Start mise en place now.`,
           sound: true,
         },
-        trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: fn60 },
+        trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.DATE,
+          date: fn60,
+        },
       });
       ids.push(id);
     }
@@ -112,7 +124,10 @@ export async function scheduleStaffNotifications(
           body: `${fn.guestCount} guests arriving at ${fn.startTime} · ${fn.room}. Final checks now.`,
           sound: true,
         },
-        trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: fn30 },
+        trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.DATE,
+          date: fn30,
+        },
       });
       ids.push(id);
     }
@@ -126,7 +141,10 @@ export async function scheduleStaffNotifications(
           body: `${fn.room} · Get to your station now. ${fn.guestCount} guests arriving at ${fn.startTime}.`,
           sound: true,
         },
-        trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: fn15 },
+        trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.DATE,
+          date: fn15,
+        },
       });
       ids.push(id);
     }
@@ -140,19 +158,26 @@ export async function scheduleStaffNotifications(
           body: `${fn.name} · ${fn.guestCount} guests`,
           sound: true,
         },
-        trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: fnStart },
+        trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.DATE,
+          date: fnStart,
+        },
       });
       ids.push(id);
     }
 
     // ── Course fire-time alerts ───────────────────────────────────
     if (fn.serviceTimes) {
-      const courseMap: Array<{ key: keyof typeof fn.serviceTimes; label: string; prepOffset: number }> = [
-        { key: "amuse",   label: "Amuse-bouche",  prepOffset: 10 },
-        { key: "entree",  label: "Entrée",         prepOffset: 15 },
-        { key: "main",    label: "Mains",          prepOffset: 20 },
-        { key: "dessert", label: "Dessert",        prepOffset: 10 },
-        { key: "supper",  label: "Supper",         prepOffset: 10 },
+      const courseMap: Array<{
+        key: keyof typeof fn.serviceTimes;
+        label: string;
+        prepOffset: number;
+      }> = [
+        { key: "amuse", label: "Amuse-bouche", prepOffset: 10 },
+        { key: "entree", label: "Entrée", prepOffset: 15 },
+        { key: "main", label: "Mains", prepOffset: 20 },
+        { key: "dessert", label: "Dessert", prepOffset: 10 },
+        { key: "supper", label: "Supper", prepOffset: 10 },
       ];
 
       for (const { key, label, prepOffset } of courseMap) {
@@ -168,7 +193,10 @@ export async function scheduleStaffNotifications(
               body: `Fire ${label.toLowerCase()} at ${courseTime} · ${prepOffset} min to plate up. ${fn.guestCount} covers.`,
               sound: true,
             },
-            trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: prepAlert },
+            trigger: {
+              type: Notifications.SchedulableTriggerInputTypes.DATE,
+              date: prepAlert,
+            },
           });
           ids.push(id);
         }
@@ -176,7 +204,10 @@ export async function scheduleStaffNotifications(
         // Fire time
         const fireAlert = buildTriggerDate(courseTime);
         if (fireAlert > now) {
-          const courseMins = courseTime.split(":").map(Number).reduce((h, m) => h * 60 + m, 0);
+          const courseMins = courseTime
+            .split(":")
+            .map(Number)
+            .reduce((h, m) => h * 60 + m, 0);
           const emoji = urgencyEmoji(courseMins - nowMins);
           const id = await Notifications.scheduleNotificationAsync({
             content: {
@@ -184,7 +215,10 @@ export async function scheduleStaffNotifications(
               body: `${fn.guestCount} covers · ${fn.room}. All sections go.`,
               sound: true,
             },
-            trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: fireAlert },
+            trigger: {
+              type: Notifications.SchedulableTriggerInputTypes.DATE,
+              date: fireAlert,
+            },
           });
           ids.push(id);
         }

@@ -33,7 +33,8 @@ export type MappedRaw = Partial<Record<keyof ConnectorFieldMap, string>>;
 // ── Levenshtein distance ──────────────────────────────────────────────────────
 
 function levenshtein(a: string, b: string): number {
-  const m = a.length, n = b.length;
+  const m = a.length,
+    n = b.length;
   const dp: number[][] = Array.from({ length: m + 1 }, (_, i) =>
     Array.from({ length: n + 1 }, (_, j) => (i === 0 ? j : j === 0 ? i : 0)),
   );
@@ -51,7 +52,7 @@ function levenshtein(a: string, b: string): number {
 // ── Core field resolver ───────────────────────────────────────────────────────
 
 function resolveField(row: RawEventRow, aliases: string[]): string | undefined {
-  const rawKeys  = Object.keys(row);
+  const rawKeys = Object.keys(row);
   const rawLower = rawKeys.map((k) => k.toLowerCase());
 
   for (const alias of aliases) {
@@ -78,7 +79,8 @@ function resolveField(row: RawEventRow, aliases: string[]): string | undefined {
       for (let i = 0; i < rawLower.length; i++) {
         if (levenshtein(al, rawLower[i]!) <= 2) {
           const val = row[rawKeys[i]!];
-          if (val !== undefined && val !== null && val !== "") return String(val);
+          if (val !== undefined && val !== null && val !== "")
+            return String(val);
         }
       }
     }
@@ -93,7 +95,10 @@ export function mapRowToMappedRaw(
   fieldMap: ConnectorFieldMap,
 ): MappedRaw {
   const result: MappedRaw = {};
-  for (const [canonical, aliases] of Object.entries(fieldMap) as [keyof ConnectorFieldMap, string[]][]) {
+  for (const [canonical, aliases] of Object.entries(fieldMap) as [
+    keyof ConnectorFieldMap,
+    string[],
+  ][]) {
     if (!Array.isArray(aliases)) continue;
     const val = resolveField(row, aliases);
     if (val !== undefined) {
@@ -114,32 +119,32 @@ export function normalizeToUnifiedEvent(
   const now = new Date().toISOString();
 
   return {
-    id:                randomUUID(),
-    externalId:        mapped.externalId ?? hashRow(sourceRow),
+    id: randomUUID(),
+    externalId: mapped.externalId ?? hashRow(sourceRow),
     source,
     connectorConfigId,
 
-    name:      (mapped.name ?? "").trim() || "Unnamed Event",
-    date:      mapped.date      ? normalizeDate(mapped.date)      : "",
+    name: (mapped.name ?? "").trim() || "Unnamed Event",
+    date: mapped.date ? normalizeDate(mapped.date) : "",
     startTime: mapped.startTime ? normalizeTime(mapped.startTime) : "",
-    endTime:   mapped.endTime   ? normalizeTime(mapped.endTime)   : "",
+    endTime: mapped.endTime ? normalizeTime(mapped.endTime) : "",
 
     venue: (mapped.venue ?? "").trim(),
-    room:  normalizeRoomName(mapped.room ?? ""),
+    room: normalizeRoomName(mapped.room ?? ""),
     floor: (mapped.floor ?? "").trim(),
 
-    guestCount:     normalizeGuestCount(mapped.guestCount ?? "0"),
+    guestCount: normalizeGuestCount(mapped.guestCount ?? "0"),
     confirmedCount: mapped.confirmedCount
       ? normalizeGuestCount(mapped.confirmedCount)
       : undefined,
 
-    bookedBy:     (mapped.bookedBy     ?? "").trim(),
-    contactName:  (mapped.contactName  ?? "").trim(),
+    bookedBy: (mapped.bookedBy ?? "").trim(),
+    contactName: (mapped.contactName ?? "").trim(),
     contactEmail: (mapped.contactEmail ?? "").trim().toLowerCase(),
     contactPhone: (mapped.contactPhone ?? "").trim(),
 
     eventType: normalizeEventType(mapped.eventType ?? ""),
-    status:    (mapped.status ?? "upcoming").toLowerCase(),
+    status: (mapped.status ?? "upcoming").toLowerCase(),
 
     menu: (mapped.menu ?? "")
       .split(/\n|;|,(?=\s*[A-Z])/)
@@ -155,10 +160,10 @@ export function normalizeToUnifiedEvent(
     chefInCharge: (mapped.chefInCharge ?? "").trim() || undefined,
     eventManager: (mapped.eventManager ?? "").trim() || undefined,
 
-    sourceRaw:    sourceRow,
-    importedAt:   now,
+    sourceRaw: sourceRow,
+    importedAt: now,
     lastSyncedAt: now,
-    contentHash:  hashRow(sourceRow),
+    contentHash: hashRow(sourceRow),
   };
 }
 

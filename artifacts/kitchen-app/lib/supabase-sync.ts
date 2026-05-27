@@ -105,7 +105,8 @@ function rowToFn(row: Record<string, unknown>): KitchenFunction {
     guestCount: (row.guest_count as number) ?? 0,
     status: (row.status as KitchenFunction["status"]) ?? "upcoming",
     menu: (row.menu as string[]) ?? [],
-    dietaryRequirements: (row.dietary_requirements as DietaryRequirement[]) ?? [],
+    dietaryRequirements:
+      (row.dietary_requirements as DietaryRequirement[]) ?? [],
     serviceTimes: row.service_times as ServiceTimes | undefined,
     serviceEvents: row.service_events as ServiceEvent[] | undefined,
     teamIds: (row.team_ids as string[]) ?? [],
@@ -164,7 +165,8 @@ export async function loadFromSupabase(): Promise<{
   prepItems: PrepItem[];
   broadcast: BroadcastMessage | null;
 }> {
-  if (!supabase) return { functions: [], staff: [], prepItems: [], broadcast: null };
+  if (!supabase)
+    return { functions: [], staff: [], prepItems: [], broadcast: null };
 
   const [fns, staffRows, prepRows, broadcastRows] = await Promise.all([
     supabase.from("kitchen_functions").select("*"),
@@ -179,17 +181,22 @@ export async function loadFromSupabase(): Promise<{
 
   // Throw so the caller (KitchenContext hydration) can fall back to AsyncStorage
   const errs = [
-    fns.error         && `kitchen_functions: ${fns.error.message}`,
-    staffRows.error   && `staff_members: ${staffRows.error.message}`,
-    prepRows.error    && `prep_items: ${prepRows.error.message}`,
+    fns.error && `kitchen_functions: ${fns.error.message}`,
+    staffRows.error && `staff_members: ${staffRows.error.message}`,
+    prepRows.error && `prep_items: ${prepRows.error.message}`,
     broadcastRows.error && `broadcast_messages: ${broadcastRows.error.message}`,
   ].filter(Boolean);
-  if (errs.length > 0) throw new Error(`Supabase load failed: ${errs.join("; ")}`);
+  if (errs.length > 0)
+    throw new Error(`Supabase load failed: ${errs.join("; ")}`);
 
   return {
     functions: ((fns.data ?? []) as Record<string, unknown>[]).map(rowToFn),
-    staff: ((staffRows.data ?? []) as Record<string, unknown>[]).map(rowToStaff),
-    prepItems: ((prepRows.data ?? []) as Record<string, unknown>[]).map(rowToPrep),
+    staff: ((staffRows.data ?? []) as Record<string, unknown>[]).map(
+      rowToStaff,
+    ),
+    prepItems: ((prepRows.data ?? []) as Record<string, unknown>[]).map(
+      rowToPrep,
+    ),
     broadcast:
       broadcastRows.data && broadcastRows.data.length > 0
         ? rowToBroadcast(broadcastRows.data[0] as Record<string, unknown>)
@@ -218,25 +225,45 @@ export async function migrateToSupabase(data: {
   const tasks: Array<Promise<void>> = [];
 
   if (data.functions.length > 0) {
-    tasks.push(run("kitchen_functions",
-      supabase.from("kitchen_functions").upsert(data.functions.map(fnToRow), { onConflict: "id" }),
-    ));
+    tasks.push(
+      run(
+        "kitchen_functions",
+        supabase
+          .from("kitchen_functions")
+          .upsert(data.functions.map(fnToRow), { onConflict: "id" }),
+      ),
+    );
   }
   if (data.staff.length > 0) {
-    tasks.push(run("staff_members",
-      supabase.from("staff_members").upsert(data.staff.map(staffToRow), { onConflict: "id" }),
-    ));
+    tasks.push(
+      run(
+        "staff_members",
+        supabase
+          .from("staff_members")
+          .upsert(data.staff.map(staffToRow), { onConflict: "id" }),
+      ),
+    );
   }
   if (data.prepItems.length > 0) {
-    tasks.push(run("prep_items",
-      supabase.from("prep_items").upsert(data.prepItems.map(prepToRow), { onConflict: "id" }),
-    ));
+    tasks.push(
+      run(
+        "prep_items",
+        supabase
+          .from("prep_items")
+          .upsert(data.prepItems.map(prepToRow), { onConflict: "id" }),
+      ),
+    );
   }
   if (data.broadcast) {
     const broadcast = data.broadcast;
-    tasks.push(run("broadcast_messages",
-      supabase.from("broadcast_messages").upsert([broadcastToRow(broadcast)], { onConflict: "id" }),
-    ));
+    tasks.push(
+      run(
+        "broadcast_messages",
+        supabase
+          .from("broadcast_messages")
+          .upsert([broadcastToRow(broadcast)], { onConflict: "id" }),
+      ),
+    );
   }
 
   // Throws on any write failure — KitchenContext will NOT set the migration-complete flag
@@ -248,59 +275,81 @@ export async function migrateToSupabase(data: {
 // Never throws — safe for fire-and-forget callers in KitchenContext.
 
 type PostgRESTResult = { error: { message: string } | null };
-const wb = (label: string, builder: PromiseLike<PostgRESTResult>): Promise<void> =>
+const wb = (
+  label: string,
+  builder: PromiseLike<PostgRESTResult>,
+): Promise<void> =>
   Promise.resolve(builder).then(({ error }) => {
     if (error) console.warn(`[supabase-sync] ${label}:`, error.message);
   });
 
 // ── Individual upsert / delete helpers ──────────────────────────────────────
 
-export async function upsertFunctionToSupabase(fn: KitchenFunction): Promise<void> {
+export async function upsertFunctionToSupabase(
+  fn: KitchenFunction,
+): Promise<void> {
   if (!supabase) return;
-  await wb("upsertFunction",
-    supabase.from("kitchen_functions").upsert(fnToRow(fn), { onConflict: "id" }),
+  await wb(
+    "upsertFunction",
+    supabase
+      .from("kitchen_functions")
+      .upsert(fnToRow(fn), { onConflict: "id" }),
   );
 }
 
 export async function deleteFunctionFromSupabase(id: string): Promise<void> {
   if (!supabase) return;
-  await wb("deleteFunction",
+  await wb(
+    "deleteFunction",
     supabase.from("kitchen_functions").delete().eq("id", id),
   );
 }
 
-export async function upsertStaffToSupabase(member: StaffMember): Promise<void> {
+export async function upsertStaffToSupabase(
+  member: StaffMember,
+): Promise<void> {
   if (!supabase) return;
-  await wb("upsertStaff",
-    supabase.from("staff_members").upsert(staffToRow(member), { onConflict: "id" }),
+  await wb(
+    "upsertStaff",
+    supabase
+      .from("staff_members")
+      .upsert(staffToRow(member), { onConflict: "id" }),
   );
 }
 
 export async function deleteStaffFromSupabase(id: string): Promise<void> {
   if (!supabase) return;
-  await wb("deleteStaff",
-    supabase.from("staff_members").delete().eq("id", id),
-  );
+  await wb("deleteStaff", supabase.from("staff_members").delete().eq("id", id));
 }
 
 export async function upsertPrepItemToSupabase(item: PrepItem): Promise<void> {
   if (!supabase) return;
-  await wb("upsertPrepItem",
+  await wb(
+    "upsertPrepItem",
     supabase.from("prep_items").upsert(prepToRow(item), { onConflict: "id" }),
   );
 }
 
-export async function upsertBroadcastToSupabase(msg: BroadcastMessage): Promise<void> {
+export async function upsertBroadcastToSupabase(
+  msg: BroadcastMessage,
+): Promise<void> {
   if (!supabase) return;
-  await wb("upsertBroadcast",
-    supabase.from("broadcast_messages").upsert(broadcastToRow(msg), { onConflict: "id" }),
+  await wb(
+    "upsertBroadcast",
+    supabase
+      .from("broadcast_messages")
+      .upsert(broadcastToRow(msg), { onConflict: "id" }),
   );
 }
 
 export async function clearBroadcastInSupabase(): Promise<void> {
   if (!supabase) return;
-  await wb("clearBroadcast",
-    supabase.from("broadcast_messages").update({ is_active: false }).eq("is_active", true),
+  await wb(
+    "clearBroadcast",
+    supabase
+      .from("broadcast_messages")
+      .update({ is_active: false })
+      .eq("is_active", true),
   );
 }
 
@@ -328,9 +377,9 @@ export interface RealtimeChangeHandlers {
   ) => void;
 }
 
-export function subscribeToKitchenChanges(
-  handlers: RealtimeChangeHandlers,
-): { unsubscribe: () => void } {
+export function subscribeToKitchenChanges(handlers: RealtimeChangeHandlers): {
+  unsubscribe: () => void;
+} {
   if (!supabase) return { unsubscribe: () => {} };
 
   const channel = supabase
@@ -393,7 +442,10 @@ export function subscribeToKitchenChanges(
         } else {
           const row = payload.new as Record<string, unknown>;
           const isActive = row.is_active as boolean;
-          handlers.onBroadcastChange(type, isActive ? rowToBroadcast(row) : null);
+          handlers.onBroadcastChange(
+            type,
+            isActive ? rowToBroadcast(row) : null,
+          );
         }
       },
     )

@@ -16,7 +16,10 @@ export interface AuthContextValue {
   session: Session | null;
   loading: boolean;
   isGuest: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: string | null }>;
+  signIn: (
+    email: string,
+    password: string,
+  ) => Promise<{ error: string | null }>;
   signUp: (
     email: string,
     password: string,
@@ -50,7 +53,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      const { data: { session: s } } = await supabase.auth.getSession();
+      const {
+        data: { session: s },
+      } = await supabase.auth.getSession();
       setSession(s);
       setUser(s?.user ?? null);
       setLoading(false);
@@ -59,7 +64,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     init();
 
     if (!supabase) return;
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, s) => {
       setSession(s);
       setUser(s?.user ?? null);
     });
@@ -67,9 +74,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signIn = useCallback(
-    async (email: string, password: string): Promise<{ error: string | null }> => {
+    async (
+      email: string,
+      password: string,
+    ): Promise<{ error: string | null }> => {
       if (!supabase) return { error: "Supabase not configured" };
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
       if (error) return { error: error.message };
       return { error: null };
     },
@@ -125,7 +138,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, session, loading, isGuest, signIn, signUp, signOut, resetPassword, enterGuestMode, exitGuestMode }}
+      value={{
+        user,
+        session,
+        loading,
+        isGuest,
+        signIn,
+        signUp,
+        signOut,
+        resetPassword,
+        enterGuestMode,
+        exitGuestMode,
+      }}
     >
       {children}
     </AuthContext.Provider>

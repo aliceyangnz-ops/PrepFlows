@@ -25,12 +25,12 @@ export interface ApiPayloadOptions {
 
 /** Connector-specific envelope unwrappers */
 const SOURCE_DATA_PATHS: Record<ConnectorSource, string[]> = {
-  moments:    ["Events", "events", "data.events", "data"],
-  delphi:     ["records", "data.records", "bookings", "data"],
-  opera:      ["hotelEventDetail", "events", "data.events", "reservationInfoList"],
-  ivvy:       ["results", "bookings", "data.results", "data"],
+  moments: ["Events", "events", "data.events", "data"],
+  delphi: ["records", "data.records", "bookings", "data"],
+  opera: ["hotelEventDetail", "events", "data.events", "reservationInfoList"],
+  ivvy: ["results", "bookings", "data.results", "data"],
   tripleseat: ["leads", "bookings", "data", "results"],
-  priava:     ["Events", "Bookings", "data.Events", "data"],
+  priava: ["Events", "Bookings", "data.Events", "data"],
 };
 
 function tryPaths(obj: unknown, paths: string[]): unknown[] | null {
@@ -56,7 +56,10 @@ export function parseApiPayload(
 ): RawEventRow[] {
   // 1. If caller provides an explicit data path, use JSON adapter
   if (options.dataPath) {
-    return parseJson(payload, { dataPath: options.dataPath, maxRows: options.maxRows });
+    return parseJson(payload, {
+      dataPath: options.dataPath,
+      maxRows: options.maxRows,
+    });
   }
 
   // 2. Try connector-specific known paths
@@ -82,10 +85,22 @@ export interface PaginationInfo {
   nextCursor?: string;
 }
 
-const TOTAL_KEYS   = ["total", "totalCount", "total_count", "totalRecords", "count"];
-const PAGE_KEYS    = ["page", "currentPage", "pageNumber"];
-const SIZE_KEYS    = ["pageSize", "page_size", "limit", "perPage", "per_page"];
-const CURSOR_KEYS  = ["nextCursor", "next_cursor", "cursor", "nextPage", "next_page_token"];
+const TOTAL_KEYS = [
+  "total",
+  "totalCount",
+  "total_count",
+  "totalRecords",
+  "count",
+];
+const PAGE_KEYS = ["page", "currentPage", "pageNumber"];
+const SIZE_KEYS = ["pageSize", "page_size", "limit", "perPage", "per_page"];
+const CURSOR_KEYS = [
+  "nextCursor",
+  "next_cursor",
+  "cursor",
+  "nextPage",
+  "next_page_token",
+];
 
 function findKey(obj: Record<string, unknown>, keys: string[]): unknown {
   for (const k of keys) if (k in obj) return obj[k];
@@ -97,10 +112,10 @@ export function extractPaginationInfo(response: unknown): PaginationInfo {
     return { hasMore: false };
   }
   const obj = response as Record<string, unknown>;
-  const total    = Number(findKey(obj, TOTAL_KEYS))  || undefined;
-  const page     = Number(findKey(obj, PAGE_KEYS))   || undefined;
-  const pageSize = Number(findKey(obj, SIZE_KEYS))   || undefined;
-  const cursor   = findKey(obj, CURSOR_KEYS);
+  const total = Number(findKey(obj, TOTAL_KEYS)) || undefined;
+  const page = Number(findKey(obj, PAGE_KEYS)) || undefined;
+  const pageSize = Number(findKey(obj, SIZE_KEYS)) || undefined;
+  const cursor = findKey(obj, CURSOR_KEYS);
 
   let hasMore = false;
   if (cursor && typeof cursor === "string") hasMore = true;

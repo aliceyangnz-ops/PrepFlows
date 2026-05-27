@@ -81,7 +81,12 @@ async function createSyncRecord(params: {
 
 async function completeSyncRecord(
   id: string,
-  counts: { processed: number; created: number; updated: number; skipped: number },
+  counts: {
+    processed: number;
+    created: number;
+    updated: number;
+    skipped: number;
+  },
   errors: SyncError[],
   startedAt: Date,
 ): Promise<void> {
@@ -89,7 +94,9 @@ async function completeSyncRecord(
   await db
     .update(syncRecordsTable)
     .set({
-      status: errors.some((e) => e.severity === "error") ? "partial" : "completed",
+      status: errors.some((e) => e.severity === "error")
+        ? "partial"
+        : "completed",
       eventsProcessed: counts.processed,
       eventsCreated: counts.created,
       eventsUpdated: counts.updated,
@@ -101,7 +108,11 @@ async function completeSyncRecord(
     .where(eq(syncRecordsTable.id, id));
 }
 
-async function failSyncRecord(id: string, message: string, startedAt: Date): Promise<void> {
+async function failSyncRecord(
+  id: string,
+  message: string,
+  startedAt: Date,
+): Promise<void> {
   const completedAt = new Date();
   await db
     .update(syncRecordsTable)
@@ -120,7 +131,13 @@ export async function runSync(params: {
   connectorConfigId: string;
   rows: RawEventRow[];
   trigger: SyncTrigger;
-}): Promise<{ syncRecordId: string; created: number; updated: number; skipped: number; errors: SyncError[] }> {
+}): Promise<{
+  syncRecordId: string;
+  created: number;
+  updated: number;
+  skipped: number;
+  errors: SyncError[];
+}> {
   const { connectorConfigId, rows, trigger } = params;
   const startedAt = new Date();
 
@@ -135,7 +152,7 @@ export async function runSync(params: {
     throw new Error(`Connector config not found: ${connectorConfigId}`);
   }
 
-  const connector  = getConnector(config.source as ConnectorSource);
+  const connector = getConnector(config.source as ConnectorSource);
   const syncRecordId = await createSyncRecord({
     connectorConfigId,
     connectorName: config.name,
@@ -162,7 +179,12 @@ export async function runSync(params: {
     try {
       const raw = connector.transformRow(rows[i]!);
       const mapped = mapRowToMappedRaw(raw, connector.getFieldMap());
-      const unified = normalizeToUnifiedEvent(raw, mapped, config.source as ConnectorSource, connectorConfigId);
+      const unified = normalizeToUnifiedEvent(
+        raw,
+        mapped,
+        config.source as ConnectorSource,
+        connectorConfigId,
+      );
 
       // Skip rows with no name or date
       if (!unified.name || unified.name === "Unnamed Event" || !unified.date) {
@@ -184,14 +206,14 @@ export async function runSync(params: {
         await db
           .update(kitchenFunctionsTable)
           .set({
-            name:     unified.name,
-            room:     unified.room,
-            floor:    unified.floor,
-            date:     unified.date,
+            name: unified.name,
+            room: unified.room,
+            floor: unified.floor,
+            date: unified.date,
             startTime: unified.startTime,
-            endTime:   unified.endTime,
+            endTime: unified.endTime,
             guestCount: unified.guestCount,
-            menu:       unified.menu,
+            menu: unified.menu,
             dietaryRequirements: unified.dietaryRequirements,
             updatedAt: new Date(),
           })
@@ -199,19 +221,19 @@ export async function runSync(params: {
         updated++;
       } else {
         const insertRow: InsertKitchenFunctionRow = {
-          id:          unified.id,
-          name:        unified.name,
-          room:        unified.room,
-          floor:       unified.floor,
-          date:        unified.date,
-          startTime:   unified.startTime,
-          endTime:     unified.endTime,
-          guestCount:  unified.guestCount,
-          status:      "upcoming",
-          menu:        unified.menu,
+          id: unified.id,
+          name: unified.name,
+          room: unified.room,
+          floor: unified.floor,
+          date: unified.date,
+          startTime: unified.startTime,
+          endTime: unified.endTime,
+          guestCount: unified.guestCount,
+          status: "upcoming",
+          menu: unified.menu,
           dietaryRequirements: unified.dietaryRequirements,
-          teamIds:     [],
-          timeline:    [],
+          teamIds: [],
+          timeline: [],
           sourceSystem: config.source,
           importJobId: unified.externalId,
         };
@@ -250,7 +272,9 @@ export async function runSync(params: {
     .update(connectorConfigsTable)
     .set({
       lastSyncAt: new Date(),
-      lastSyncStatus: errors.some((e) => e.severity === "error") ? "partial" : "completed",
+      lastSyncStatus: errors.some((e) => e.severity === "error")
+        ? "partial"
+        : "completed",
       lastSyncError: errors[0]?.message ?? null,
       updatedAt: new Date(),
     })
@@ -296,7 +320,10 @@ export async function logWebhookEvent(params: {
   return id;
 }
 
-export async function markWebhookProcessed(id: string, error?: string): Promise<void> {
+export async function markWebhookProcessed(
+  id: string,
+  error?: string,
+): Promise<void> {
   await db
     .update(webhookEventsTable)
     .set({ processed: true, processedAt: new Date(), error: error ?? null })

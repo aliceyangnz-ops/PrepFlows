@@ -1,0 +1,22 @@
+# Replit internals
+.upm/
+.cache/
+.local/
+
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+.expo/
+.expo-shared/
+*.tsbuildinfo
+
+# Generated
+pnpm-lock.yaml
+
+# Config that shouldn't be reformatted
+*.mobileprovision
+*.p8
+*.p12

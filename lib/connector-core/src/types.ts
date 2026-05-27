@@ -31,21 +31,21 @@ export const CONNECTOR_SOURCES: ConnectorSource[] = [
 ];
 
 export const CONNECTOR_DISPLAY_NAMES: Record<ConnectorSource, string> = {
-  moments:     "Moments (Ungerboeck)",
-  delphi:      "Delphi (Amadeus S&C)",
-  opera:       "Oracle Opera",
-  ivvy:        "iVvy",
-  tripleseat:  "Tripleseat",
-  priava:      "Priava",
+  moments: "Moments (Ungerboeck)",
+  delphi: "Delphi (Amadeus S&C)",
+  opera: "Oracle Opera",
+  ivvy: "iVvy",
+  tripleseat: "Tripleseat",
+  priava: "Priava",
 };
 
 // ── Status / trigger enums ────────────────────────────────────────────────────
 
-export type ConnectorStatus  = "active" | "paused" | "error" | "unconfigured";
-export type SyncTrigger      = "manual" | "scheduled" | "webhook" | "file_import";
-export type SyncStatus       = "running" | "completed" | "failed" | "partial";
-export type AdapterType      = "xlsx" | "csv" | "json" | "api";
-export type SyncEventType    =
+export type ConnectorStatus = "active" | "paused" | "error" | "unconfigured";
+export type SyncTrigger = "manual" | "scheduled" | "webhook" | "file_import";
+export type SyncStatus = "running" | "completed" | "failed" | "partial";
+export type AdapterType = "xlsx" | "csv" | "json" | "api";
+export type SyncEventType =
   | "sync_started"
   | "sync_progress"
   | "sync_completed"
@@ -135,56 +135,56 @@ export interface UnifiedDietaryRequirement {
  */
 export interface UnifiedBanquetEvent {
   // ── Identity ──────────────────────────────────────────────────────────────
-  id:                string;
-  externalId:        string;   // original PMS record ID
-  source:            ConnectorSource;
+  id: string;
+  externalId: string; // original PMS record ID
+  source: ConnectorSource;
   connectorConfigId: string;
 
   // ── Core scheduling ───────────────────────────────────────────────────────
-  name:      string;
-  date:      string;  // YYYY-MM-DD
-  startTime: string;  // HH:MM (24h)
-  endTime:   string;  // HH:MM (24h)
+  name: string;
+  date: string; // YYYY-MM-DD
+  startTime: string; // HH:MM (24h)
+  endTime: string; // HH:MM (24h)
 
   // ── Venue ─────────────────────────────────────────────────────────────────
   venue: string;
-  room:  string;
+  room: string;
   floor: string;
 
   // ── Guest numbers ─────────────────────────────────────────────────────────
-  guestCount:         number;
-  confirmedCount?:    number;
-  minimumGuarantee?:  number;
+  guestCount: number;
+  confirmedCount?: number;
+  minimumGuarantee?: number;
 
   // ── Client ────────────────────────────────────────────────────────────────
-  bookedBy:     string;
-  contactName:  string;
+  bookedBy: string;
+  contactName: string;
   contactEmail: string;
   contactPhone: string;
 
   // ── Classification ────────────────────────────────────────────────────────
-  eventType: string;  // normalized to KitchenCommand FunctionType where possible
-  status:    string;
+  eventType: string; // normalized to KitchenCommand FunctionType where possible
+  status: string;
 
   // ── Content ───────────────────────────────────────────────────────────────
-  menu:                 string[];
-  dietaryRequirements:  UnifiedDietaryRequirement[];
-  notes:                string;
+  menu: string[];
+  dietaryRequirements: UnifiedDietaryRequirement[];
+  notes: string;
 
   // ── Financial ─────────────────────────────────────────────────────────────
   estimatedRevenue?: number;
-  depositAmount?:    number;
-  depositPaid?:      boolean;
+  depositAmount?: number;
+  depositPaid?: boolean;
 
   // ── Staff ─────────────────────────────────────────────────────────────────
   chefInCharge?: string;
   eventManager?: string;
 
   // ── Metadata ──────────────────────────────────────────────────────────────
-  sourceRaw:     Record<string, unknown>; // the original raw row
-  importedAt:    string; // ISO timestamp
-  lastSyncedAt:  string;
-  contentHash:   string; // SHA-256 of source data for change detection
+  sourceRaw: Record<string, unknown>; // the original raw row
+  importedAt: string; // ISO timestamp
+  lastSyncedAt: string;
+  contentHash: string; // SHA-256 of source data for change detection
 }
 
 // ── Field map ─────────────────────────────────────────────────────────────────
@@ -197,39 +197,39 @@ export interface UnifiedBanquetEvent {
  * Case-insensitive matching is applied by the mapping engine.
  */
 export interface ConnectorFieldMap {
-  name:           string[];
-  date:           string[];
-  startTime:      string[];
-  endTime:        string[];
-  venue:          string[];
-  room:           string[];
-  floor:          string[];
-  guestCount:     string[];
+  name: string[];
+  date: string[];
+  startTime: string[];
+  endTime: string[];
+  venue: string[];
+  room: string[];
+  floor: string[];
+  guestCount: string[];
   confirmedCount: string[];
-  bookedBy:       string[];
-  contactName:    string[];
-  contactEmail:   string[];
-  contactPhone:   string[];
-  eventType:      string[];
-  status:         string[];
-  menu:           string[];
-  dietaryNotes:   string[];
-  notes:          string[];
-  chefInCharge:   string[];
-  eventManager:   string[];
-  externalId:     string[];
-  revenue:        string[];
+  bookedBy: string[];
+  contactName: string[];
+  contactEmail: string[];
+  contactPhone: string[];
+  eventType: string[];
+  status: string[];
+  menu: string[];
+  dietaryNotes: string[];
+  notes: string[];
+  chefInCharge: string[];
+  eventManager: string[];
+  externalId: string[];
+  revenue: string[];
 }
 
 // ── SSE / real-time events ────────────────────────────────────────────────────
 
 export interface SyncProgressEvent {
-  type:               SyncEventType;
-  syncRecordId?:      string;
+  type: SyncEventType;
+  syncRecordId?: string;
   connectorConfigId?: string;
-  connectorName?:     string;
-  source?:            ConnectorSource;
-  message:            string;
-  data?:              Partial<SyncRecord>;
-  timestamp:          string;
+  connectorName?: string;
+  source?: ConnectorSource;
+  message: string;
+  data?: Partial<SyncRecord>;
+  timestamp: string;
 }

@@ -72,12 +72,22 @@ async function parseSpreadsheet(
 
 function getConfidenceConfig(method: ColumnMappingDetail["method"]) {
   switch (method) {
-    case "exact":    return { label: "Exact",   color: "#22C55E", icon: "check-circle" as const };
-    case "override": return { label: "Custom",  color: "#22C55E", icon: "edit-2" as const };
-    case "alias":    return { label: "Matched", color: "#22C55E", icon: "check" as const };
-    case "smart":    return { label: "AI",      color: "#EAB308", icon: "cpu" as const };
-    case "fuzzy":    return { label: "Fuzzy",   color: "#F59E0B", icon: "zap" as const };
-    default:         return { label: "—",       color: "#6B7280", icon: "minus" as const };
+    case "exact":
+      return {
+        label: "Exact",
+        color: "#22C55E",
+        icon: "check-circle" as const,
+      };
+    case "override":
+      return { label: "Custom", color: "#22C55E", icon: "edit-2" as const };
+    case "alias":
+      return { label: "Matched", color: "#22C55E", icon: "check" as const };
+    case "smart":
+      return { label: "AI", color: "#EAB308", icon: "cpu" as const };
+    case "fuzzy":
+      return { label: "Fuzzy", color: "#F59E0B", icon: "zap" as const };
+    default:
+      return { label: "—", color: "#6B7280", icon: "minus" as const };
   }
 }
 
@@ -97,7 +107,8 @@ function ColumnMappingEditor({
   const colors = useColors();
   const [pickerCanonical, setPickerCanonical] = useState<string | null>(null);
 
-  const pickerDetail = details.find((d) => d.canonical === pickerCanonical) ?? null;
+  const pickerDetail =
+    details.find((d) => d.canonical === pickerCanonical) ?? null;
   const mappedCount = details.filter((d) => d.header !== null).length;
   const aiCount = details.filter(
     (d) => d.method === "smart" || d.method === "fuzzy",
@@ -107,16 +118,25 @@ function ColumnMappingEditor({
   if (details.length === 0) return null;
 
   return (
-    <View style={[ms.card, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
+    <View
+      style={[
+        ms.card,
+        { backgroundColor: colors.secondary, borderColor: colors.border },
+      ]}
+    >
       {/* Header */}
       <View style={ms.cardHeader}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
           <Text style={[ms.cardTitle, { color: colors.mutedForeground }]}>
             Column mapping
           </Text>
-          <View style={[ms.aiBadge, { backgroundColor: colors.primary + "20" }]}>
+          <View
+            style={[ms.aiBadge, { backgroundColor: colors.primary + "20" }]}
+          >
             <Feather name="cpu" size={9} color={colors.primary} />
-            <Text style={[ms.aiBadgeText, { color: colors.primary }]}>Smart</Text>
+            <Text style={[ms.aiBadgeText, { color: colors.primary }]}>
+              Smart
+            </Text>
           </View>
           {overrideCount > 0 && (
             <View style={[ms.aiBadge, { backgroundColor: "#22C55E20" }]}>
@@ -142,9 +162,9 @@ function ColumnMappingEditor({
         {(
           [
             { label: "Exact match", color: "#22C55E" },
-            { label: "AI matched",  color: "#EAB308" },
-            { label: "Fuzzy",       color: "#F59E0B" },
-            { label: "Not found",   color: "#6B7280" },
+            { label: "AI matched", color: "#EAB308" },
+            { label: "Fuzzy", color: "#F59E0B" },
+            { label: "Not found", color: "#6B7280" },
           ] as const
         ).map((item) => (
           <View key={item.label} style={ms.legendItem}>
@@ -165,12 +185,20 @@ function ColumnMappingEditor({
             key={d.canonical}
             style={[
               ms.row,
-              !isLast && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border },
+              !isLast && {
+                borderBottomWidth: StyleSheet.hairlineWidth,
+                borderBottomColor: colors.border,
+              },
             ]}
             onPress={() => setPickerCanonical(d.canonical)}
           >
             {/* Confidence dot */}
-            <View style={[ms.dot, { backgroundColor: cfg.color + (d.header ? "FF" : "40") }]} />
+            <View
+              style={[
+                ms.dot,
+                { backgroundColor: cfg.color + (d.header ? "FF" : "40") },
+              ]}
+            />
 
             {/* Field label */}
             <Text
@@ -208,13 +236,20 @@ function ColumnMappingEditor({
               >
                 {d.header ?? "Not detected"}
               </Text>
-              <View style={[ms.confBadge, { backgroundColor: cfg.color + "20" }]}>
+              <View
+                style={[ms.confBadge, { backgroundColor: cfg.color + "20" }]}
+              >
                 <Feather name={cfg.icon} size={9} color={cfg.color} />
                 <Text style={[ms.confBadgeText, { color: cfg.color }]}>
                   {cfg.label}
                 </Text>
               </View>
-              <Feather name="chevron-right" size={13} color={colors.mutedForeground} style={{ opacity: 0.5 }} />
+              <Feather
+                name="chevron-right"
+                size={13}
+                color={colors.mutedForeground}
+                style={{ opacity: 0.5 }}
+              />
             </View>
           </Pressable>
         );
@@ -235,7 +270,9 @@ function ColumnMappingEditor({
             style={[ms.modalSheet, { backgroundColor: colors.card }]}
             onPress={(e) => e.stopPropagation()}
           >
-            <View style={[ms.modalHandle, { backgroundColor: colors.border }]} />
+            <View
+              style={[ms.modalHandle, { backgroundColor: colors.border }]}
+            />
 
             <Text style={[ms.modalTitle, { color: colors.foreground }]}>
               Map "{pickerDetail?.label}"
@@ -245,34 +282,70 @@ function ColumnMappingEditor({
             </Text>
 
             {/* Current auto-suggestion */}
-            {pickerDetail?.alternatives && pickerDetail.alternatives.length > 0 && (
-              <View style={[ms.suggestionsBox, { backgroundColor: colors.background, borderColor: colors.border }]}>
-                <Text style={[ms.suggestionsTitle, { color: colors.mutedForeground }]}>
-                  Other suggestions
-                </Text>
-                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
-                  {pickerDetail.alternatives.map((alt) => (
-                    <Pressable
-                      key={alt.header}
-                      style={[ms.suggestionChip, { borderColor: colors.primary + "60", backgroundColor: colors.primary + "10" }]}
-                      onPress={() => {
-                        onOverride(pickerCanonical!, alt.header);
-                        setPickerCanonical(null);
-                      }}
-                    >
-                      <Text style={[ms.suggestionChipText, { color: colors.primary }]} numberOfLines={1}>
-                        {alt.header}
-                      </Text>
-                      <Text style={[ms.suggestionScore, { color: colors.primary }]}>
-                        {alt.score}%
-                      </Text>
-                    </Pressable>
-                  ))}
+            {pickerDetail?.alternatives &&
+              pickerDetail.alternatives.length > 0 && (
+                <View
+                  style={[
+                    ms.suggestionsBox,
+                    {
+                      backgroundColor: colors.background,
+                      borderColor: colors.border,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      ms.suggestionsTitle,
+                      { color: colors.mutedForeground },
+                    ]}
+                  >
+                    Other suggestions
+                  </Text>
+                  <View
+                    style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}
+                  >
+                    {pickerDetail.alternatives.map((alt) => (
+                      <Pressable
+                        key={alt.header}
+                        style={[
+                          ms.suggestionChip,
+                          {
+                            borderColor: colors.primary + "60",
+                            backgroundColor: colors.primary + "10",
+                          },
+                        ]}
+                        onPress={() => {
+                          onOverride(pickerCanonical!, alt.header);
+                          setPickerCanonical(null);
+                        }}
+                      >
+                        <Text
+                          style={[
+                            ms.suggestionChipText,
+                            { color: colors.primary },
+                          ]}
+                          numberOfLines={1}
+                        >
+                          {alt.header}
+                        </Text>
+                        <Text
+                          style={[
+                            ms.suggestionScore,
+                            { color: colors.primary },
+                          ]}
+                        >
+                          {alt.score}%
+                        </Text>
+                      </Pressable>
+                    ))}
+                  </View>
                 </View>
-              </View>
-            )}
+              )}
 
-            <ScrollView style={{ maxHeight: 320 }} showsVerticalScrollIndicator={false}>
+            <ScrollView
+              style={{ maxHeight: 320 }}
+              showsVerticalScrollIndicator={false}
+            >
               {/* Not mapped option */}
               <Pressable
                 style={[ms.pickerItem, { borderBottomColor: colors.border }]}
@@ -281,7 +354,12 @@ function ColumnMappingEditor({
                   setPickerCanonical(null);
                 }}
               >
-                <Text style={[ms.pickerItemText, { color: colors.mutedForeground, fontStyle: "italic" }]}>
+                <Text
+                  style={[
+                    ms.pickerItemText,
+                    { color: colors.mutedForeground, fontStyle: "italic" },
+                  ]}
+                >
                   — Not mapped —
                 </Text>
                 {pickerDetail?.header === null && (
@@ -309,7 +387,9 @@ function ColumnMappingEditor({
                       style={[
                         ms.pickerItemText,
                         {
-                          color: isSelected ? colors.primary : colors.foreground,
+                          color: isSelected
+                            ? colors.primary
+                            : colors.foreground,
                           fontWeight: isSelected ? "700" : "400",
                         },
                       ]}
@@ -328,7 +408,9 @@ function ColumnMappingEditor({
               style={[ms.modalCancel, { borderTopColor: colors.border }]}
               onPress={() => setPickerCanonical(null)}
             >
-              <Text style={[ms.modalCancelText, { color: colors.mutedForeground }]}>
+              <Text
+                style={[ms.modalCancelText, { color: colors.mutedForeground }]}
+              >
                 Cancel
               </Text>
             </Pressable>
@@ -344,10 +426,14 @@ function ColumnMappingEditor({
 function StatusBadge({ status }: { status: string }) {
   const colors = useColors();
   const config: Record<string, { bg: string; text: string; label: string }> = {
-    completed:  { bg: "#22C55E20", text: "#22C55E", label: "Completed" },
+    completed: { bg: "#22C55E20", text: "#22C55E", label: "Completed" },
     processing: { bg: "#EAB308" + "20", text: "#EAB308", label: "Processing" },
-    pending:    { bg: "#F59E0B20", text: "#F59E0B", label: "Pending" },
-    failed:     { bg: colors.destructive + "20", text: colors.destructive, label: "Failed" },
+    pending: { bg: "#F59E0B20", text: "#F59E0B", label: "Pending" },
+    failed: {
+      bg: colors.destructive + "20",
+      text: colors.destructive,
+      label: "Failed",
+    },
   };
   const cfg = config[status] || config.pending;
   return (
@@ -360,13 +446,24 @@ function StatusBadge({ status }: { status: string }) {
 function HistoryRow({ item }: { item: ImportHistoryItem }) {
   const colors = useColors();
   const date = new Date(item.uploadedAt).toLocaleString("en-AU", {
-    day: "2-digit", month: "short", year: "numeric",
-    hour: "2-digit", minute: "2-digit",
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
   return (
-    <View style={[s.historyRow, { backgroundColor: colors.card, borderColor: colors.border }]}>
+    <View
+      style={[
+        s.historyRow,
+        { backgroundColor: colors.card, borderColor: colors.border },
+      ]}
+    >
       <View style={s.historyRowLeft}>
-        <Text style={[s.historyFileName, { color: colors.foreground }]} numberOfLines={1}>
+        <Text
+          style={[s.historyFileName, { color: colors.foreground }]}
+          numberOfLines={1}
+        >
           {item.fileName}
         </Text>
         <Text style={[s.historyMeta, { color: colors.mutedForeground }]}>
@@ -402,14 +499,23 @@ function ValidationTable({
   const color = type === "error" ? colors.destructive : colors.warning;
   if (items.length === 0) return null;
   return (
-    <View style={[s.validationTable, { borderColor: color + "40", backgroundColor: color + "10" }]}>
+    <View
+      style={[
+        s.validationTable,
+        { borderColor: color + "40", backgroundColor: color + "10" },
+      ]}
+    >
       <Text style={[s.validationTitle, { color }]}>
         {type === "error" ? "⚠ Errors" : "⚑ Warnings"} ({items.length})
       </Text>
       {items.slice(0, 10).map((item, i) => (
         <View key={i} style={s.validationRow}>
-          <Text style={[s.validationRow2, { color: colors.mutedForeground }]}>Row {item.row}</Text>
-          <Text style={[s.validationMsg, { color: colors.foreground }]}>{item.message}</Text>
+          <Text style={[s.validationRow2, { color: colors.mutedForeground }]}>
+            Row {item.row}
+          </Text>
+          <Text style={[s.validationMsg, { color: colors.foreground }]}>
+            {item.message}
+          </Text>
         </View>
       ))}
       {items.length > 10 && (
@@ -421,18 +527,38 @@ function ValidationTable({
   );
 }
 
-function PreviewCard({ row, index }: { row: Record<string, unknown>; index: number }) {
+function PreviewCard({
+  row,
+  index,
+}: {
+  row: Record<string, unknown>;
+  index: number;
+}) {
   const colors = useColors();
   return (
-    <View style={[s.previewCard, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
-      <Text style={[s.previewCardIdx, { color: colors.mutedForeground }]}>Row {index + 1}</Text>
+    <View
+      style={[
+        s.previewCard,
+        { backgroundColor: colors.secondary, borderColor: colors.border },
+      ]}
+    >
+      <Text style={[s.previewCardIdx, { color: colors.mutedForeground }]}>
+        Row {index + 1}
+      </Text>
       {Object.entries(row)
         .filter(([, v]) => v !== "" && v !== null && v !== undefined)
         .slice(0, 6)
         .map(([k, v]) => (
           <View key={k} style={s.previewField}>
-            <Text style={[s.previewFieldKey, { color: colors.mutedForeground }]}>{k}</Text>
-            <Text style={[s.previewFieldVal, { color: colors.foreground }]} numberOfLines={1}>
+            <Text
+              style={[s.previewFieldKey, { color: colors.mutedForeground }]}
+            >
+              {k}
+            </Text>
+            <Text
+              style={[s.previewFieldVal, { color: colors.foreground }]}
+              numberOfLines={1}
+            >
               {String(v)}
             </Text>
           </View>
@@ -461,11 +587,18 @@ export default function ImportEventsScreen() {
   const [isDragging, setIsDragging] = useState(false);
   const [filename, setFilename] = useState("");
   const [rawRows, setRawRows] = useState<Record<string, unknown>[]>([]);
-  const [parseResult, setParseResult] = useState<ImportParseResult | null>(null);
-  const [columnOverrides, setColumnOverrides] = useState<Record<string, string>>({});
+  const [parseResult, setParseResult] = useState<ImportParseResult | null>(
+    null,
+  );
+  const [columnOverrides, setColumnOverrides] = useState<
+    Record<string, string>
+  >({});
   const [history, setHistory] = useState<ImportHistoryItem[]>([]);
   const [historyLoading, setHistoryLoading] = useState(true);
-  const [importResult, setImportResult] = useState<{ imported: number; failed: number } | null>(null);
+  const [importResult, setImportResult] = useState<{
+    imported: number;
+    failed: number;
+  } | null>(null);
   const [activeTab, setActiveTab] = useState<"upload" | "history">("upload");
 
   // All headers from the uploaded spreadsheet (for the picker)
@@ -480,8 +613,16 @@ export default function ImportEventsScreen() {
     if (isDragging) {
       Animated.loop(
         Animated.sequence([
-          Animated.timing(pulseAnim, { toValue: 1.02, duration: 600, useNativeDriver: true }),
-          Animated.timing(pulseAnim, { toValue: 1, duration: 600, useNativeDriver: true }),
+          Animated.timing(pulseAnim, {
+            toValue: 1.02,
+            duration: 600,
+            useNativeDriver: true,
+          }),
+          Animated.timing(pulseAnim, {
+            toValue: 1,
+            duration: 600,
+            useNativeDriver: true,
+          }),
         ]),
       ).start();
     } else {
@@ -497,28 +638,34 @@ export default function ImportEventsScreen() {
       .finally(() => setHistoryLoading(false));
   }, []);
 
-  const handleFile = useCallback(async (uri: string, name: string) => {
-    setIsLoading(true);
-    setColumnOverrides({});
-    try {
-      const rows = await parseSpreadsheet(uri, name);
-      if (rows.length === 0) {
-        Alert.alert("Empty file", "No data rows found in the spreadsheet.");
-        return;
+  const handleFile = useCallback(
+    async (uri: string, name: string) => {
+      setIsLoading(true);
+      setColumnOverrides({});
+      try {
+        const rows = await parseSpreadsheet(uri, name);
+        if (rows.length === 0) {
+          Alert.alert("Empty file", "No data rows found in the spreadsheet.");
+          return;
+        }
+        setFilename(name);
+        setRawRows(rows);
+        const result = await parseImport({ rows, filename: name, uploadedBy });
+        setParseResult(result);
+        setStep("review");
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      } catch (err) {
+        Alert.alert(
+          "Parse error",
+          err instanceof Error ? err.message : "Could not read file",
+        );
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      } finally {
+        setIsLoading(false);
       }
-      setFilename(name);
-      setRawRows(rows);
-      const result = await parseImport({ rows, filename: name, uploadedBy });
-      setParseResult(result);
-      setStep("review");
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    } catch (err) {
-      Alert.alert("Parse error", err instanceof Error ? err.message : "Could not read file");
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [uploadedBy]);
+    },
+    [uploadedBy],
+  );
 
   const pickFile = useCallback(async () => {
     try {
@@ -588,7 +735,11 @@ export default function ImportEventsScreen() {
     setStep("importing");
     setIsLoading(true);
     try {
-      const result = await confirmImport(parseResult.jobId, rawRows, uploadedBy);
+      const result = await confirmImport(
+        parseResult.jobId,
+        rawRows,
+        uploadedBy,
+      );
 
       const newHistory = await fetchImportHistory().catch(() => history);
       setHistory(newHistory);
@@ -606,7 +757,10 @@ export default function ImportEventsScreen() {
       setStep("done");
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (err) {
-      Alert.alert("Import error", err instanceof Error ? err.message : "Import failed");
+      Alert.alert(
+        "Import error",
+        err instanceof Error ? err.message : "Import failed",
+      );
       setStep("review");
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     } finally {
@@ -631,8 +785,14 @@ export default function ImportEventsScreen() {
       <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
         {Platform.OS === "web" ? (
           <div
-            onDragEnter={(e) => { e.preventDefault(); setIsDragging(true); }}
-            onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+            onDragEnter={(e) => {
+              e.preventDefault();
+              setIsDragging(true);
+            }}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setIsDragging(true);
+            }}
             onDragLeave={() => setIsDragging(false)}
             onDrop={handleWebDrop}
             style={{ borderRadius: 16 }}
@@ -655,20 +815,57 @@ export default function ImportEventsScreen() {
       </Animated.View>
 
       {/* Supported formats */}
-      <View style={[s.formatsRow, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
-        <Text style={[s.formatsTitle, { color: colors.mutedForeground }]}>Supported formats</Text>
+      <View
+        style={[
+          s.formatsRow,
+          { backgroundColor: colors.secondary, borderColor: colors.border },
+        ]}
+      >
+        <Text style={[s.formatsTitle, { color: colors.mutedForeground }]}>
+          Supported formats
+        </Text>
         <View style={s.formatsChips}>
           {["XLSX", "XLS", "CSV"].map((f) => (
-            <View key={f} style={[s.chip, { backgroundColor: colors.card, borderColor: colors.border }]}>
-              <Text style={[s.chipText, { color: colors.foreground }]}>{f}</Text>
+            <View
+              key={f}
+              style={[
+                s.chip,
+                { backgroundColor: colors.card, borderColor: colors.border },
+              ]}
+            >
+              <Text style={[s.chipText, { color: colors.foreground }]}>
+                {f}
+              </Text>
             </View>
           ))}
         </View>
-        <Text style={[s.formatsTitle, { color: colors.mutedForeground, marginTop: 12 }]}>Compatible systems</Text>
+        <Text
+          style={[
+            s.formatsTitle,
+            { color: colors.mutedForeground, marginTop: 12 },
+          ]}
+        >
+          Compatible systems
+        </Text>
         <View style={s.formatsChips}>
-          {["Moments Explorer", "Delphi", "Opera", "iVvy", "Priava", "Tripleseat"].map((s2) => (
-            <View key={s2} style={[s.chip, { backgroundColor: colors.card, borderColor: colors.border }]}>
-              <Text style={[s.chipText, { color: colors.mutedForeground }]}>{s2}</Text>
+          {[
+            "Moments Explorer",
+            "Delphi",
+            "Opera",
+            "iVvy",
+            "Priava",
+            "Tripleseat",
+          ].map((s2) => (
+            <View
+              key={s2}
+              style={[
+                s.chip,
+                { backgroundColor: colors.card, borderColor: colors.border },
+              ]}
+            >
+              <Text style={[s.chipText, { color: colors.mutedForeground }]}>
+                {s2}
+              </Text>
             </View>
           ))}
         </View>
@@ -682,30 +879,60 @@ export default function ImportEventsScreen() {
     return (
       <ScrollView contentContainerStyle={s.scrollContent}>
         {/* Summary */}
-        <View style={[s.summaryCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <View
+          style={[
+            s.summaryCard,
+            { backgroundColor: colors.card, borderColor: colors.border },
+          ]}
+        >
           <View style={s.summaryRow}>
             <View style={s.summaryItem}>
-              <Text style={[s.summaryNum, { color: colors.foreground }]}>{parseResult.totalRows}</Text>
-              <Text style={[s.summaryLabel, { color: colors.mutedForeground }]}>Total rows</Text>
+              <Text style={[s.summaryNum, { color: colors.foreground }]}>
+                {parseResult.totalRows}
+              </Text>
+              <Text style={[s.summaryLabel, { color: colors.mutedForeground }]}>
+                Total rows
+              </Text>
             </View>
-            <View style={[s.summaryDivider, { backgroundColor: colors.border }]} />
+            <View
+              style={[s.summaryDivider, { backgroundColor: colors.border }]}
+            />
             <View style={s.summaryItem}>
-              <Text style={[s.summaryNum, { color: "#22C55E" }]}>{parseResult.validRows}</Text>
-              <Text style={[s.summaryLabel, { color: colors.mutedForeground }]}>Ready to import</Text>
+              <Text style={[s.summaryNum, { color: "#22C55E" }]}>
+                {parseResult.validRows}
+              </Text>
+              <Text style={[s.summaryLabel, { color: colors.mutedForeground }]}>
+                Ready to import
+              </Text>
             </View>
-            <View style={[s.summaryDivider, { backgroundColor: colors.border }]} />
+            <View
+              style={[s.summaryDivider, { backgroundColor: colors.border }]}
+            />
             <View style={s.summaryItem}>
-              <Text style={[s.summaryNum, { color: parseResult.errors.length > 0 ? colors.destructive : colors.mutedForeground }]}>
+              <Text
+                style={[
+                  s.summaryNum,
+                  {
+                    color:
+                      parseResult.errors.length > 0
+                        ? colors.destructive
+                        : colors.mutedForeground,
+                  },
+                ]}
+              >
                 {parseResult.errors.length}
               </Text>
-              <Text style={[s.summaryLabel, { color: colors.mutedForeground }]}>Errors</Text>
+              <Text style={[s.summaryLabel, { color: colors.mutedForeground }]}>
+                Errors
+              </Text>
             </View>
           </View>
 
           <View style={[s.sourceBadgeRow, { borderTopColor: colors.border }]}>
             <Feather name="database" size={12} color={colors.primary} />
             <Text style={[s.sourceBadgeText, { color: colors.primary }]}>
-              {parseResult.sourceSystem.replace(/_/g, " ")} — {parseResult.filename}
+              {parseResult.sourceSystem.replace(/_/g, " ")} —{" "}
+              {parseResult.filename}
             </Text>
           </View>
         </View>
@@ -736,7 +963,11 @@ export default function ImportEventsScreen() {
             style={[s.btnSecondary, { borderColor: colors.border }]}
             onPress={reset}
           >
-            <Text style={[s.btnSecondaryText, { color: colors.mutedForeground }]}>Cancel</Text>
+            <Text
+              style={[s.btnSecondaryText, { color: colors.mutedForeground }]}
+            >
+              Cancel
+            </Text>
           </Pressable>
           <Pressable
             style={[
@@ -749,7 +980,8 @@ export default function ImportEventsScreen() {
           >
             <Feather name="upload-cloud" size={16} color="#fff" />
             <Text style={s.btnPrimaryText}>
-              Import {parseResult.validRows} event{parseResult.validRows !== 1 ? "s" : ""}
+              Import {parseResult.validRows} event
+              {parseResult.validRows !== 1 ? "s" : ""}
             </Text>
           </Pressable>
         </View>
@@ -762,9 +994,12 @@ export default function ImportEventsScreen() {
       <View style={[s.doneIcon, { backgroundColor: "#22C55E20" }]}>
         <Feather name="check-circle" size={48} color="#22C55E" />
       </View>
-      <Text style={[s.doneTitle, { color: colors.foreground }]}>Import complete</Text>
+      <Text style={[s.doneTitle, { color: colors.foreground }]}>
+        Import complete
+      </Text>
       <Text style={[s.doneSubtitle, { color: colors.mutedForeground }]}>
-        {importResult?.imported} event{importResult?.imported !== 1 ? "s" : ""} added to your kitchen
+        {importResult?.imported} event{importResult?.imported !== 1 ? "s" : ""}{" "}
+        added to your kitchen
         {importResult?.failed ? ` · ${importResult.failed} skipped` : ""}
       </Text>
       <View style={s.doneActions}>
@@ -772,7 +1007,9 @@ export default function ImportEventsScreen() {
           style={[s.btnSecondary, { borderColor: colors.border }]}
           onPress={reset}
         >
-          <Text style={[s.btnSecondaryText, { color: colors.mutedForeground }]}>Import another</Text>
+          <Text style={[s.btnSecondaryText, { color: colors.mutedForeground }]}>
+            Import another
+          </Text>
         </Pressable>
         <Pressable
           style={[s.btnPrimary, { backgroundColor: colors.primary }]}
@@ -800,7 +1037,10 @@ export default function ImportEventsScreen() {
           data={history}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => <HistoryRow item={item} />}
-          contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 16 }}
+          contentContainerStyle={{
+            padding: 16,
+            paddingBottom: insets.bottom + 16,
+          }}
           showsVerticalScrollIndicator={false}
         />
       )}
@@ -810,12 +1050,19 @@ export default function ImportEventsScreen() {
   return (
     <View style={[s.container, { backgroundColor: colors.background }]}>
       {/* Header */}
-      <View style={[s.header, { paddingTop: insets.top + 12, borderBottomColor: colors.border }]}>
+      <View
+        style={[
+          s.header,
+          { paddingTop: insets.top + 12, borderBottomColor: colors.border },
+        ]}
+      >
         <Pressable style={s.backBtn} onPress={() => router.back()}>
           <Feather name="chevron-left" size={22} color={colors.foreground} />
         </Pressable>
         <View>
-          <Text style={[s.headerTitle, { color: colors.foreground }]}>Import Events</Text>
+          <Text style={[s.headerTitle, { color: colors.foreground }]}>
+            Import Events
+          </Text>
           <Text style={[s.headerSubtitle, { color: colors.mutedForeground }]}>
             Moments Explorer · XLSX · CSV
           </Text>
@@ -831,14 +1078,22 @@ export default function ImportEventsScreen() {
               key={tab}
               style={[
                 s.tab,
-                activeTab === tab && [s.tabActive, { borderBottomColor: colors.primary }],
+                activeTab === tab && [
+                  s.tabActive,
+                  { borderBottomColor: colors.primary },
+                ],
               ]}
               onPress={() => setActiveTab(tab)}
             >
               <Text
                 style={[
                   s.tabText,
-                  { color: activeTab === tab ? colors.primary : colors.mutedForeground },
+                  {
+                    color:
+                      activeTab === tab
+                        ? colors.primary
+                        : colors.mutedForeground,
+                  },
                 ]}
               >
                 {tab === "upload" ? "Upload" : "History"}
@@ -856,7 +1111,12 @@ export default function ImportEventsScreen() {
         {step === "importing" && (
           <View style={s.doneContainer}>
             <ActivityIndicator size="large" color={colors.primary} />
-            <Text style={[s.doneSubtitle, { color: colors.mutedForeground, marginTop: 20 }]}>
+            <Text
+              style={[
+                s.doneSubtitle,
+                { color: colors.mutedForeground, marginTop: 20 },
+              ]}
+            >
               Importing events…
             </Text>
           </View>
@@ -895,7 +1155,9 @@ function DropZoneContent({
         <ActivityIndicator size="large" color={colors.primary} />
       ) : (
         <>
-          <View style={[s.dropIcon, { backgroundColor: colors.primary + "20" }]}>
+          <View
+            style={[s.dropIcon, { backgroundColor: colors.primary + "20" }]}
+          >
             <Feather name="upload-cloud" size={32} color={colors.primary} />
           </View>
           <Text style={[s.dropTitle, { color: colors.foreground }]}>
@@ -919,103 +1181,344 @@ function DropZoneContent({
 // ─── Styles ───────────────────────────────────────────────────────────────
 
 const s = StyleSheet.create({
-  container:        { flex: 1 },
-  scrollContent:    { padding: 16, paddingBottom: 40 },
-  header:           { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, paddingBottom: 14, borderBottomWidth: StyleSheet.hairlineWidth },
-  backBtn:          { padding: 4, marginRight: 8 },
-  headerTitle:      { fontSize: 18, fontWeight: "700" },
-  headerSubtitle:   { fontSize: 12, marginTop: 1 },
-  headerRight:      { width: 30 },
-  tabBar:           { flexDirection: "row", borderBottomWidth: StyleSheet.hairlineWidth },
-  tab:              { flex: 1, alignItems: "center", paddingVertical: 12, borderBottomWidth: 2, borderBottomColor: "transparent" },
-  tabActive:        { borderBottomWidth: 2 },
-  tabText:          { fontSize: 14, fontWeight: "600" },
-  dropZone:         { borderWidth: 2, borderStyle: "dashed", borderRadius: 16, padding: 40, alignItems: "center", marginBottom: 16 },
-  dropIcon:         { width: 72, height: 72, borderRadius: 36, alignItems: "center", justifyContent: "center", marginBottom: 16 },
-  dropTitle:        { fontSize: 18, fontWeight: "700", marginBottom: 6 },
-  dropSubtitle:     { fontSize: 14, textAlign: "center", marginBottom: 20, lineHeight: 20 },
-  dropBtn:          { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8 },
-  dropBtnText:      { color: "#fff", fontWeight: "600", fontSize: 14 },
-  formatsRow:       { borderRadius: 12, borderWidth: 1, padding: 16 },
-  formatsTitle:     { fontSize: 12, fontWeight: "600", marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 },
-  formatsChips:     { flexDirection: "row", flexWrap: "wrap", gap: 6 },
-  chip:             { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6, borderWidth: 1 },
-  chipText:         { fontSize: 12, fontWeight: "500" },
-  summaryCard:      { borderRadius: 12, borderWidth: 1, marginBottom: 12 },
-  summaryRow:       { flexDirection: "row", alignItems: "center" },
-  summaryItem:      { flex: 1, alignItems: "center", paddingVertical: 16 },
-  summaryNum:       { fontSize: 28, fontWeight: "800" },
-  summaryLabel:     { fontSize: 11, marginTop: 2, textTransform: "uppercase", letterSpacing: 0.4 },
-  summaryDivider:   { width: 1, height: 40 },
-  sourceBadgeRow:   { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 16, paddingVertical: 10, borderTopWidth: StyleSheet.hairlineWidth },
-  sourceBadgeText:  { fontSize: 12, fontWeight: "500" },
-  sectionLabel:     { fontSize: 12, fontWeight: "600", textTransform: "uppercase", letterSpacing: 0.5, marginTop: 12, marginBottom: 6 },
-  validationTable:  { borderRadius: 10, borderWidth: 1, padding: 12, marginBottom: 10 },
-  validationTitle:  { fontSize: 12, fontWeight: "700", marginBottom: 8 },
-  validationRow:    { flexDirection: "row", alignItems: "flex-start", marginBottom: 4, gap: 8 },
-  validationRow2:   { fontSize: 11, width: 44, flexShrink: 0 },
-  validationMsg:    { fontSize: 12, flex: 1, lineHeight: 16 },
-  validationMore:   { fontSize: 11, marginTop: 4 },
-  previewCard:      { borderRadius: 10, borderWidth: 1, padding: 12, marginBottom: 8 },
-  previewCardIdx:   { fontSize: 11, fontWeight: "600", marginBottom: 6, textTransform: "uppercase" },
-  previewField:     { flexDirection: "row", alignItems: "flex-start", marginBottom: 3 },
-  previewFieldKey:  { fontSize: 11, width: 100, flexShrink: 0 },
-  previewFieldVal:  { fontSize: 12, flex: 1 },
-  reviewActions:    { flexDirection: "row", gap: 10, marginTop: 20 },
-  btnPrimary:       { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingVertical: 14, borderRadius: 10 },
-  btnPrimaryText:   { color: "#fff", fontWeight: "700", fontSize: 15 },
-  btnSecondary:     { flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: 14, borderRadius: 10, borderWidth: 1 },
+  container: { flex: 1 },
+  scrollContent: { padding: 16, paddingBottom: 40 },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingBottom: 14,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  backBtn: { padding: 4, marginRight: 8 },
+  headerTitle: { fontSize: 18, fontWeight: "700" },
+  headerSubtitle: { fontSize: 12, marginTop: 1 },
+  headerRight: { width: 30 },
+  tabBar: { flexDirection: "row", borderBottomWidth: StyleSheet.hairlineWidth },
+  tab: {
+    flex: 1,
+    alignItems: "center",
+    paddingVertical: 12,
+    borderBottomWidth: 2,
+    borderBottomColor: "transparent",
+  },
+  tabActive: { borderBottomWidth: 2 },
+  tabText: { fontSize: 14, fontWeight: "600" },
+  dropZone: {
+    borderWidth: 2,
+    borderStyle: "dashed",
+    borderRadius: 16,
+    padding: 40,
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  dropIcon: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 16,
+  },
+  dropTitle: { fontSize: 18, fontWeight: "700", marginBottom: 6 },
+  dropSubtitle: {
+    fontSize: 14,
+    textAlign: "center",
+    marginBottom: 20,
+    lineHeight: 20,
+  },
+  dropBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  dropBtnText: { color: "#fff", fontWeight: "600", fontSize: 14 },
+  formatsRow: { borderRadius: 12, borderWidth: 1, padding: 16 },
+  formatsTitle: {
+    fontSize: 12,
+    fontWeight: "600",
+    marginBottom: 8,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  formatsChips: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
+  chip: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+    borderWidth: 1,
+  },
+  chipText: { fontSize: 12, fontWeight: "500" },
+  summaryCard: { borderRadius: 12, borderWidth: 1, marginBottom: 12 },
+  summaryRow: { flexDirection: "row", alignItems: "center" },
+  summaryItem: { flex: 1, alignItems: "center", paddingVertical: 16 },
+  summaryNum: { fontSize: 28, fontWeight: "800" },
+  summaryLabel: {
+    fontSize: 11,
+    marginTop: 2,
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
+  },
+  summaryDivider: { width: 1, height: 40 },
+  sourceBadgeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderTopWidth: StyleSheet.hairlineWidth,
+  },
+  sourceBadgeText: { fontSize: 12, fontWeight: "500" },
+  sectionLabel: {
+    fontSize: 12,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    marginTop: 12,
+    marginBottom: 6,
+  },
+  validationTable: {
+    borderRadius: 10,
+    borderWidth: 1,
+    padding: 12,
+    marginBottom: 10,
+  },
+  validationTitle: { fontSize: 12, fontWeight: "700", marginBottom: 8 },
+  validationRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    marginBottom: 4,
+    gap: 8,
+  },
+  validationRow2: { fontSize: 11, width: 44, flexShrink: 0 },
+  validationMsg: { fontSize: 12, flex: 1, lineHeight: 16 },
+  validationMore: { fontSize: 11, marginTop: 4 },
+  previewCard: {
+    borderRadius: 10,
+    borderWidth: 1,
+    padding: 12,
+    marginBottom: 8,
+  },
+  previewCardIdx: {
+    fontSize: 11,
+    fontWeight: "600",
+    marginBottom: 6,
+    textTransform: "uppercase",
+  },
+  previewField: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    marginBottom: 3,
+  },
+  previewFieldKey: { fontSize: 11, width: 100, flexShrink: 0 },
+  previewFieldVal: { fontSize: 12, flex: 1 },
+  reviewActions: { flexDirection: "row", gap: 10, marginTop: 20 },
+  btnPrimary: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 14,
+    borderRadius: 10,
+  },
+  btnPrimaryText: { color: "#fff", fontWeight: "700", fontSize: 15 },
+  btnSecondary: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 14,
+    borderRadius: 10,
+    borderWidth: 1,
+  },
   btnSecondaryText: { fontWeight: "600", fontSize: 15 },
-  btnDisabled:      { opacity: 0.4 },
-  doneContainer:    { flex: 1, alignItems: "center", justifyContent: "center", padding: 32 },
-  doneIcon:         { width: 96, height: 96, borderRadius: 48, alignItems: "center", justifyContent: "center", marginBottom: 20 },
-  doneTitle:        { fontSize: 24, fontWeight: "800", marginBottom: 8 },
-  doneSubtitle:     { fontSize: 15, textAlign: "center", lineHeight: 22 },
-  doneActions:      { flexDirection: "row", gap: 10, marginTop: 28, width: "100%" },
-  historyRow:       { borderRadius: 10, borderWidth: 1, padding: 14, marginBottom: 8, flexDirection: "row", alignItems: "center" },
-  historyRowLeft:   { flex: 1, marginRight: 10 },
-  historyFileName:  { fontSize: 14, fontWeight: "600", marginBottom: 2 },
-  historyMeta:      { fontSize: 11, marginBottom: 4 },
-  historyStats:     { flexDirection: "row", flexWrap: "wrap" },
-  historyStatText:  { fontSize: 12 },
-  badge:            { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
-  badgeText:        { fontSize: 11, fontWeight: "700" },
-  emptyHistory:     { flex: 1, alignItems: "center", justifyContent: "center", padding: 40, gap: 12 },
+  btnDisabled: { opacity: 0.4 },
+  doneContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 32,
+  },
+  doneIcon: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 20,
+  },
+  doneTitle: { fontSize: 24, fontWeight: "800", marginBottom: 8 },
+  doneSubtitle: { fontSize: 15, textAlign: "center", lineHeight: 22 },
+  doneActions: { flexDirection: "row", gap: 10, marginTop: 28, width: "100%" },
+  historyRow: {
+    borderRadius: 10,
+    borderWidth: 1,
+    padding: 14,
+    marginBottom: 8,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  historyRowLeft: { flex: 1, marginRight: 10 },
+  historyFileName: { fontSize: 14, fontWeight: "600", marginBottom: 2 },
+  historyMeta: { fontSize: 11, marginBottom: 4 },
+  historyStats: { flexDirection: "row", flexWrap: "wrap" },
+  historyStatText: { fontSize: 12 },
+  badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
+  badgeText: { fontSize: 11, fontWeight: "700" },
+  emptyHistory: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 40,
+    gap: 12,
+  },
   emptyHistoryText: { fontSize: 15 },
 });
 
 // ─── ColumnMappingEditor styles (ms = mapping styles) ────────────────────
 
 const ms = StyleSheet.create({
-  card:             { borderRadius: 12, borderWidth: 1, marginBottom: 12, overflow: "hidden" },
-  cardHeader:       { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 14, paddingTop: 12, paddingBottom: 8 },
-  cardTitle:        { fontSize: 11, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.5 },
-  aiBadge:          { flexDirection: "row", alignItems: "center", gap: 3, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
-  aiBadgeText:      { fontSize: 10, fontWeight: "700" },
-  summaryText:      { fontSize: 11, fontWeight: "600" },
-  legend:           { flexDirection: "row", flexWrap: "wrap", gap: 10, paddingHorizontal: 14, paddingBottom: 10, borderBottomWidth: StyleSheet.hairlineWidth },
-  legendItem:       { flexDirection: "row", alignItems: "center", gap: 4 },
-  legendDot:        { width: 6, height: 6, borderRadius: 3 },
-  legendText:       { fontSize: 10 },
-  row:              { flexDirection: "row", alignItems: "center", paddingHorizontal: 14, paddingVertical: 11 },
-  dot:              { width: 7, height: 7, borderRadius: 4, marginRight: 10, flexShrink: 0 },
-  fieldLabel:       { fontSize: 12, width: 96, flexShrink: 0 },
-  rowRight:         { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "flex-end", gap: 5, minWidth: 0 },
-  headerText:       { fontSize: 12, fontWeight: "600", flex: 1, textAlign: "right" },
-  confBadge:        { flexDirection: "row", alignItems: "center", gap: 3, paddingHorizontal: 5, paddingVertical: 2, borderRadius: 4, flexShrink: 0 },
-  confBadgeText:    { fontSize: 9, fontWeight: "700" },
-  modalOverlay:     { flex: 1, backgroundColor: "#00000070", justifyContent: "flex-end" },
-  modalSheet:       { borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingTop: 12, paddingBottom: 32, maxHeight: "85%" },
-  modalHandle:      { width: 36, height: 4, borderRadius: 2, alignSelf: "center", marginBottom: 16 },
-  modalTitle:       { fontSize: 16, fontWeight: "700", paddingHorizontal: 20, marginBottom: 4 },
-  modalSubtitle:    { fontSize: 13, paddingHorizontal: 20, marginBottom: 12, lineHeight: 18 },
-  suggestionsBox:   { marginHorizontal: 16, marginBottom: 12, padding: 12, borderRadius: 10, borderWidth: 1 },
-  suggestionsTitle: { fontSize: 10, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 },
-  suggestionChip:   { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, borderWidth: 1 },
+  card: {
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 12,
+    overflow: "hidden",
+  },
+  cardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 14,
+    paddingTop: 12,
+    paddingBottom: 8,
+  },
+  cardTitle: {
+    fontSize: 11,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  aiBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  aiBadgeText: { fontSize: 10, fontWeight: "700" },
+  summaryText: { fontSize: 11, fontWeight: "600" },
+  legend: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+    paddingHorizontal: 14,
+    paddingBottom: 10,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  legendItem: { flexDirection: "row", alignItems: "center", gap: 4 },
+  legendDot: { width: 6, height: 6, borderRadius: 3 },
+  legendText: { fontSize: 10 },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+  },
+  dot: { width: 7, height: 7, borderRadius: 4, marginRight: 10, flexShrink: 0 },
+  fieldLabel: { fontSize: 12, width: 96, flexShrink: 0 },
+  rowRight: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    gap: 5,
+    minWidth: 0,
+  },
+  headerText: { fontSize: 12, fontWeight: "600", flex: 1, textAlign: "right" },
+  confBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+    borderRadius: 4,
+    flexShrink: 0,
+  },
+  confBadgeText: { fontSize: 9, fontWeight: "700" },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "#00000070",
+    justifyContent: "flex-end",
+  },
+  modalSheet: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingTop: 12,
+    paddingBottom: 32,
+    maxHeight: "85%",
+  },
+  modalHandle: {
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    alignSelf: "center",
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    paddingHorizontal: 20,
+    marginBottom: 4,
+  },
+  modalSubtitle: {
+    fontSize: 13,
+    paddingHorizontal: 20,
+    marginBottom: 12,
+    lineHeight: 18,
+  },
+  suggestionsBox: {
+    marginHorizontal: 16,
+    marginBottom: 12,
+    padding: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+  },
+  suggestionsTitle: {
+    fontSize: 10,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    marginBottom: 8,
+  },
+  suggestionChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
   suggestionChipText: { fontSize: 12, fontWeight: "600", maxWidth: 120 },
-  suggestionScore:  { fontSize: 10, fontWeight: "700" },
-  pickerItem:       { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 20, paddingVertical: 14, borderBottomWidth: StyleSheet.hairlineWidth },
-  pickerItemText:   { fontSize: 14, flex: 1 },
-  modalCancel:      { paddingVertical: 16, alignItems: "center", borderTopWidth: StyleSheet.hairlineWidth },
-  modalCancelText:  { fontSize: 15, fontWeight: "600" },
+  suggestionScore: { fontSize: 10, fontWeight: "700" },
+  pickerItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  pickerItemText: { fontSize: 14, flex: 1 },
+  modalCancel: {
+    paddingVertical: 16,
+    alignItems: "center",
+    borderTopWidth: StyleSheet.hairlineWidth,
+  },
+  modalCancelText: { fontSize: 15, fontWeight: "600" },
 });

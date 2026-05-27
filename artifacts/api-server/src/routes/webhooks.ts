@@ -18,10 +18,7 @@
 import { Router } from "express";
 import { and, eq, like } from "drizzle-orm";
 import { db, connectorConfigsTable } from "@workspace/db";
-import {
-  getConnector,
-  type ConnectorSource,
-} from "@workspace/connector-core";
+import { getConnector, type ConnectorSource } from "@workspace/connector-core";
 import {
   runSync,
   logWebhookEvent,
@@ -38,7 +35,14 @@ router.post("/webhooks/:source/:token", async (req, res) => {
   const { source, token } = req.params as { source: string; token: string };
 
   // Validate source
-  const validSources: ConnectorSource[] = ["moments", "delphi", "opera", "ivvy", "tripleseat", "priava"];
+  const validSources: ConnectorSource[] = [
+    "moments",
+    "delphi",
+    "opera",
+    "ivvy",
+    "tripleseat",
+    "priava",
+  ];
   if (!validSources.includes(source as ConnectorSource)) {
     return res.status(404).json({ error: "Unknown source" });
   }
@@ -73,13 +77,23 @@ router.post("/webhooks/:source/:token", async (req, res) => {
       const rawBody = JSON.stringify(req.body);
 
       if (!signature) {
-        logger.warn({ source, configId: config.id }, "webhook: missing signature header");
+        logger.warn(
+          { source, configId: config.id },
+          "webhook: missing signature header",
+        );
         return res.status(401).json({ error: "Missing signature" });
       }
 
-      const valid = connector.verifyWebhookSignature(rawBody, signature, config.webhookSecret);
+      const valid = connector.verifyWebhookSignature(
+        rawBody,
+        signature,
+        config.webhookSecret,
+      );
       if (!valid) {
-        logger.warn({ source, configId: config.id }, "webhook: invalid signature");
+        logger.warn(
+          { source, configId: config.id },
+          "webhook: invalid signature",
+        );
         return res.status(401).json({ error: "Invalid signature" });
       }
     }

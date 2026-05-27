@@ -83,7 +83,9 @@ export async function parseXlsx(
   if (headerRowIdx === -1) {
     for (let i = 0; i < Math.min(10, rawRows.length); i++) {
       const row = rawRows[i] ?? [];
-      const filled = row.filter((c) => typeof c === "string" && c.trim()).length;
+      const filled = row.filter(
+        (c) => typeof c === "string" && c.trim(),
+      ).length;
       if (filled > 0 && filled / row.length > 0.3) {
         headerRowIdx = i;
         break;
@@ -115,7 +117,8 @@ export async function parseXlsx(
 
     const rawRow = rawRows[i] ?? [];
     // Skip fully blank rows
-    if (rawRow.every((c) => c === "" || c === null || c === undefined)) continue;
+    if (rawRow.every((c) => c === "" || c === null || c === undefined))
+      continue;
 
     const row: RawEventRow = {};
     headers.forEach((header, idx) => {

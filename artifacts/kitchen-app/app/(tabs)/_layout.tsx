@@ -5,7 +5,13 @@ import { Icon, Label, NativeTabs } from "expo-router/unstable-native-tabs";
 import { SymbolView } from "expo-symbols";
 import { Feather, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import React from "react";
-import { Platform, StyleSheet, View, useColorScheme, useWindowDimensions } from "react-native";
+import {
+  Platform,
+  StyleSheet,
+  View,
+  useColorScheme,
+  useWindowDimensions,
+} from "react-native";
 
 import { LiquidGlassIcon } from "@/components/LiquidGlassIcon";
 import { TabletSidebar } from "@/components/TabletSidebar";
@@ -69,7 +75,12 @@ function ClassicTabLayout() {
                 style={StyleSheet.absoluteFill}
               />
             ) : isWeb ? (
-              <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.card }]} />
+              <View
+                style={[
+                  StyleSheet.absoluteFill,
+                  { backgroundColor: colors.card },
+                ]}
+              />
             ) : null,
           sceneStyle: isTablet ? { marginLeft: SIDEBAR_WIDTH } : undefined,
         }}
@@ -80,9 +91,19 @@ function ClassicTabLayout() {
             title: "Today",
             tabBarIcon: ({ color, focused }) => (
               <LiquidGlassIcon active={focused} size={38} shape="pill">
-                {isIOS
-                  ? <SymbolView name="calendar" tintColor={focused ? colors.primary : color} size={20} />
-                  : <Feather name="calendar" size={19} color={focused ? colors.primary : color} />}
+                {isIOS ? (
+                  <SymbolView
+                    name="calendar"
+                    tintColor={focused ? colors.primary : color}
+                    size={20}
+                  />
+                ) : (
+                  <Feather
+                    name="calendar"
+                    size={19}
+                    color={focused ? colors.primary : color}
+                  />
+                )}
               </LiquidGlassIcon>
             ),
           }}
@@ -93,9 +114,19 @@ function ClassicTabLayout() {
             title: "Functions",
             tabBarIcon: ({ color, focused }) => (
               <LiquidGlassIcon active={focused} size={38} shape="pill">
-                {isIOS
-                  ? <SymbolView name="fork.knife" tintColor={focused ? colors.primary : color} size={20} />
-                  : <MaterialCommunityIcons name="silverware-fork-knife" size={19} color={focused ? colors.primary : color} />}
+                {isIOS ? (
+                  <SymbolView
+                    name="fork.knife"
+                    tintColor={focused ? colors.primary : color}
+                    size={20}
+                  />
+                ) : (
+                  <MaterialCommunityIcons
+                    name="silverware-fork-knife"
+                    size={19}
+                    color={focused ? colors.primary : color}
+                  />
+                )}
               </LiquidGlassIcon>
             ),
           }}
@@ -106,9 +137,19 @@ function ClassicTabLayout() {
             title: "Prep",
             tabBarIcon: ({ color, focused }) => (
               <LiquidGlassIcon active={focused} size={38} shape="pill">
-                {isIOS
-                  ? <SymbolView name="checklist" tintColor={focused ? colors.primary : color} size={20} />
-                  : <Feather name="check-square" size={19} color={focused ? colors.primary : color} />}
+                {isIOS ? (
+                  <SymbolView
+                    name="checklist"
+                    tintColor={focused ? colors.primary : color}
+                    size={20}
+                  />
+                ) : (
+                  <Feather
+                    name="check-square"
+                    size={19}
+                    color={focused ? colors.primary : color}
+                  />
+                )}
               </LiquidGlassIcon>
             ),
           }}
@@ -119,9 +160,19 @@ function ClassicTabLayout() {
             title: "Roster",
             tabBarIcon: ({ color, focused }) => (
               <LiquidGlassIcon active={focused} size={38} shape="pill">
-                {isIOS
-                  ? <SymbolView name="person.3" tintColor={focused ? colors.primary : color} size={20} />
-                  : <Ionicons name="people-outline" size={20} color={focused ? colors.primary : color} />}
+                {isIOS ? (
+                  <SymbolView
+                    name="person.3"
+                    tintColor={focused ? colors.primary : color}
+                    size={20}
+                  />
+                ) : (
+                  <Ionicons
+                    name="people-outline"
+                    size={20}
+                    color={focused ? colors.primary : color}
+                  />
+                )}
               </LiquidGlassIcon>
             ),
           }}

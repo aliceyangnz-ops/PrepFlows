@@ -5,7 +5,7 @@ import { THEMES, type ThemeName } from "@/constants/colors";
 
 const THEME_KEY = "@kitchen_theme_v1";
 
-type ThemeColors = typeof THEMES["navy"] & { radius: number };
+type ThemeColors = (typeof THEMES)["navy"] & { radius: number };
 
 interface ThemeCtx {
   themeName: ThemeName;

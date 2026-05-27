@@ -12,7 +12,11 @@ import { Router } from "express";
 import { desc, eq } from "drizzle-orm";
 import { db, syncRecordsTable } from "@workspace/db";
 import { parseCsv, parseJson, parseXlsx } from "@workspace/connector-core";
-import { addSseSubscriber, broadcastSseEvent, runSync } from "../services/syncEngine.js";
+import {
+  addSseSubscriber,
+  broadcastSseEvent,
+  runSync,
+} from "../services/syncEngine.js";
 
 const router = Router();
 
@@ -51,9 +55,13 @@ router.post("/sync/:connectorId", async (req, res) => {
   try {
     let rows;
 
-    if (contentType.includes("text/csv") || contentType.includes("text/plain")) {
+    if (
+      contentType.includes("text/csv") ||
+      contentType.includes("text/plain")
+    ) {
       // CSV upload
-      const body = typeof req.body === "string" ? req.body : JSON.stringify(req.body);
+      const body =
+        typeof req.body === "string" ? req.body : JSON.stringify(req.body);
       rows = parseCsv(body);
     } else if (
       contentType.includes("application/vnd.openxmlformats") ||
@@ -61,7 +69,10 @@ router.post("/sync/:connectorId", async (req, res) => {
       contentType.includes("application/octet-stream")
     ) {
       // XLSX upload (raw buffer via body-parser limit increase)
-      const buffer = req.body instanceof Buffer ? req.body : Buffer.from(req.body as string, "binary");
+      const buffer =
+        req.body instanceof Buffer
+          ? req.body
+          : Buffer.from(req.body as string, "binary");
       rows = await parseXlsx(buffer);
     } else {
       // JSON payload
@@ -69,10 +80,16 @@ router.post("/sync/:connectorId", async (req, res) => {
     }
 
     if (!rows || rows.length === 0) {
-      return res.status(400).json({ error: "No data rows found in request body" });
+      return res
+        .status(400)
+        .json({ error: "No data rows found in request body" });
     }
 
-    const result = await runSync({ connectorConfigId: connectorId, rows, trigger: "manual" });
+    const result = await runSync({
+      connectorConfigId: connectorId,
+      rows,
+      trigger: "manual",
+    });
     return res.json(result);
   } catch (err) {
     req.log.error({ err }, "sync trigger failed");
@@ -85,7 +102,7 @@ router.post("/sync/:connectorId", async (req, res) => {
 
 router.get("/sync/records", async (req, res) => {
   try {
-    const limit  = Math.min(Number(req.query["limit"] ?? 50), 200);
+    const limit = Math.min(Number(req.query["limit"] ?? 50), 200);
     const offset = Number(req.query["offset"] ?? 0);
     const connectorId = req.query["connectorId"] as string | undefined;
 
@@ -125,7 +142,9 @@ router.get("/sync/records/:id", async (req, res) => {
 
 router.delete("/sync/records/:id", async (req, res) => {
   try {
-    await db.delete(syncRecordsTable).where(eq(syncRecordsTable.id, req.params.id!));
+    await db
+      .delete(syncRecordsTable)
+      .where(eq(syncRecordsTable.id, req.params.id!));
     return res.json({ deleted: true });
   } catch (err) {
     req.log.error({ err }, "delete sync record failed");
