@@ -324,16 +324,18 @@ function parseHospitalityText(text: string): ParsedFunctionData {
     if (s) { startTime = s; conf["startTime"] = 90; }
     if (e) { endTime = e; conf["endTime"] = 90; }
   } else {
-    const sm = normalised.match(/(?:start(?:s|ing)?\s*(?:time)?:|commences?:|from\s+)((?:\d{1,2})(?::\d{2})?\s*(?:[ap]m)?)/i);
+    const sm = normalised.match(/(?:start(?:s|ing)?\s*(?:time)?:|commences?:|from\s+)\s*((?:\d{1,2})(?::\d{2})?\s*(?:[ap]m)?)/i);
     if (sm) { const t = normaliseTime(sm[1] ?? ""); if (t) { startTime = t; conf["startTime"] = 80; } }
-    const em = normalised.match(/(?:end(?:s|ing)?\s*(?:time)?:|finish(?:es)?:|close[sd]?:|concludes?:|until\s+)((?:\d{1,2})(?::\d{2})?\s*(?:[ap]m)?)/i);
+    const em = normalised.match(/(?:end(?:s|ing)?\s*(?:time)?:|finish(?:es)?:|close[sd]?:|concludes?:|until\s+)\s*((?:\d{1,2})(?::\d{2})?\s*(?:[ap]m)?)/i);
     if (em) { const t = normaliseTime(em[1] ?? ""); if (t) { endTime = t; conf["endTime"] = 80; } }
   }
 
   // Guest count — understands pax, covers, guests, kaumātua (elders), tangata (people in Māori context)
+  // NOTE: use [^\S\r\n]* (non-newline whitespace) not \s* — prevents "Level 2\nGuests:" matching as "2 guests"
   let guestCount = 0;
   const paxM =
-    normalised.match(/(\d{1,4})\s*(?:pax|guests?|covers?|people|attendees?|persons?|heads?\b|tangata|kaumātua)/i) ||
+    normalised.match(/^(?:guests?|pax|attendance|covers?|number\s+of\s+guests?|headcount):\s*(\d{1,4})/im) ||
+    normalised.match(/(\d{1,4})[^\S\r\n]*(?:pax|guests?|covers?|people|attendees?|persons?|tangata|kaumātua)/i) ||
     normalised.match(/(?:for|of)\s+(\d{1,4})\s*(?:pax|guests?|people|covers?)/i) ||
     normalised.match(/(?:capacity|attendance|numbers?):\s*(\d{1,4})/i);
   if (paxM) { guestCount = parseInt(paxM[1] ?? "0", 10); conf["guestCount"] = 85; }
@@ -373,8 +375,22 @@ function parseHospitalityText(text: string): ParsedFunctionData {
     [["set menu", "prix fixe", "degustation", "tasting menu", "fixed menu", "dégustation"], "Set Menu"],
     [["cocktail"], "Cocktail"],
   ];
-  for (const [keywords, type] of typeMap) {
-    if (keywords.some((kw) => lower.includes(kw))) { functionType = type; conf["functionType"] = 80; break; }
+  // Priority 1: honour an explicit "Type:" label — prevents menu course names from overriding it
+  const explicitTypeM = normalised.match(/^(?:type|function\s*type|event\s*type|service\s*type|function\s*style):\s*(.+)/im);
+  if (explicitTypeM) {
+    const rawType = (explicitTypeM[1] ?? "").trim().toLowerCase();
+    for (const [keywords, type] of typeMap) {
+      if (keywords.some((kw) => rawType.includes(kw))) { functionType = type; conf["functionType"] = 95; break; }
+    }
+    if (!conf["functionType"]) conf["functionType"] = 70;
+  }
+  // Priority 2: keyword scan restricted to header lines (before the MENU section) to avoid false menu matches
+  if (!conf["functionType"]) {
+    const menuSectionStart = lower.search(/^(?:menu|food\s*&\s*beverage|f&b|catering\s+menu)\s*$/im);
+    const headerText = menuSectionStart > 0 ? lower.slice(0, menuSectionStart) : lower;
+    for (const [keywords, type] of typeMap) {
+      if (keywords.some((kw) => headerText.includes(kw))) { functionType = type; conf["functionType"] = 80; break; }
+    }
   }
 
   // Dietary requirements — extended with AU/NZ/Māori dietary patterns
@@ -436,6 +452,42 @@ function parseHospitalityText(text: string): ParsedFunctionData {
   }
   serviceEvents.sort((a, b) => a.time.localeCompare(b.time));
   if (serviceEvents.length > 0) conf["serviceEvents"] = 80;
+
+  // Parse structured SERVICE TIMELINE / TIMELINE sections: lines like "Label: HH:MM" or "HH:MM Label"
+  // Uses a line-by-line scan (avoids multiline regex edge-cases with the m flag and lazy quantifiers).
+  // Always runs — deduplication prevents repeats from earlier coursePat scanning.
+  {
+    const sectionHdrM = normalised.match(
+      /^(?:service\s+timeline|timeline|run\s+sheet|service\s+schedule|course\s+times?)[^\n]*/im,
+    );
+    if (sectionHdrM && sectionHdrM.index !== undefined) {
+      // Trim the leading newline that immediately follows the section header
+      const afterHdr = normalised.slice(sectionHdrM.index + sectionHdrM[0].length).replace(/^\r?\n/, "");
+      let seenContent = false;
+      for (const rawLine of afterHdr.split(/\n/)) {
+        const line = rawLine.trim();
+        if (!line) { if (seenContent) break; else continue; } // skip leading blanks; first blank after content ends section
+        // Stop at a new section header (all-caps word block, or known section keywords)
+        if (/^[A-Z]{2}[A-Z\s]{2,}$/.test(line) || /^(?:DIETARY|SPECIAL|MENU|FOOD|NOTES|STAFF|PREP)\b/i.test(line)) break;
+        const labelFirst = line.match(/^([A-Za-zÀ-ÿ][^:\d][^:]{0,28}):\s*(\d{1,2}:\d{2})/);
+        const timeFirst  = line.match(/^(\d{1,2}:\d{2})\s+(.{2,40})/);
+        if (labelFirst) {
+          const t = normaliseTime(labelFirst[2]!);
+          if (t && !serviceEvents.some((e) => e.label === labelFirst[1]!.trim())) {
+            serviceEvents.push({ time: t, label: labelFirst[1]!.trim() });
+            seenContent = true;
+          }
+        } else if (timeFirst) {
+          if (!serviceEvents.some((e) => e.time === timeFirst[1])) {
+            serviceEvents.push({ time: timeFirst[1]!, label: timeFirst[2]!.trim() });
+            seenContent = true;
+          }
+        }
+      }
+      serviceEvents.sort((a, b) => a.time.localeCompare(b.time));
+      if (serviceEvents.length > 0) conf["serviceEvents"] = 85;
+    }
+  }
 
   // Special requirements
   const specialRequirements: string[] = [];

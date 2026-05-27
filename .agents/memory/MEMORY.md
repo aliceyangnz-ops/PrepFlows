@@ -1,0 +1,1 @@
+- [AI Parse parser quirks](ai-parse-parser-quirks.md) — 4 root causes: cross-line \s* digit match, menu overriding Type: label, missing \s* after colon, section scanner multiline collapse
