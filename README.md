@@ -23,6 +23,7 @@ prepflows/
 ```
 
 **Stack:**
+
 - Mobile: Expo SDK 54, expo-router, React Native 0.81
 - Web: Vite + React 19, Tailwind CSS v4
 - API: Express 5, Drizzle ORM, Pino, Zod
@@ -96,21 +97,21 @@ pnpm --filter @workspace/api-server run typecheck    # API only
 
 Copy `.env.example` to `.env`. Required variables:
 
-| Variable | Description |
-|---|---|
-| `SUPABASE_URL` | Your Supabase project URL |
-| `SUPABASE_ANON_KEY` | Supabase anon/public key |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key (server only) |
-| `SUPABASE_POOLER_URL` | Transaction pooler URL (API server DB connection) |
-| `SUPABASE_DB_URL` | Direct connection URL (migrations only) |
-| `EXPO_PUBLIC_SUPABASE_URL` | Same as SUPABASE_URL — injected into Expo bundle |
+| Variable                        | Description                                           |
+| ------------------------------- | ----------------------------------------------------- |
+| `SUPABASE_URL`                  | Your Supabase project URL                             |
+| `SUPABASE_ANON_KEY`             | Supabase anon/public key                              |
+| `SUPABASE_SERVICE_ROLE_KEY`     | Supabase service role key (server only)               |
+| `SUPABASE_POOLER_URL`           | Transaction pooler URL (API server DB connection)     |
+| `SUPABASE_DB_URL`               | Direct connection URL (migrations only)               |
+| `EXPO_PUBLIC_SUPABASE_URL`      | Same as SUPABASE_URL — injected into Expo bundle      |
 | `EXPO_PUBLIC_SUPABASE_ANON_KEY` | Same as SUPABASE_ANON_KEY — injected into Expo bundle |
-| `SESSION_SECRET` | Random 32-char string for session signing |
-| `STRIPE_SECRET_KEY` | Stripe secret key (`sk_live_…` or `sk_test_…`) |
-| `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret (`whsec_…`) |
-| `VITE_STRIPE_PUBLISHABLE_KEY` | Stripe publishable key for the website |
-| `OPENAI_API_KEY` | Optional — enables GPT-4o Smart Import |
-| `EXPO_TOKEN` | EAS CLI token (CI/CD only) |
+| `SESSION_SECRET`                | Random 32-char string for session signing             |
+| `STRIPE_SECRET_KEY`             | Stripe secret key (`sk_live_…` or `sk_test_…`)        |
+| `STRIPE_WEBHOOK_SECRET`         | Stripe webhook signing secret (`whsec_…`)             |
+| `VITE_STRIPE_PUBLISHABLE_KEY`   | Stripe publishable key for the website                |
+| `OPENAI_API_KEY`                | Optional — enables GPT-4o Smart Import                |
+| `EXPO_TOKEN`                    | EAS CLI token (CI/CD only)                            |
 
 ---
 
@@ -121,6 +122,7 @@ Copy `.env.example` to `.env`. Required variables:
 The API server runs on Replit and is reachable at your Replit deployment domain. Pushes to `main` redeploy automatically via the Replit GitHub integration.
 
 Required secrets in Replit:
+
 - `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
 - `SUPABASE_POOLER_URL`, `DATABASE_URL`
 - `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`
@@ -139,6 +141,7 @@ vercel --prod
 ```
 
 Set environment variables in the Vercel dashboard:
+
 - `VITE_STRIPE_PUBLISHABLE_KEY`
 - `SUPABASE_URL`, `SUPABASE_ANON_KEY`
 
@@ -158,6 +161,7 @@ eas build --profile production --platform all
 ```
 
 **Before your first production build:**
+
 1. Set `EXPO_PUBLIC_SUPABASE_ANON_KEY` as an EAS secret:
    ```bash
    eas secret:create --scope project --name EXPO_PUBLIC_SUPABASE_ANON_KEY --value "your-anon-key"
@@ -166,6 +170,7 @@ eas build --profile production --platform all
 3. Add `google-service-account.json` for Android Play Store submission
 
 **Submit to stores:**
+
 ```bash
 eas submit --platform ios --latest
 eas submit --platform android --latest
@@ -188,13 +193,14 @@ artifacts/kitchen-app/supabase/migrations/
 
 Three workflows are included in `.github/workflows/`:
 
-| Workflow | Trigger | What it does |
-|---|---|---|
-| `ci.yml` | Push / PR to main | Typecheck + format check across all packages |
-| `eas-build.yml` | Push to main (app changes) | Runs EAS preview build |
-| `deploy-api.yml` | Push to main (API changes) | Typechecks + builds the API server |
+| Workflow         | Trigger                    | What it does                                 |
+| ---------------- | -------------------------- | -------------------------------------------- |
+| `ci.yml`         | Push / PR to main          | Typecheck + format check across all packages |
+| `eas-build.yml`  | Push to main (app changes) | Runs EAS preview build                       |
+| `deploy-api.yml` | Push to main (API changes) | Typechecks + builds the API server           |
 
 **Required GitHub secrets:**
+
 - `EXPO_TOKEN` — from [expo.dev](https://expo.dev) → Account → Access tokens
 - `EXPO_PUBLIC_SUPABASE_ANON_KEY` — your Supabase anon key
 - `DATABASE_URL` — for API build verification
@@ -203,17 +209,17 @@ Three workflows are included in `.github/workflows/`:
 
 ## Key Features
 
-| Feature | Location |
-|---|---|
-| Today dashboard | `kitchen-app/app/(tabs)/index.tsx` |
-| Function list & detail | `kitchen-app/app/(tabs)/index.tsx`, `app/function/[id].tsx` |
+| Feature                            | Location                                                            |
+| ---------------------------------- | ------------------------------------------------------------------- |
+| Today dashboard                    | `kitchen-app/app/(tabs)/index.tsx`                                  |
+| Function list & detail             | `kitchen-app/app/(tabs)/index.tsx`, `app/function/[id].tsx`         |
 | Smart Import (paste / file / scan) | `kitchen-app/app/function/add.tsx` + `api-server/routes/aiParse.ts` |
-| Prep list + print/share | `kitchen-app/app/(tabs)/prep.tsx`, `app/prep-print/` |
-| Roster + sick calls | `kitchen-app/app/(tabs)/roster.tsx` |
-| Casual staff QR brief | `kitchen-app/app/brief/[id].tsx` |
-| PMS connector sync | `api-server/routes/connectors.ts` + `lib/connector-core/` |
-| Stripe billing | `api-server/routes/stripe.ts` + `api-server/stripeService.ts` |
-| Supabase realtime sync | `kitchen-app/lib/supabase-sync.ts` |
+| Prep list + print/share            | `kitchen-app/app/(tabs)/prep.tsx`, `app/prep-print/`                |
+| Roster + sick calls                | `kitchen-app/app/(tabs)/roster.tsx`                                 |
+| Casual staff QR brief              | `kitchen-app/app/brief/[id].tsx`                                    |
+| PMS connector sync                 | `api-server/routes/connectors.ts` + `lib/connector-core/`           |
+| Stripe billing                     | `api-server/routes/stripe.ts` + `api-server/stripeService.ts`       |
+| Supabase realtime sync             | `kitchen-app/lib/supabase-sync.ts`                                  |
 
 ---
 

@@ -288,69 +288,81 @@ components:
     Connector:
       type: object
       properties:
-        id:           { type: string }
-        name:         { type: string }
-        source:       { type: string }
-        status:       { type: string }
-        apiEndpoint:  { type: ["string", "null"] }
-        webhookPath:  { type: string }
-        schedule:     { type: ["string", "null"] }
-        lastSyncAt:   { type: ["string", "null"] }
+        id: { type: string }
+        name: { type: string }
+        source: { type: string }
+        status: { type: string }
+        apiEndpoint: { type: ["string", "null"] }
+        webhookPath: { type: string }
+        schedule: { type: ["string", "null"] }
+        lastSyncAt: { type: ["string", "null"] }
         lastSyncStatus: { type: ["string", "null"] }
-        lastSyncError:  { type: ["string", "null"] }
-        createdAt:    { type: string }
-        updatedAt:    { type: string }
+        lastSyncError: { type: ["string", "null"] }
+        createdAt: { type: string }
+        updatedAt: { type: string }
       required: [id, name, source, status, webhookPath, createdAt, updatedAt]
 
     ConnectorInput:
       type: object
       properties:
-        name:          { type: string }
-        source:        { type: string }
-        apiEndpoint:   { type: string }
-        apiKey:        { type: string }
+        name: { type: string }
+        source: { type: string }
+        apiEndpoint: { type: string }
+        apiKey: { type: string }
         webhookSecret: { type: string }
-        schedule:      { type: string }
+        schedule: { type: string }
       required: [name, source]
 
     ConnectorUpdate:
       type: object
       properties:
-        name:          { type: string }
-        status:        { type: string }
-        apiEndpoint:   { type: string }
-        apiKey:        { type: string }
+        name: { type: string }
+        status: { type: string }
+        apiEndpoint: { type: string }
+        apiKey: { type: string }
         webhookSecret: { type: string }
-        schedule:      { type: string }
+        schedule: { type: string }
 
     SyncRecord:
       type: object
       properties:
-        id:                { type: string }
+        id: { type: string }
         connectorConfigId: { type: string }
-        connectorName:     { type: string }
-        source:            { type: string }
-        trigger:           { type: string }
-        status:            { type: string }
-        eventsProcessed:   { type: integer }
-        eventsCreated:     { type: integer }
-        eventsUpdated:     { type: integer }
-        eventsSkipped:     { type: integer }
+        connectorName: { type: string }
+        source: { type: string }
+        trigger: { type: string }
+        status: { type: string }
+        eventsProcessed: { type: integer }
+        eventsCreated: { type: integer }
+        eventsUpdated: { type: integer }
+        eventsSkipped: { type: integer }
         errors:
           type: array
           items:
             type: object
             properties:
-              row:      { type: integer }
-              field:    { type: string }
-              message:  { type: string }
+              row: { type: integer }
+              field: { type: string }
+              message: { type: string }
               severity: { type: string }
-        startedAt:    { type: string }
-        completedAt:  { type: ["string", "null"] }
-        durationMs:   { type: ["integer", "null"] }
-      required: [id, connectorConfigId, connectorName, source, trigger, status,
-                 eventsProcessed, eventsCreated, eventsUpdated, eventsSkipped,
-                 errors, startedAt]
+        startedAt: { type: string }
+        completedAt: { type: ["string", "null"] }
+        durationMs: { type: ["integer", "null"] }
+      required:
+        [
+          id,
+          connectorConfigId,
+          connectorName,
+          source,
+          trigger,
+          status,
+          eventsProcessed,
+          eventsCreated,
+          eventsUpdated,
+          eventsSkipped,
+          errors,
+          startedAt,
+        ]
 
     SyncTriggerInput:
       type: object
@@ -366,9 +378,9 @@ components:
       type: object
       properties:
         syncRecordId: { type: string }
-        created:      { type: integer }
-        updated:      { type: integer }
-        skipped:      { type: integer }
+        created: { type: integer }
+        updated: { type: integer }
+        skipped: { type: integer }
         errors:
           type: array
           items:
@@ -378,13 +390,14 @@ components:
     WebhookEvent:
       type: object
       properties:
-        id:                { type: string }
+        id: { type: string }
         connectorConfigId: { type: string }
-        source:            { type: string }
-        payload:           { type: object, additionalProperties: true }
-        headers:           { type: object, additionalProperties: true }
-        processed:         { type: boolean }
-        error:             { type: ["string", "null"] }
-        receivedAt:        { type: string }
-        processedAt:       { type: ["string", "null"] }
-      required: [id, connectorConfigId, source, payload, headers, processed, receivedAt]
+        source: { type: string }
+        payload: { type: object, additionalProperties: true }
+        headers: { type: object, additionalProperties: true }
+        processed: { type: boolean }
+        error: { type: ["string", "null"] }
+        receivedAt: { type: string }
+        processedAt: { type: ["string", "null"] }
+      required:
+        [id, connectorConfigId, source, payload, headers, processed, receivedAt]

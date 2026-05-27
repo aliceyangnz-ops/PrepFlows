@@ -35,6 +35,7 @@ The existing PrepFlows codebase was already significantly more mature than a typ
 ```
 
 **Data flow:**
+
 - Mobile app stores data in AsyncStorage first (offline-first)
 - Background sync pushes to Supabase via `supabase-sync.ts`
 - Supabase Realtime pushes changes back to all connected clients
@@ -44,23 +45,23 @@ The existing PrepFlows codebase was already significantly more mature than a typ
 
 ## What Was Already Done (pre-migration)
 
-| Item | Status |
-|---|---|
-| pnpm monorepo | ✅ Production-grade — equivalent to Turborepo |
-| TypeScript everywhere | ✅ All packages strictly typed |
-| Expo SDK 54 + expo-router | ✅ Configured correctly |
-| `app.json` with bundle IDs | ✅ `com.prepflows.app` for iOS + Android |
+| Item                           | Status                                            |
+| ------------------------------ | ------------------------------------------------- |
+| pnpm monorepo                  | ✅ Production-grade — equivalent to Turborepo     |
+| TypeScript everywhere          | ✅ All packages strictly typed                    |
+| Expo SDK 54 + expo-router      | ✅ Configured correctly                           |
+| `app.json` with bundle IDs     | ✅ `com.prepflows.app` for iOS + Android          |
 | `eas.json` with EAS project ID | ✅ Project `1b0f2131-5c1e-4b13-9daa-4d5aa9871dba` |
-| Apple team ID | ✅ `KR39B536C5` in `eas.json` |
-| Supabase auth integration | ✅ In both mobile app and website |
-| Supabase realtime sync | ✅ `supabase-sync.ts` with offline fallback |
-| Drizzle ORM schema | ✅ All tables defined with Zod schemas |
-| OpenAPI spec | ✅ `lib/api-spec/openapi.yaml` |
-| Generated React Query hooks | ✅ Via Orval codegen |
-| Stripe billing | ✅ Subscriptions + webhooks live |
-| PMS connector framework | ✅ Opera, iVvy, Delphi, Tripleseat connectors |
-| Smart Import AI parsing | ✅ GPT-4o + rule-based fallback |
-| Offline-first mobile data | ✅ AsyncStorage with background Supabase sync |
+| Apple team ID                  | ✅ `KR39B536C5` in `eas.json`                     |
+| Supabase auth integration      | ✅ In both mobile app and website                 |
+| Supabase realtime sync         | ✅ `supabase-sync.ts` with offline fallback       |
+| Drizzle ORM schema             | ✅ All tables defined with Zod schemas            |
+| OpenAPI spec                   | ✅ `lib/api-spec/openapi.yaml`                    |
+| Generated React Query hooks    | ✅ Via Orval codegen                              |
+| Stripe billing                 | ✅ Subscriptions + webhooks live                  |
+| PMS connector framework        | ✅ Opera, iVvy, Delphi, Tripleseat connectors     |
+| Smart Import AI parsing        | ✅ GPT-4o + rule-based fallback                   |
+| Offline-first mobile data      | ✅ AsyncStorage with background Supabase sync     |
 
 ---
 
@@ -71,6 +72,7 @@ The existing PrepFlows codebase was already significantly more mature than a typ
 **Before:** `app.json` contained hardcoded Supabase URL and anon key in plain text — committed to source control.
 
 **After:** Removed from `app.json`. Key is now injected exclusively through:
+
 - `app.config.js` reading `EXPO_PUBLIC_SUPABASE_ANON_KEY` env var
 - EAS secrets for CI builds (`eas secret:create`)
 - `.env` locally
@@ -85,6 +87,7 @@ The anon key is safe to include in the app bundle (Supabase security relies on R
 ### 3. `.gitignore` updated
 
 Added:
+
 - `.env*` files (all variants)
 - EAS / Apple credential files (`*.p12`, `*.mobileprovision`, `*.p8`, `GoogleService-Info.plist`, `google-service-account.json`)
 - Proper build output exclusions
@@ -96,6 +99,7 @@ Comprehensive template with every required environment variable, descriptions, a
 ### 5. `README.md` created
 
 Full project documentation covering:
+
 - Architecture diagram
 - Local development setup
 - Environment variable reference
@@ -117,33 +121,33 @@ Three workflows:
 
 ### High priority — needed before App Store submission
 
-| Task | Where | Instructions |
-|---|---|---|
-| Get App Store Connect App ID | [appstoreconnect.apple.com](https://appstoreconnect.apple.com) → My Apps → your app → App Information → Apple ID | Update `eas.json` → `submit.production.ios.ascAppId` |
-| Create Google Play service account key | [Google Play Console](https://play.google.com/console) → Setup → API access | Save as `artifacts/kitchen-app/google-service-account.json` (gitignored) |
-| Set EAS secrets | `eas secret:create --scope project --name EXPO_PUBLIC_SUPABASE_ANON_KEY --value "..."` | Required for CI builds to access Supabase |
-| Register GitHub secrets | GitHub repo → Settings → Secrets → `EXPO_TOKEN`, `EXPO_PUBLIC_SUPABASE_ANON_KEY` | Required for `eas-build.yml` workflow |
+| Task                                   | Where                                                                                                            | Instructions                                                             |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| Get App Store Connect App ID           | [appstoreconnect.apple.com](https://appstoreconnect.apple.com) → My Apps → your app → App Information → Apple ID | Update `eas.json` → `submit.production.ios.ascAppId`                     |
+| Create Google Play service account key | [Google Play Console](https://play.google.com/console) → Setup → API access                                      | Save as `artifacts/kitchen-app/google-service-account.json` (gitignored) |
+| Set EAS secrets                        | `eas secret:create --scope project --name EXPO_PUBLIC_SUPABASE_ANON_KEY --value "..."`                           | Required for CI builds to access Supabase                                |
+| Register GitHub secrets                | GitHub repo → Settings → Secrets → `EXPO_TOKEN`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`                                 | Required for `eas-build.yml` workflow                                    |
 
 ### Medium priority — needed for production launch
 
-| Task | Notes |
-|---|---|
-| Enable Supabase Row Level Security (RLS) | All tables should have RLS policies before going live. Use `lib/db/supabase-setup.sql` as a starting point. |
-| Apply Drizzle migrations to production Supabase | Run `pnpm --filter @workspace/db run migrate` with `SUPABASE_DB_URL` pointing at production |
-| Configure Stripe webhook URL | Stripe Dashboard → Developers → Webhooks → Add endpoint: `https://your-domain.replit.app/api/stripe/webhook` |
-| Push code to GitHub | Create repo, `git remote add origin …`, `git push` |
-| Connect Replit to GitHub | Replit → Version Control → Connect to GitHub repo (enables auto-deploy on push) |
-| Deploy website to Vercel | `cd artifacts/prepflows-website && vercel --prod` |
-| Privacy policy + App Store screenshots | Required for App Store / Google Play listing |
+| Task                                            | Notes                                                                                                        |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Enable Supabase Row Level Security (RLS)        | All tables should have RLS policies before going live. Use `lib/db/supabase-setup.sql` as a starting point.  |
+| Apply Drizzle migrations to production Supabase | Run `pnpm --filter @workspace/db run migrate` with `SUPABASE_DB_URL` pointing at production                  |
+| Configure Stripe webhook URL                    | Stripe Dashboard → Developers → Webhooks → Add endpoint: `https://your-domain.replit.app/api/stripe/webhook` |
+| Push code to GitHub                             | Create repo, `git remote add origin …`, `git push`                                                           |
+| Connect Replit to GitHub                        | Replit → Version Control → Connect to GitHub repo (enables auto-deploy on push)                              |
+| Deploy website to Vercel                        | `cd artifacts/prepflows-website && vercel --prod`                                                            |
+| Privacy policy + App Store screenshots          | Required for App Store / Google Play listing                                                                 |
 
 ### Low priority — post-launch
 
-| Task | Notes |
-|---|---|
-| Turborepo (optional) | The current pnpm workspace already provides equivalent caching and filtering. Turborepo would add remote caching for large teams — not needed now. |
-| Next.js for website | The current Vite/React site is production-ready. Migration to Next.js only makes sense if you need SSR for SEO at scale. |
-| Supabase Storage | Not yet used. Add if you need file uploads (function sheets, staff photos) stored server-side. |
-| Multi-tenancy activation | `workspaceId` columns exist in all tables but RLS policies aren't yet enforcing them. |
+| Task                     | Notes                                                                                                                                              |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Turborepo (optional)     | The current pnpm workspace already provides equivalent caching and filtering. Turborepo would add remote caching for large teams — not needed now. |
+| Next.js for website      | The current Vite/React site is production-ready. Migration to Next.js only makes sense if you need SSR for SEO at scale.                           |
+| Supabase Storage         | Not yet used. Add if you need file uploads (function sheets, staff photos) stored server-side.                                                     |
+| Multi-tenancy activation | `workspaceId` columns exist in all tables but RLS policies aren't yet enforcing them.                                                              |
 
 ---
 
@@ -179,26 +183,26 @@ vercel --prod
 
 ### Ongoing deployments
 
-| Trigger | What happens |
-|---|---|
-| Push to `main` | CI typecheck runs (GitHub Actions) |
-| Push to `main` (app code changed) | EAS preview build triggers automatically |
-| Replit GitHub integration | API server redeploys automatically |
+| Trigger                                  | What happens                             |
+| ---------------------------------------- | ---------------------------------------- |
+| Push to `main`                           | CI typecheck runs (GitHub Actions)       |
+| Push to `main` (app code changed)        | EAS preview build triggers automatically |
+| Replit GitHub integration                | API server redeploys automatically       |
 | Manual: `eas build --profile production` | Creates new App Store / Play Store build |
-| Manual: `eas submit --latest` | Submits latest build to stores |
+| Manual: `eas submit --latest`            | Submits latest build to stores           |
 
 ---
 
 ## Risk Assessment
 
-| Risk | Likelihood | Mitigation |
-|---|---|---|
-| Supabase anon key exposure | Low (now fixed) | Removed from `app.json`; use env vars and EAS secrets |
-| AsyncStorage data loss on reinstall | Medium | Supabase sync backs up all data server-side |
-| RLS not enforced yet | High (pre-launch) | All tables have `workspaceId` columns; RLS policies needed before multi-tenant launch |
-| `heads?\b` regex in guest count parser | Low | Fixed — cross-line `\s*` replaced with `[^\S\r\n]*` |
-| EAS build failure on native deps | Low | All native deps are Expo-compatible; `newArchEnabled: true` tested |
-| Stripe webhook without signing | Low | `STRIPE_WEBHOOK_SECRET` verification is implemented |
+| Risk                                   | Likelihood        | Mitigation                                                                            |
+| -------------------------------------- | ----------------- | ------------------------------------------------------------------------------------- |
+| Supabase anon key exposure             | Low (now fixed)   | Removed from `app.json`; use env vars and EAS secrets                                 |
+| AsyncStorage data loss on reinstall    | Medium            | Supabase sync backs up all data server-side                                           |
+| RLS not enforced yet                   | High (pre-launch) | All tables have `workspaceId` columns; RLS policies needed before multi-tenant launch |
+| `heads?\b` regex in guest count parser | Low               | Fixed — cross-line `\s*` replaced with `[^\S\r\n]*`                                   |
+| EAS build failure on native deps       | Low               | All native deps are Expo-compatible; `newArchEnabled: true` tested                    |
+| Stripe webhook without signing         | Low               | `STRIPE_WEBHOOK_SECRET` verification is implemented                                   |
 
 ---
 

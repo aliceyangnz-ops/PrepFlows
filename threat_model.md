@@ -5,6 +5,7 @@
 KitchenCommand is an Expo + React Native kitchen operations app for catering staff on iOS, Android, and web. Its core production surface is the `artifacts/kitchen-app` client, which stores roster, function, prep, broadcast, and current-staff state locally in AsyncStorage with no backend required for normal operation. A small Express API exists in `artifacts/api-server`, but the current reachable server surface is limited to a health endpoint.
 
 Production assumptions for this scan:
+
 - TLS is provided by the platform in production.
 - `NODE_ENV` is `production` in production.
 - `artifacts/mockup-sandbox` is dev-only and out of scope unless production reachability is demonstrated.
