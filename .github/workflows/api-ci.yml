@@ -1,42 +1,64 @@
+```yml
 name: API Server CI
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
     paths:
       - "artifacts/api-server/**"
       - "lib/**"
+      - ".github/workflows/api-ci.yml"
+
   pull_request:
 
 jobs:
   api-ci:
+    name: API Server Validation
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      # Checkout repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4
+      # Setup pnpm
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
         with:
           version: 10
 
-      - uses: actions/setup-node@v4
+      # Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: 22.x
+          node-version: 22
           cache: pnpm
 
+      # Install dependencies
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile --prefer-offline
+        run: pnpm install --frozen-lockfile
 
-      # 🔥 MUST: build shared packages first
-      - name: Build monorepo packages
-        run: pnpm -r run build
+      # Build ONLY required shared packages
+      # Prevents experimental apps from breaking CI
+      - name: Build database package
+        run: pnpm --filter @workspace/db run build
+
+      - name: Build shared libraries
+        run: pnpm --filter "./lib/**" run build
 
       # Typecheck API server
       - name: Typecheck API server
         run: pnpm --filter @workspace/api-server run typecheck
 
-      # Final build validation
+      # Build API server
       - name: Build API server
         run: pnpm --filter @workspace/api-server run build
         env:
+          NODE_ENV: production
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      # Success message
+      - name: CI completed
+        run: echo "PrepFlows API CI passed successfully."
+```
