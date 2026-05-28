@@ -2,10 +2,13 @@ name: API Server CI
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
     paths:
       - "artifacts/api-server/**"
       - "lib/**"
+      - ".github/workflows/api-ci.yml"
+
   pull_request:
 
 jobs:
@@ -13,30 +16,34 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
         with:
           version: 10
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: 22.x
+          node-version: 22
           cache: pnpm
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile --prefer-offline
+        run: pnpm install --frozen-lockfile
 
-      # 🔥 MUST: build shared packages first
-      - name: Build monorepo packages
-        run: pnpm -r run build
+      - name: Build shared libs
+        run: pnpm --filter "./lib/**" run build
 
-      # Typecheck API server
       - name: Typecheck API server
         run: pnpm --filter @workspace/api-server run typecheck
 
-      # Final build validation
       - name: Build API server
         run: pnpm --filter @workspace/api-server run build
         env:
+          NODE_ENV: production
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: CI success
+        run: echo "API CI passed"
